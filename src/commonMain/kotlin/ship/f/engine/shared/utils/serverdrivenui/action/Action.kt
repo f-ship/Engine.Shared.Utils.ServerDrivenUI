@@ -5,10 +5,7 @@ import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.*
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.Meta.None
 import ship.f.engine.shared.utils.serverdrivenui.measureInMillis
-import ship.f.engine.shared.utils.serverdrivenui.state.ComponentState
-import ship.f.engine.shared.utils.serverdrivenui.state.State
-import ship.f.engine.shared.utils.serverdrivenui.state.Value
-import ship.f.engine.shared.utils.serverdrivenui.state.WidgetState
+import ship.f.engine.shared.utils.serverdrivenui.state.*
 
 fun <K, V> Map<K,V>.fGet(key: K): V = get(key) ?: error("Key $key not found in $this")
 
@@ -46,6 +43,11 @@ interface Client {
 
     fun postUpdateHook(id: ID, stateHolder: StateHolder<State>)
 }
+
+/**
+ * Will potentially depreciate this in favour of a simple call that will just be a single call
+ * TODO in the next SDUI refactoring
+ */
 sealed class Subject {
     data class Component(val component: ComponentState, val id: ID) : Subject()
     data class Widget(val widget: WidgetState, val id: ID) : Subject()
@@ -54,7 +56,7 @@ sealed class Subject {
 }
 
 @Serializable
-data class Target2(
+data class Target(
     val id: ID,
     val descendants: Descendants = Descendants.None,
 ) {
@@ -83,7 +85,7 @@ data class Target2(
  */
 @Serializable
 sealed class Action {
-    abstract val targetIds: List<Target2>
+    abstract val targetIds: List<Target>
 
     abstract fun execute(
         subject: Subject,
@@ -94,7 +96,7 @@ sealed class Action {
     @Serializable
     @SerialName("Navigate")
     data class Navigate(
-        override val targetIds: List<Target2> = listOf(),
+        override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
             subject: Subject,
@@ -109,7 +111,7 @@ sealed class Action {
     @Serializable
     @SerialName("Refresh")
     data class Refresh(
-        override val targetIds: List<Target2> = listOf(),
+        override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
             subject: Subject,
@@ -124,7 +126,7 @@ sealed class Action {
     @Serializable
     @SerialName("Copy")
     data class Copy(
-        override val targetIds: List<Target2> = listOf(),
+        override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
             subject: Subject,
@@ -136,41 +138,14 @@ sealed class Action {
 
     }
 
-    @Serializable
-    @SerialName("UpdateFieldState")
-    data class UpdateFieldState(
-        override val targetIds: List<Target2> = listOf(),
-    ) : Action() {
-        override fun execute(
-            subject: Subject,
-            client: Client,
-            meta: Meta,
-        ) {
-            when (subject) {
-                is Subject.All -> subject.targets.forEach {
-                    execute(it, client, meta)
-                }
-                is Subject.Component -> {
-                    client.updateState( subject.id, subject.component)
-                }
-                is Subject.Screen -> {
-                    subject.screen.forEach {
-                        client.updateState( it.id, it.widget)
-                    }
-                }
-                is Subject.Widget -> {
-                    client.updateState( subject.id, subject.widget)
-                }
-            }
-        }
-    }
+    sealed class Match : Action()
 
     // If searches the tree to ensure other visibilities of the same group match the one of the event Visibility(val group: String, val value: String)
     @Serializable
     @SerialName("UpdateVisibility")
-    data class UpdateVisibility(
-        override val targetIds: List<Target2> = listOf(),
-    ) : Action() {
+    data class MatchVisibility(
+        override val targetIds: List<Target> = listOf(),
+    ) : Match() {
         override fun execute(
             subject: Subject,
             client: Client,
@@ -182,9 +157,9 @@ sealed class Action {
 
     @Serializable
     @SerialName("UpdateEnabled")
-    data class UpdateEnabled(
-        override val targetIds: List<Target2> = listOf(),
-    ) : Action() {
+    data class MatchEnabled(
+        override val targetIds: List<Target> = listOf(),
+    ) : Match() {
         override fun execute(
             subject: Subject,
             client: Client,
@@ -195,29 +170,78 @@ sealed class Action {
     }
 
     @Serializable
-    @SerialName("UpdateToggled")
-    data class UpdateToggled(
-        override val targetIds: List<Target2> = listOf(),
-    ) : Action() {
+    @SerialName("MatchToggled")
+    data class MatchToggled(
+        override val targetIds: List<Target> = listOf(),
+    ) : Match() {
         override fun execute(
             subject: Subject,
             client: Client,
             meta: Meta,
         ) {
+            TODO("Not yet implemented")
+        }
+    }
+
+    @Serializable
+    @SerialName("MatchLoading")
+    data class MatchLoading(
+        override val targetIds: List<Target> = listOf(),
+    ) : Match() {
+        override fun execute(
+            subject: Subject,
+            client: Client,
+            meta: Meta,
+        ) {
+            TODO("Not yet implemented")
+        }
+    }
+
+    @Serializable
+    @SerialName("MatchVariant")
+    data class MatchVariant(
+        override val targetIds: List<Target> = listOf(),
+    ) : Match() {
+        override fun execute(
+            subject: Subject,
+            client: Client,
+            meta: Meta,
+        ) {
+            TODO("Not yet implemented")
+        }
+    }
+
+    @Serializable
+    @SerialName("MatchValid")
+    data class MatchValid(
+        override val targetIds: List<Target> = listOf(),
+    ) : Match() {
+        override fun execute(
+            subject: Subject,
+            client: Client,
+            meta: Meta,
+        ) {
+            val valid = targetIds.mapNotNull { client.stateMap.fGet(it.id).state as? Valid<*> }.all { it.valid == true }
             when (subject) {
                 is Subject.All -> subject.targets.forEach {
                     execute(it, client, meta)
                 }
                 is Subject.Component -> {
-                    client.updateState( subject.id, subject.component)
+                    (subject.component as? Valid<*>)?.copyValid(valid)?.let { state ->
+                        client.updateState( subject.id, state)
+                    }
                 }
                 is Subject.Screen -> {
                     subject.screen.forEach {
-                        client.updateState( it.id, it.widget)
+                        (it.widget as? Valid<*>)?.copyValid(valid)?.let { state ->
+                            client.updateState( it.id, state)
+                        }
                     }
                 }
                 is Subject.Widget -> {
-                    client.updateState( subject.id, subject.widget)
+                    (subject.widget as? Valid<*>)?.copyValid(valid)?.let { state ->
+                        client.updateState( subject.id, state)
+                    }
                 }
             }
         }
@@ -226,7 +250,7 @@ sealed class Action {
     @Serializable
     @SerialName("UpdateState")
     data class UpdateState(
-        override val targetIds: List<Target2> = listOf(),
+        override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
             subject: Subject,
@@ -255,7 +279,7 @@ sealed class Action {
     @Serializable
     @SerialName("SendState")
     data class SendState(
-        override val targetIds: List<Target2> = listOf(),
+        override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
             subject: Subject,
@@ -269,21 +293,21 @@ sealed class Action {
     @Serializable
     @SerialName("UpdateValue")
     data class UpdateValue(
-        override val targetIds: List<Target2> = listOf(),
+        override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
-            scope: Subject, // TODO depreciate this, this was an error as it can only be hardcoded, use targetIds instead, maybe it's still useful actually
+            subject: Subject, // TODO depreciate this, this was an error as it can only be hardcoded, use targetIds instead, maybe it's still useful actually
             client: Client,
             meta: Meta,
         ) {
-            when(scope) {
+            when(subject) {
                 is Subject.All -> TODO()
                 is Subject.Component -> {
-                    val toUpdate = client.stateMap.fGet(scope.id).state as? Value<*>
+                    val toUpdate = client.stateMap.fGet(subject.id).state as? Value<*>
                     val update = client.stateMap.fGet(targetIds.first().id).state as? Value<*>
                     if (toUpdate != null && update != null){
                         val updated = toUpdate.copyValue(v = update.value)
-                        client.updateState(scope.id, updated)
+                        client.updateState(subject.id, updated)
                     }
                 }
                 is Subject.Screen -> TODO()

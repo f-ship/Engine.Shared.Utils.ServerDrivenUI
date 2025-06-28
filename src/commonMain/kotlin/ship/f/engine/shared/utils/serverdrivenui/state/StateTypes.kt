@@ -5,8 +5,9 @@ interface Value<T : State> {
     fun copyValue(v: String): T
 }
 
-interface Valid {
-    val valid: Boolean
+interface Valid<T : State> {
+    val valid: Boolean?
+    fun copyValid(v: Boolean): T
 }
 
 interface Select {

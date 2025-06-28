@@ -77,7 +77,9 @@ fun id(value: String) = ID(id = value, scope = "")
 @SerialName("SConfig")
 data class ScreenConfig(
     val id: ID = auto(),
-    val state: List<Widget>,
+    val lightColorScheme: ColorSchemeState? = null,
+    val darkColorScheme: ColorSchemeState? = null,
+    val state: List<Widget> = emptyList(),
 ) {
     @Serializable
     @SerialName("ID")

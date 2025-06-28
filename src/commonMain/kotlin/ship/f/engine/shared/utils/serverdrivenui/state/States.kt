@@ -78,15 +78,15 @@ data class FieldState(
     val placeholder: String = "",
     val label: String = "",
     override val value: String = "",
+    override val valid: Boolean? = null,
     val fieldType: FieldType = FieldType.Text,
     val validations: List<Validation> = listOf(),
     val restrictions: List<Restriction> = listOf(),
     val localState: LocalState = LocalState(),
     val type: String = "FieldState",
-) : ComponentState(), Value<FieldState> {
+) : ComponentState(), Value<FieldState>, Valid<FieldState> {
     override fun copyValue(v: String) = this.copy(value = v)
-    fun copyLocalState(v: LocalState) = this.copy(localState = v)
-
+    override fun copyValid(v: Boolean) = this.copy(valid = v)
     @Serializable
     data class LocalState(
         val error: String? = null,
@@ -125,12 +125,31 @@ data class FieldState(
 }
 
 @Serializable
+@SerialName("ThemeState")
+data class ColorSchemeState(
+    val primary: Long,
+    val onPrimary: Long,
+    val onSecondaryContainer: Long,
+    val secondaryContainer: Long,
+    val background: Long,
+    val onBackground: Long,
+    val surface: Long,
+    val onSurface: Long,
+    val surfaceVariant: Long,
+    val onSurfaceVariant: Long,
+    val outline: Long,
+)
+
+@Serializable
 @SerialName("ToggleState")
 data class ToggleState(
     val value: Boolean = false,
     val initialState: Boolean? = null,
     val type: String = "ToggleState",
-) : ComponentState()
+    override val valid: Boolean? = null,
+) : ComponentState(), Valid<ToggleState> {
+    override fun copyValid(v: Boolean) = copy(valid = v)
+}
 
 @Serializable
 @SerialName("DropDownState")
@@ -215,8 +234,10 @@ data class CustomState(
 data class ButtonState(
     val value: String,
     val buttonType: ButtonType = ButtonType.Primary,
+    override val valid: Boolean? = null,
     val type: String = "ButtonState",
-) : ComponentState() {
+) : ComponentState(), Valid<ButtonState> {
+    override fun copyValid(v: Boolean) = copy(valid = v)
     @Serializable
     sealed class ButtonType {
         @Serializable
