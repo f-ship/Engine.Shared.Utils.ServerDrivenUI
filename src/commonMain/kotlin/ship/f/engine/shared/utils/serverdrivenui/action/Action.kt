@@ -13,6 +13,8 @@ interface Client {
     val stateMap: MutableMap<ID, StateHolder<State>>
     val elementMap: MutableMap<ID, Element> // TODO May not need this
 
+    var banner: Fallback?
+
     @Serializable
     data class StateHolder<T : State>(
         val state: T,
@@ -103,7 +105,7 @@ sealed class Action {
             client: Client,
             meta: Meta,
         ) {
-            TODO("Not yet implemented")
+
         }
 
     }
