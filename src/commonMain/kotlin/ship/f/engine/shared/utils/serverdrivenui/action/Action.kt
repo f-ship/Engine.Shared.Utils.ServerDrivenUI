@@ -5,12 +5,14 @@ import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.*
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.Meta.None
 import ship.f.engine.shared.utils.serverdrivenui.measureInMillis
-import ship.f.engine.shared.utils.serverdrivenui.state.*
+import ship.f.engine.shared.utils.serverdrivenui.state.State
+import ship.f.engine.shared.utils.serverdrivenui.state.Valid
+import ship.f.engine.shared.utils.serverdrivenui.state.Value
 
 fun <K, V> Map<K,V>.fGet(key: K): V = get(key) ?: error("Key $key not found in $this")
 
 interface Client {
-    val stateMap: MutableMap<ID, StateHolder<State>>
+    val stateMap: MutableMap<ID, StateHolder<out State>>
     val elementMap: MutableMap<ID, Element> // TODO May not need this
 
     var banner: Fallback?
@@ -27,9 +29,22 @@ interface Client {
         )
     }
 
-    // Need some way to properly register updates for derived states
+    /**
+     * Currently need to messily have two implementations here for the same thing as we are updating the state too many times otherwise.
+     * Need to create a more intelligent way to update the state and another process to propagate state to listeners.
+     * Even though the element shouldn't change outside the state, maybe I should do the state changes on that level
+     */
     fun updateState(id: ID, state: State) = measureInMillis("updateState: $id") {
-        val stateHolder = stateMap.fGet(id).copy(state = state)
+        stateMap.fGet(id).listeners.forEach { listener ->
+            val e = elementMap.fGet(listener.id)
+            listener.action.execute(e, this)
+            postUpdateHook(id = listener.id, stateHolder = stateMap.fGet(listener.id))
+        }
+    }
+
+    fun updateState2(id: ID, state: State) = measureInMillis("updateState: $id") {
+        val oldStateHolder = stateMap.fGet(id)
+        val stateHolder = StateHolder(state = state, listeners = oldStateHolder.listeners)
         stateMap[id] = stateHolder
         postUpdateHook(id = id, stateHolder = stateHolder)
         stateMap.fGet(id).listeners.forEach { listener ->
@@ -39,18 +54,7 @@ interface Client {
         }
     }
 
-    fun postUpdateHook(id: ID, stateHolder: StateHolder<State>)
-}
-
-/**
- * Will potentially depreciate this in favour of a simple call that will just be a single call
- * TODO in the next SDUI refactoring
- */
-sealed class Subject {
-    data class Component(val component: ComponentState, val id: ID) : Subject()
-    data class Widget(val widget: WidgetState, val id: ID) : Subject()
-    data class Screen(val screen: List<Widget>, val id: ID) : Subject()
-    data class All(val targets: List<Subject>) : Subject()
+    fun postUpdateHook(id: ID, stateHolder: StateHolder<out State>)
 }
 
 @Serializable
@@ -221,7 +225,7 @@ sealed class Action {
         ) {
             val valid = targetIds.mapNotNull { client.stateMap.fGet(it.id).state as? Valid<*> }.all { it.valid == true }
             (element.state as? Valid<*>)?.copyValid(valid)?.let { state ->
-                client.updateState( element.id, state)
+                client.updateState2( element.id, state)
             }
         }
     }

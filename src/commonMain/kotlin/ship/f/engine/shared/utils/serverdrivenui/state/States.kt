@@ -6,14 +6,256 @@ import ship.f.engine.shared.utils.serverdrivenui.ComponentStateSerializer
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.Element
 import ship.f.engine.shared.utils.serverdrivenui.WidgetStateSerializer
 
+
+fun getRandomString(length: Int = 16) : String {
+    val allowedChars = ('A'..'Z') + ('a'..'z') + ('0'..'9')
+    return (1..length)
+        .map { allowedChars.random() }
+        .joinToString("")
+}
 @Serializable
 @SerialName("State")
-sealed class State
+sealed class State {
+    open var globalCopy : (state: State) -> State = { error("Not implemented") }
+    val id: String = getRandomString() // Has the change to collide so need to do something smarter
+}
 
 @Serializable(with = WidgetStateSerializer::class)
 @SerialName("WidgetState")
 sealed class WidgetState : State() {
     abstract val children: List<Element>
+
+    fun spaceState(
+        value: Int = 16,
+    ) = SpaceState(
+        value = value,
+    )
+
+    fun textState(
+        value: String,
+        style: TextState.Style = TextState.Style.BodyMedium,
+    ) = TextState(
+        value = value,
+        style = style,
+    )
+
+    fun fieldState(
+        initialValue: String = "",
+        placeholder: String = "",
+        label: String = "",
+        value: String = "",
+        valid: Boolean? = null,
+        fieldType: FieldState.FieldType = FieldState.FieldType.Text,
+        validations: List<FieldState.Validation> = listOf(),
+        restrictions: List<FieldState.Restriction> = listOf(),
+        localState: FieldState.LocalState = FieldState.LocalState(),
+    ) = FieldState(
+        initialValue = initialValue,
+        placeholder = placeholder,
+        label = label,
+        value = value,
+        valid = valid,
+        fieldType = fieldType,
+        validations = validations,
+        restrictions = restrictions,
+        localState = localState,
+    )
+
+    fun colorSchemeState(
+        primary: Long,
+        onPrimary: Long,
+        onSecondaryContainer: Long,
+        secondaryContainer: Long,
+        background: Long,
+        onBackground: Long,
+        surface: Long,
+        onSurface: Long,
+        surfaceVariant: Long,
+        onSurfaceVariant: Long,
+        outline: Long,
+    ) = ColorSchemeState(
+        primary = primary,
+        onPrimary = onPrimary,
+        onSecondaryContainer = onSecondaryContainer,
+        secondaryContainer = secondaryContainer,
+        background = background,
+        onBackground = onBackground,
+        surface = surface,
+        onSurface = onSurface,
+        surfaceVariant = surfaceVariant,
+        onSurfaceVariant = onSurfaceVariant,
+        outline = outline,
+    )
+
+    fun toggleState(
+        value: Boolean = false,
+        initialState: Boolean? = null,
+        valid: Boolean? = null,
+    ) = ToggleState(
+        value = value,
+        initialState = initialState,
+        valid = valid,
+    )
+
+    fun dropDownState(
+        value: String,
+    ) = DropDownState(
+        value = value,
+    )
+
+    fun radioListState(
+        value: String = "",
+    ) = RadioListState(
+        value = value,
+    )
+
+    fun tickListState(
+        value: String = "",
+    ) = TickListState(
+        value = value,
+    )
+
+    fun searchState(
+        value: String = ""
+    ) = SearchState(
+        value = value,
+    )
+
+    fun menuState(
+        value: String = "",
+    ) = MenuState(
+        value = value,
+    )
+
+    fun bottomRowState(
+        value: String = "",
+    ) = BottomRowState(
+        value = value,
+    )
+
+    fun imageState(
+        src: ImageState.Source,
+        accessibilityLabel: String? = null,
+    ) = ImageState(
+        src = src,
+        accessibilityLabel = accessibilityLabel,
+    )
+
+    fun videoState(
+        value: String,
+    ) = VideoState(
+        value = value,
+    )
+
+    fun customState(
+        value: String,
+    ) = CustomState(
+        value = value,
+    )
+
+    fun buttonState(
+        value: String,
+        buttonType: ButtonState.ButtonType = ButtonState.ButtonType.Primary,
+        valid: Boolean? = null,
+    ) = ButtonState(
+        value = value,
+        buttonType = buttonType,
+        valid = valid,
+    )
+
+    fun iconState(
+        value: String,
+    ) = IconState(
+        value = value,
+    )
+
+    fun loadingShimmerState(
+        value: String,
+    ) = LoadingShimmerState(
+        value = value,
+    )
+
+    fun dialogState(
+        value: String,
+    ) = DialogState(
+        value = value,
+    )
+
+    fun snackBarState(
+        value: String,
+    ) = SnackBarState(
+        value = value,
+    )
+
+    fun loaderState(
+        value: String,
+    ) = LoaderState(
+        value = value,
+    )
+
+    fun unknownComponentState(
+        value: String,
+    ) = UnknownComponentState(
+        value = value,
+    )
+
+    fun cardState(
+        children: List<Element> = listOf(),
+    ) = CardState(
+        children = children,
+    )
+
+    fun bottomSheetState(
+        children: List<Element> = listOf(),
+    ) = BottomSheetState(
+        children = children,
+    )
+
+    fun rowState(
+        arrangement: Arrangement = Arrangement.Center,
+        children: List<Element> = listOf(),
+    ) = RowState(
+        arrangement = arrangement,
+        children = children,
+    )
+
+    fun columnState(
+        arrangement: Arrangement = Arrangement.Center,
+        children: List<Element> = listOf(),
+    ) = ColumnState(
+        arrangement = arrangement,
+        children = children,
+    )
+
+    fun flexRowState(
+        children: List<Element> = listOf(),
+    ) = FlexRowState(
+        children = children,
+    )
+
+    fun flexColumnState(
+        children: List<Element> = listOf(),
+    ) = FlexColumnState(
+        children = children,
+    )
+
+    fun gridState(
+        children: List<Element> = listOf(),
+    ) = GridState(
+        children = children,
+    )
+
+    fun flexGridState(
+        children: List<Element> = listOf(),
+    ) = FlexGridState(
+        children = children,
+    )
+
+    fun unknownWidgetState(
+        children: List<Element> = listOf(),
+    ) = UnknownWidgetState(
+        children = children,
+    )
 }
 
 @Serializable(with = ComponentStateSerializer::class)
@@ -40,32 +282,46 @@ data class TextState(
     sealed class Style {
         @Serializable
         data object TitleLarge : Style()
+
         @Serializable
         data object TitleMedium : Style()
+
         @Serializable
         data object TitleSmall : Style()
+
         @Serializable
         data object HeadlineLarge : Style()
+
         @Serializable
         data object HeadlineMedium : Style()
+
         @Serializable
         data object HeadlineSmall : Style()
+
         @Serializable
         data object DisplayLarge : Style()
+
         @Serializable
         data object DisplayMedium : Style()
+
         @Serializable
         data object DisplaySmall : Style()
+
         @Serializable
         data object BodyLarge : Style()
+
         @Serializable
         data object BodyMedium : Style()
+
         @Serializable
         data object BodySmall : Style()
+
         @Serializable
         data object LabelLarge : Style()
+
         @Serializable
         data object LabelMedium : Style()
+
         @Serializable
         data object LabelSmall : Style()
     }
@@ -87,6 +343,7 @@ data class FieldState(
 ) : ComponentState(), Value<FieldState>, Valid<FieldState> {
     override fun copyValue(v: String) = this.copy(value = v)
     override fun copyValid(v: Boolean) = this.copy(valid = v)
+
     @Serializable
     data class LocalState(
         val error: String? = null,
@@ -109,8 +366,10 @@ data class FieldState(
     sealed class FieldType {
         @Serializable
         data object Text : FieldType()
+
         @Serializable
         data object Number : FieldType()
+
         @Serializable
         data object Password : FieldType()
     }
@@ -145,8 +404,8 @@ data class ColorSchemeState(
 data class ToggleState(
     val value: Boolean = false,
     val initialState: Boolean? = null,
-    val type: String = "ToggleState",
     override val valid: Boolean? = null,
+    val type: String = "ToggleState",
 ) : ComponentState(), Valid<ToggleState> {
     override fun copyValid(v: Boolean) = copy(valid = v)
 }
@@ -238,12 +497,15 @@ data class ButtonState(
     val type: String = "ButtonState",
 ) : ComponentState(), Valid<ButtonState> {
     override fun copyValid(v: Boolean) = copy(valid = v)
+
     @Serializable
     sealed class ButtonType {
         @Serializable
         data object Primary : ButtonType()
+
         @Serializable
         data object Secondary : ButtonType()
+
         @Serializable
         data object Tertiary : ButtonType()
     }
@@ -319,7 +581,9 @@ data class ColumnState(
     override val children: List<Element> = listOf(),
     val arrangement: Arrangement = Arrangement.Center,
     val type: String = "ColumnState",
-) : WidgetState()
+) : WidgetState() {
+
+}
 
 @Serializable
 @SerialName("FlexRowState")
