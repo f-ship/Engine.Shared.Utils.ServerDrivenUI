@@ -33,12 +33,8 @@ interface Client {
         stateMap[id] = stateHolder
         postUpdateHook(id = id, stateHolder = stateHolder)
         stateMap.fGet(id).listeners.forEach { listener ->
-            val s = stateMap.fGet(listener.id).state
-            val scope = when(s){
-                is ComponentState -> Subject.Component(s, listener.id)
-                is WidgetState -> Subject.Widget(s, listener.id)
-            }
-            listener.action.execute(scope, this)
+            val e = elementMap.fGet(listener.id)
+            listener.action.execute(e, this)
             postUpdateHook(id = listener.id, stateHolder = stateMap.fGet(listener.id))
         }
     }
@@ -90,7 +86,7 @@ sealed class Action {
     abstract val targetIds: List<Target>
 
     abstract fun execute(
-        subject: Subject,
+        element: Element,
         client: Client,
         meta: Meta = None,
     )
@@ -101,7 +97,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
-            subject: Subject,
+            element: Element,
             client: Client,
             meta: Meta,
         ) {
@@ -116,7 +112,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
-            subject: Subject,
+            element: Element,
             client: Client,
             meta: Meta,
         ) {
@@ -131,7 +127,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
-            subject: Subject,
+            element: Element,
             client: Client,
             meta: Meta,
         ) {
@@ -149,7 +145,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Match() {
         override fun execute(
-            subject: Subject,
+            element: Element,
             client: Client,
             meta: Meta,
         ) {
@@ -163,7 +159,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Match() {
         override fun execute(
-            subject: Subject,
+            element: Element,
             client: Client,
             meta: Meta,
         ) {
@@ -177,7 +173,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Match() {
         override fun execute(
-            subject: Subject,
+            element: Element,
             client: Client,
             meta: Meta,
         ) {
@@ -191,7 +187,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Match() {
         override fun execute(
-            subject: Subject,
+            element: Element,
             client: Client,
             meta: Meta,
         ) {
@@ -205,7 +201,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Match() {
         override fun execute(
-            subject: Subject,
+            element: Element,
             client: Client,
             meta: Meta,
         ) {
@@ -219,32 +215,13 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Match() {
         override fun execute(
-            subject: Subject,
+            element: Element,
             client: Client,
             meta: Meta,
         ) {
             val valid = targetIds.mapNotNull { client.stateMap.fGet(it.id).state as? Valid<*> }.all { it.valid == true }
-            when (subject) {
-                is Subject.All -> subject.targets.forEach {
-                    execute(it, client, meta)
-                }
-                is Subject.Component -> {
-                    (subject.component as? Valid<*>)?.copyValid(valid)?.let { state ->
-                        client.updateState( subject.id, state)
-                    }
-                }
-                is Subject.Screen -> {
-                    subject.screen.forEach {
-                        (it.widget as? Valid<*>)?.copyValid(valid)?.let { state ->
-                            client.updateState( it.id, state)
-                        }
-                    }
-                }
-                is Subject.Widget -> {
-                    (subject.widget as? Valid<*>)?.copyValid(valid)?.let { state ->
-                        client.updateState( subject.id, state)
-                    }
-                }
+            (element.state as? Valid<*>)?.copyValid(valid)?.let { state ->
+                client.updateState( element.id, state)
             }
         }
     }
@@ -255,26 +232,11 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
-            subject: Subject,
+            element: Element,
             client: Client,
             meta: Meta,
         ) {
-            when (subject) {
-                is Subject.All -> subject.targets.forEach {
-                    execute(it, client, meta)
-                }
-                is Subject.Component -> {
-                    client.updateState( subject.id, subject.component)
-                }
-                is Subject.Screen -> {
-                    subject.screen.forEach {
-                        client.updateState( it.id, it.widget)
-                    }
-                }
-                is Subject.Widget -> {
-                    client.updateState( subject.id, subject.widget)
-                }
-            }
+            client.updateState( element.id, element.state)
         }
     }
 
@@ -284,7 +246,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
-            subject: Subject,
+            element: Element,
             client: Client,
             meta: Meta,
         ) {
@@ -298,22 +260,15 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
-            subject: Subject, // TODO depreciate this, this was an error as it can only be hardcoded, use targetIds instead, maybe it's still useful actually
+            element: Element,
             client: Client,
             meta: Meta,
         ) {
-            when(subject) {
-                is Subject.All -> TODO()
-                is Subject.Component -> {
-                    val toUpdate = client.stateMap.fGet(subject.id).state as? Value<*>
-                    val update = client.stateMap.fGet(targetIds.first().id).state as? Value<*>
-                    if (toUpdate != null && update != null){
-                        val updated = toUpdate.copyValue(v = update.value)
-                        client.updateState(subject.id, updated)
-                    }
-                }
-                is Subject.Screen -> TODO()
-                is Subject.Widget -> TODO()
+            val toUpdate = client.stateMap.fGet(element.id).state as? Value<*>
+            val update = client.stateMap.fGet(targetIds.first().id).state as? Value<*>
+            if (toUpdate != null && update != null){
+                val updated = toUpdate.copyValue(v = update.value)
+                client.updateState(element.id, updated)
             }
         }
     }
