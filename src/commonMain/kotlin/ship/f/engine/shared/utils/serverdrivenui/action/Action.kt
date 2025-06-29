@@ -13,7 +13,9 @@ fun <K, V> Map<K,V>.fGet(key: K): V = get(key) ?: error("Key $key not found in $
 
 interface Client {
     val stateMap: MutableMap<ID, StateHolder<out State>>
-    val elementMap: MutableMap<ID, Element> // TODO May not need this
+    // TODO May not need this
+    // TODO Turns out this will most likely replace the stateMap entirely, would also be good to replace the shadow map also
+    val elementMap: MutableMap<ID, Element>
 
     var banner: Fallback?
 
@@ -21,13 +23,7 @@ interface Client {
     data class StateHolder<T : State>(
         val state: T,
         val listeners: List<RemoteAction> = listOf(),
-    ) {
-        @Serializable
-        data class RemoteAction(
-            val action: Action,
-            val id: ID = ID(id = "", scope = "") // Implemented at runtime
-        )
-    }
+    )
 
     /**
      * Currently need to messily have two implementations here for the same thing as we are updating the state too many times otherwise.

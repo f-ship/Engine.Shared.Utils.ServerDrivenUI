@@ -11,6 +11,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.ID
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.Meta.None
 import ship.f.engine.shared.utils.serverdrivenui.action.Action
+import ship.f.engine.shared.utils.serverdrivenui.action.RemoteAction
 import ship.f.engine.shared.utils.serverdrivenui.state.*
 
 fun measureInMillis(id: Any, block: () -> Unit) {
@@ -93,6 +94,7 @@ data class ScreenConfig(
         abstract val fallback: Fallback
 
         abstract val triggerActions: List<TriggerAction>
+        abstract val listeners: List<RemoteAction>
     }
 
     @Serializable
@@ -157,6 +159,7 @@ data class ScreenConfig(
         override val state: WidgetState,
         override val fallback: Fallback = Fallback.Hide,
         override val triggerActions: List<TriggerAction> = emptyList(),
+        override val listeners: List<RemoteAction> = emptyList(),
     ) : Element()
 
     @Serializable
@@ -166,6 +169,7 @@ data class ScreenConfig(
         override val state: ComponentState,
         override val fallback: Fallback = Fallback.Hide,
         override val triggerActions: List<TriggerAction> = emptyList(),
+        override val listeners: List<RemoteAction> = emptyList(),
     ) : Element()
 
     @Serializable
