@@ -31,19 +31,23 @@ interface Client {
      * Even though the element shouldn't change outside the state, maybe I should do the state changes on that level
      */
     fun updateState(id: ID, state: State) = measureInMillis("updateState: $id") {
-        stateMap.fGet(id).listeners.forEach { listener ->
+        elementMap.fGet(id).listeners.forEach { listener ->
             val e = elementMap.fGet(listener.id)
             listener.action.execute(e, this)
             postUpdateHook(id = listener.id, stateHolder = stateMap.fGet(listener.id))
         }
     }
 
+    /**
+     * The reason this exists is that this first updates it's own state then propagates it's state to listeners
+     * The above method only propagates state to listeners, as the state itself has been updated on the UI
+     */
     fun updateState2(id: ID, state: State) = measureInMillis("updateState: $id") {
         val oldStateHolder = stateMap.fGet(id)
         val stateHolder = StateHolder(state = state, listeners = oldStateHolder.listeners)
         stateMap[id] = stateHolder
         postUpdateHook(id = id, stateHolder = stateHolder)
-        stateMap.fGet(id).listeners.forEach { listener ->
+        elementMap.fGet(id).listeners.forEach { listener ->
             val e = elementMap.fGet(listener.id)
             listener.action.execute(e, this)
             postUpdateHook(id = listener.id, stateHolder = stateMap.fGet(listener.id))
@@ -236,7 +240,7 @@ sealed class Action {
             client: Client,
             meta: Meta,
         ) {
-            client.updateState( element.id, element.state)
+            client.updateState(element.id, element.state)
         }
     }
 
