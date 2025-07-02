@@ -24,9 +24,95 @@ fun measureInMillis(id: Any, block: () -> Unit) {
     println("$id: Took ${elapsed.inWholeMilliseconds} ms")
 }
 
+//private object WidgetListSerializer : KSerializer<List<ScreenConfig.Widget<WidgetState>>> {
+//    private val elementSerializer = ElementSerializer(WidgetStateSerializer)
+//    private val listSerializer = ListSerializer(elementSerializer)
+//
+//    override val descriptor = listSerializer.descriptor
+//    override fun serialize(encoder: Encoder, value: List<ScreenConfig.Widget<WidgetState>>) =
+//        listSerializer.serialize(encoder, value)
+//    override fun deserialize(decoder: Decoder): List<ScreenConfig.Widget<WidgetState>> =
+//        listSerializer.deserialize(decoder) as List<ScreenConfig.Widget<WidgetState>>
+//}
+//
+//class ElementSerializer<T : State>(
+//    private val dataSerializer: KSerializer<T>,
+//) : KSerializer<Element<T>> {
+//    override val descriptor = buildClassSerialDescriptor("Element") {
+//        element("id", ID.serializer().descriptor)
+//        element("state", dataSerializer.descriptor)
+//        element("fallback", ScreenConfig.Fallback.serializer().descriptor)
+//        element("triggerActions", ListSerializer(ScreenConfig.TriggerAction.serializer()).descriptor)
+//        element("listeners", ListSerializer(RemoteAction.serializer()).descriptor)
+//    }
+//
+//
+//    override fun serialize(encoder: Encoder, value: Element<T>) {
+//        val composite = encoder.beginStructure(descriptor)
+//
+//        composite.encodeSerializableElement(descriptor, 0, ID.serializer(), value.id)
+//        composite.encodeSerializableElement(descriptor, 1, dataSerializer, value.state)
+//        composite.encodeSerializableElement(descriptor, 2, ScreenConfig.Fallback.serializer(), value.fallback)
+//        composite.encodeSerializableElement(
+//            descriptor,
+//            3,
+//            ListSerializer(ScreenConfig.TriggerAction.serializer()),
+//            value.triggerActions
+//        )
+//        composite.encodeSerializableElement(
+//            descriptor,
+//            4,
+//            ListSerializer(RemoteAction.serializer()),
+//            value.listeners
+//        )
+//
+//        composite.endStructure(descriptor)
+//    }
+//
+//    override fun deserialize(decoder: Decoder): Element<T> {
+//        val composite = decoder.beginStructure(descriptor)
+//
+//        val id = composite.decodeSerializableElement(descriptor, 0, ID.serializer())
+//        val state = composite.decodeSerializableElement(descriptor, 1, dataSerializer)
+//        val fallback = composite.decodeSerializableElement(descriptor, 2, ScreenConfig.Fallback.serializer())
+//        val triggerActions = composite.decodeSerializableElement(
+//            descriptor,
+//            3,
+//            ListSerializer(ScreenConfig.TriggerAction.serializer())
+//        )
+//        val listeners = composite.decodeSerializableElement(
+//            descriptor,
+//            4,
+//            ListSerializer(RemoteAction.serializer())
+//        )
+//
+//        composite.endStructure(descriptor)
+//
+//         // Since Element is sealed and has two implementations (Widget and Component),
+//         // we need to determine which one to create based on the state type
+//        return when (state) {
+//            is WidgetState -> ScreenConfig.Widget(
+//                id = id,
+//                state = state as WidgetState,
+//                fallback = fallback,
+//                triggerActions = triggerActions,
+//                listeners = listeners
+//            )
+//            is ComponentState -> ScreenConfig.Component(
+//                id = id,
+//                state = state as ComponentState,
+//                fallback = fallback,
+//                triggerActions = triggerActions,
+//                listeners = listeners
+//            )
+//            else -> throw IllegalStateException("Unknown state type: ${state::class}")
+//        } as Element<T>
+//    }
+//}
+
 object WidgetStateSerializer : JsonContentPolymorphicSerializer<WidgetState>(WidgetState::class) {
     override fun selectDeserializer(element: JsonElement): DeserializationStrategy<WidgetState> {
-        val discriminator = element.jsonObject["type"]?.jsonPrimitive?.content
+        val discriminator = element.jsonObject["type"]?.jsonPrimitive?.content ?: element.jsonObject["type2"]?.jsonPrimitive?.content
         return when (discriminator) {
             CardState::class.simpleName -> CardState.serializer()
             BottomSheetState::class.simpleName -> BottomSheetState.serializer()
@@ -41,8 +127,7 @@ object WidgetStateSerializer : JsonContentPolymorphicSerializer<WidgetState>(Wid
     }
 }
 
-object ComponentStateSerializer :
-    JsonContentPolymorphicSerializer<ComponentState>(ComponentState::class) {
+object ComponentStateSerializer : JsonContentPolymorphicSerializer<ComponentState>(ComponentState::class) {
     override fun selectDeserializer(element: JsonElement): DeserializationStrategy<ComponentState> {
         val discriminator = element.jsonObject["type"]?.jsonPrimitive?.content
         return when (discriminator) {
@@ -74,23 +159,23 @@ var count = 0
 fun auto() = ID(id = "Auto-${count++}", scope = "")
 fun id(value: String) = ID(id = value, scope = "")
 
-@Serializable
-@SerialName("SConfig")
+@Serializable()
+@SerialName("ScreenConfig")
 data class ScreenConfig(
     val id: ID = auto(),
     val lightColorScheme: ColorSchemeState? = null,
     val darkColorScheme: ColorSchemeState? = null,
-    val state: List<Widget> = emptyList(),
+    val state: List<Element<out State>> = emptyList(),
 ) {
     @Serializable
     @SerialName("ID")
     data class ID(val id: String, val scope: String)
 
-    @Serializable
+    @Serializable()
     @SerialName("Element")
-    sealed class Element {
+    sealed class Element<S : State> {
         abstract val id: ID
-        abstract val state: State
+        abstract val state: S
         abstract val fallback: Fallback
 
         abstract val triggerActions: List<TriggerAction>
@@ -98,6 +183,7 @@ data class ScreenConfig(
     }
 
     @Serializable
+    @SerialName("Meta")
     sealed class Meta {
         @Serializable
         @SerialName("None")
@@ -105,6 +191,7 @@ data class ScreenConfig(
     }
 
     @Serializable
+    @SerialName("TriggerAction")
     sealed class TriggerAction {
         abstract val meta: Meta
         abstract val action: Action
@@ -154,27 +241,30 @@ data class ScreenConfig(
 
     @Serializable
     @SerialName("Widget")
-    data class Widget(
+    data class Widget<S : WidgetState>(
         override val id: ID = auto(),
-        override val state: WidgetState,
+        override val state: S,
         override val fallback: Fallback = Fallback.Hide,
         override val triggerActions: List<TriggerAction> = emptyList(),
         override val listeners: List<RemoteAction> = emptyList(),
-    ) : Element()
+    ) : Element<WidgetState>()
 
     @Serializable
     @SerialName("Component")
-    data class Component(
+    data class Component<S : ComponentState>(
         override val id: ID = auto(),
-        override val state: ComponentState,
+        override val state: S,
         override val fallback: Fallback = Fallback.Hide,
         override val triggerActions: List<TriggerAction> = emptyList(),
         override val listeners: List<RemoteAction> = emptyList(),
-    ) : Element()
+    ) : Element<ComponentState>()
 
     @Serializable
     @SerialName("Fallback")
     sealed class Fallback {
+
+        @Serializable
+        @SerialName("UI")
         data class UI(
             val id: ID,
             val state: State,

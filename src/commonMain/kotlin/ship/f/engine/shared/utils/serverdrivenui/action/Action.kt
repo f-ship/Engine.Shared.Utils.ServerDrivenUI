@@ -15,7 +15,7 @@ interface Client {
     val stateMap: MutableMap<ID, StateHolder<out State>>
     // TODO May not need this
     // TODO Turns out this will most likely replace the stateMap entirely, would also be good to replace the shadow map also
-    val elementMap: MutableMap<ID, Element>
+    val elementMap: MutableMap<ID, Element<out State>>
 
     var banner: Fallback?
 
@@ -90,7 +90,7 @@ sealed class Action {
     abstract val targetIds: List<Target>
 
     abstract fun execute(
-        element: Element,
+        element: Element<out State>,
         client: Client,
         meta: Meta = None,
     )
@@ -101,7 +101,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
-            element: Element,
+            element: Element<out State>,
             client: Client,
             meta: Meta,
         ) {
@@ -116,7 +116,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
-            element: Element,
+            element: Element<out State>,
             client: Client,
             meta: Meta,
         ) {
@@ -131,7 +131,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
-            element: Element,
+            element: Element<out State>,
             client: Client,
             meta: Meta,
         ) {
@@ -149,7 +149,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Match() {
         override fun execute(
-            element: Element,
+            element: Element<out State>,
             client: Client,
             meta: Meta,
         ) {
@@ -163,7 +163,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Match() {
         override fun execute(
-            element: Element,
+            element: Element<out State>,
             client: Client,
             meta: Meta,
         ) {
@@ -177,7 +177,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Match() {
         override fun execute(
-            element: Element,
+            element: Element<out State>,
             client: Client,
             meta: Meta,
         ) {
@@ -191,7 +191,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Match() {
         override fun execute(
-            element: Element,
+            element: Element<out State>,
             client: Client,
             meta: Meta,
         ) {
@@ -205,7 +205,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Match() {
         override fun execute(
-            element: Element,
+            element: Element<out State>,
             client: Client,
             meta: Meta,
         ) {
@@ -219,7 +219,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Match() {
         override fun execute(
-            element: Element,
+            element: Element<out State>,
             client: Client,
             meta: Meta,
         ) {
@@ -236,7 +236,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
-            element: Element,
+            element: Element<out State>,
             client: Client,
             meta: Meta,
         ) {
@@ -250,7 +250,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
-            element: Element,
+            element: Element<out State>,
             client: Client,
             meta: Meta,
         ) {
@@ -264,7 +264,7 @@ sealed class Action {
         override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
-            element: Element,
+            element: Element<out State>,
             client: Client,
             meta: Meta,
         ) {
