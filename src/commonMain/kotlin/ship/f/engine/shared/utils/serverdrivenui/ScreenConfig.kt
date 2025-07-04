@@ -11,7 +11,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.ID
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.Meta.None
 import ship.f.engine.shared.utils.serverdrivenui.action.Action
-import ship.f.engine.shared.utils.serverdrivenui.action.Client
+import ship.f.engine.shared.utils.serverdrivenui.action.ClientHolder.getClient
 import ship.f.engine.shared.utils.serverdrivenui.action.RemoteAction
 import ship.f.engine.shared.utils.serverdrivenui.state.*
 
@@ -187,12 +187,12 @@ data class ScreenConfig(
             is Widget<*> -> update(state = state)
         }
 
-        inline fun <reified T : TriggerAction> trigger(c: Client) {
+        inline fun <reified T : TriggerAction> trigger() {
             triggerActions.filterIsInstance<T>().forEach { triggerAction ->
                 triggerAction.action.execute(
                     //TODO We need to pull target out into the data structure for the triggers, or maybe onto the action
                     element = this,
-                    client = c,
+                    client = getClient(),
                 )
             }
         }

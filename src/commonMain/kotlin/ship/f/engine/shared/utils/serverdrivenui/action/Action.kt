@@ -10,6 +10,12 @@ import ship.f.engine.shared.utils.serverdrivenui.state.Valid
 
 fun <K, V> Map<K, V>.fGet(key: K): V = get(key) ?: error("Key $key not found in $this")
 
+object ClientHolder {
+    private val clients = mutableListOf<Client>()
+    fun addClient(client: Client) { clients.add(client) }
+    fun getClient() = clients.last()
+}
+
 interface Client {
     val stateMap: MutableMap<ID, StateHolder<out State>>
 
@@ -29,6 +35,8 @@ interface Client {
         elementMap[element.id] = element
         postElementUpdateHook(element)
         element.listeners.forEach { listener ->
+            println(elementMap)
+            val eM = elementMap
             val e = elementMap.fGet(listener.id)
             listener.action.execute(e, this)
             postUpdateHook(id = listener.id, stateHolder = stateMap.fGet(listener.id))
