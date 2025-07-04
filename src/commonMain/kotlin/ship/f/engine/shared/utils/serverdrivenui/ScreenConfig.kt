@@ -11,6 +11,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.ID
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.Meta.None
 import ship.f.engine.shared.utils.serverdrivenui.action.Action
+import ship.f.engine.shared.utils.serverdrivenui.action.Client
 import ship.f.engine.shared.utils.serverdrivenui.action.RemoteAction
 import ship.f.engine.shared.utils.serverdrivenui.state.*
 
@@ -180,6 +181,21 @@ data class ScreenConfig(
 
         abstract val triggerActions: List<TriggerAction>
         abstract val listeners: List<RemoteAction>
+
+        fun updateState(state: State) = when (this) {
+            is Component<*> -> update(state = state)
+            is Widget<*> -> update(state = state)
+        }
+
+        inline fun <reified T : TriggerAction> trigger(c: Client) {
+            triggerActions.filterIsInstance<T>().forEach { triggerAction ->
+                triggerAction.action.execute(
+                    //TODO We need to pull target out into the data structure for the triggers, or maybe onto the action
+                    element = this,
+                    client = c,
+                )
+            }
+        }
     }
 
     @Serializable
@@ -247,7 +263,12 @@ data class ScreenConfig(
         override val fallback: Fallback = Fallback.Hide,
         override val triggerActions: List<TriggerAction> = emptyList(),
         override val listeners: List<RemoteAction> = emptyList(),
-    ) : Element<WidgetState>()
+    ) : Element<WidgetState>() {
+        fun update(state: State) = copy(state = state as S)
+        fun update(block: S.() -> S): Widget<S> {
+            return copy(state = block(this.state))
+        }
+    }
 
     @Serializable
     @SerialName("Component")
@@ -257,7 +278,12 @@ data class ScreenConfig(
         override val fallback: Fallback = Fallback.Hide,
         override val triggerActions: List<TriggerAction> = emptyList(),
         override val listeners: List<RemoteAction> = emptyList(),
-    ) : Element<ComponentState>()
+    ) : Element<ComponentState>() {
+        fun update(state: State) = copy(state = state as S)
+        fun update(block: S.() -> S): Component<S> {
+            return copy(state = block(this.state))
+        }
+    }
 
     @Serializable
     @SerialName("Fallback")

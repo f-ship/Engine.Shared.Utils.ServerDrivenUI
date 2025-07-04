@@ -7,12 +7,12 @@ import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.Meta.None
 import ship.f.engine.shared.utils.serverdrivenui.measureInMillis
 import ship.f.engine.shared.utils.serverdrivenui.state.State
 import ship.f.engine.shared.utils.serverdrivenui.state.Valid
-import ship.f.engine.shared.utils.serverdrivenui.state.Value
 
-fun <K, V> Map<K,V>.fGet(key: K): V = get(key) ?: error("Key $key not found in $this")
+fun <K, V> Map<K, V>.fGet(key: K): V = get(key) ?: error("Key $key not found in $this")
 
 interface Client {
     val stateMap: MutableMap<ID, StateHolder<out State>>
+
     // TODO May not need this
     // TODO Turns out this will most likely replace the stateMap entirely, would also be good to replace the shadow map also
     val elementMap: MutableMap<ID, Element<out State>>
@@ -25,12 +25,23 @@ interface Client {
         val listeners: List<RemoteAction> = listOf(),
     )
 
+    fun updateState(element: Element<out State>) = measureInMillis("updateState: ${element.id}")  {
+        elementMap[element.id] = element
+        postElementUpdateHook(element)
+        element.listeners.forEach { listener ->
+            val e = elementMap.fGet(listener.id)
+            listener.action.execute(e, this)
+            postUpdateHook(id = listener.id, stateHolder = stateMap.fGet(listener.id))
+        }
+    }
+
     /**
      * Currently need to messily have two implementations here for the same thing as we are updating the state too many times otherwise.
      * Need to create a more intelligent way to update the state and another process to propagate state to listeners.
      * Even though the element shouldn't change outside the state, maybe I should do the state changes on that level
      */
     fun updateState(id: ID, state: State) = measureInMillis("updateState: $id") {
+
         elementMap.fGet(id).listeners.forEach { listener ->
             val e = elementMap.fGet(listener.id)
             listener.action.execute(e, this)
@@ -55,6 +66,7 @@ interface Client {
     }
 
     fun postUpdateHook(id: ID, stateHolder: StateHolder<out State>)
+    fun postElementUpdateHook(element: Element<out State>)
 }
 
 @Serializable
@@ -67,9 +79,11 @@ data class Target(
         @Serializable
         @SerialName("None")
         object None : Descendants()
+
         @Serializable
         @SerialName("Immediate")
         object Immediate : Descendants()
+
         @Serializable
         @SerialName("All")
         object All : Descendants()
@@ -223,9 +237,11 @@ sealed class Action {
             client: Client,
             meta: Meta,
         ) {
-            val valid = targetIds.mapNotNull { client.stateMap.fGet(it.id).state as? Valid<*> }.all { it.valid == true }
+
+            val valid = targetIds.mapNotNull { client.elementMap.fGet(it.id).state as? Valid<*> }.all { it.valid == true }
             (element.state as? Valid<*>)?.copyValid(valid)?.let { state ->
-                client.updateState2( element.id, state)
+                client.updateState(element.updateState(state))
+//                client.updateState2(element.id, state)
             }
         }
     }
@@ -240,7 +256,7 @@ sealed class Action {
             client: Client,
             meta: Meta,
         ) {
-            client.updateState(element.id, element.state)
+            client.updateState(element)
         }
     }
 
@@ -268,12 +284,12 @@ sealed class Action {
             client: Client,
             meta: Meta,
         ) {
-            val toUpdate = client.stateMap.fGet(element.id).state as? Value<*>
-            val update = client.stateMap.fGet(targetIds.first().id).state as? Value<*>
-            if (toUpdate != null && update != null){
-                val updated = toUpdate.copyValue(v = update.value)
-                client.updateState(element.id, updated)
-            }
+//            val toUpdate = client.stateMap.fGet(element.id).state as? Value<*>
+//            val update = client.stateMap.fGet(targetIds.first().id).state as? Value<*>
+//            if (toUpdate != null && update != null) {
+//                val updated = toUpdate.copyValue(v = update.value)
+//                client.updateState(element.id, updated)
+//            }
         }
     }
 }
