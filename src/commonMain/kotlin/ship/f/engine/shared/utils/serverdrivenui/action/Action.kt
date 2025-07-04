@@ -17,63 +17,18 @@ object ClientHolder {
 }
 
 interface Client {
-    val stateMap: MutableMap<ID, StateHolder<out State>>
-
-    // TODO May not need this
-    // TODO Turns out this will most likely replace the stateMap entirely, would also be good to replace the shadow map also
     val elementMap: MutableMap<ID, Element<out State>>
 
     var banner: Fallback?
 
-    @Serializable
-    data class StateHolder<T : State>(
-        val state: T,
-        val listeners: List<RemoteAction> = listOf(),
-    )
-
     fun updateState(element: Element<out State>) = measureInMillis("updateState: ${element.id}")  {
         elementMap[element.id] = element
-        postElementUpdateHook(element)
         element.listeners.forEach { listener ->
-            println(elementMap)
-            val eM = elementMap
-            val e = elementMap.fGet(listener.id)
-            listener.action.execute(e, this)
-            postUpdateHook(id = listener.id, stateHolder = stateMap.fGet(listener.id))
+            listener.action.execute(elementMap.fGet(listener.id), this)
         }
+        postElementUpdateHook(element)
     }
 
-    /**
-     * Currently need to messily have two implementations here for the same thing as we are updating the state too many times otherwise.
-     * Need to create a more intelligent way to update the state and another process to propagate state to listeners.
-     * Even though the element shouldn't change outside the state, maybe I should do the state changes on that level
-     */
-    fun updateState(id: ID, state: State) = measureInMillis("updateState: $id") {
-
-        elementMap.fGet(id).listeners.forEach { listener ->
-            val e = elementMap.fGet(listener.id)
-            listener.action.execute(e, this)
-            postUpdateHook(id = listener.id, stateHolder = stateMap.fGet(listener.id))
-        }
-    }
-
-    /**
-     * The reason this exists is that this first updates it's own state then propagates it's state to listeners
-     * The above method only propagates state to listeners, as the state itself has been updated on the UI
-     */
-    fun updateState2(id: ID, state: State) = measureInMillis("updateState: $id") {
-        val oldStateHolder = stateMap.fGet(id)
-        val stateHolder = StateHolder(state = state, listeners = oldStateHolder.listeners)
-        stateMap[id] = stateHolder
-        postUpdateHook(id = id, stateHolder = stateHolder)
-        elementMap.fGet(id).listeners.forEach { listener ->
-            val e = elementMap.fGet(listener.id)
-            listener.action.execute(e, this)
-            postUpdateHook(id = listener.id, stateHolder = stateMap.fGet(listener.id))
-        }
-    }
-
-    fun postUpdateHook(id: ID, stateHolder: StateHolder<out State>)
     fun postElementUpdateHook(element: Element<out State>)
 }
 
@@ -249,7 +204,6 @@ sealed class Action {
             val valid = targetIds.mapNotNull { client.elementMap.fGet(it.id).state as? Valid<*> }.all { it.valid == true }
             (element.state as? Valid<*>)?.copyValid(valid)?.let { state ->
                 client.updateState(element.updateState(state))
-//                client.updateState2(element.id, state)
             }
         }
     }
