@@ -1,6 +1,7 @@
 package ship.f.engine.shared.utils.serverdrivenui.client
 
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig
+import ship.f.engine.shared.utils.serverdrivenui.action.Meta
 import ship.f.engine.shared.utils.serverdrivenui.ext.fGet
 import ship.f.engine.shared.utils.serverdrivenui.ext.measureInMillis
 import ship.f.engine.shared.utils.serverdrivenui.state.State
@@ -10,6 +11,11 @@ interface Client {
      * The map of elements that the client keeps of track off
      */
     val elementMap: MutableMap<ScreenConfig.ID, ScreenConfig.Element<out State>>
+
+    /**
+     * Map used as session storage for context that may be required by the server but not important for the client
+     */
+    val metaMap: MutableMap<ScreenConfig.ID, Meta>
 
     /**
      * When the server sends the client a component, and it can't render, the component will be rendered with fallback behavior.
