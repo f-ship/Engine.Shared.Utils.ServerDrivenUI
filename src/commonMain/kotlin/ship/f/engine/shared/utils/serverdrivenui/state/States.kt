@@ -2,21 +2,14 @@ package ship.f.engine.shared.utils.serverdrivenui.state
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import ship.f.engine.shared.utils.serverdrivenui.ComponentStateSerializer
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.Element
-import ship.f.engine.shared.utils.serverdrivenui.WidgetStateSerializer
+import ship.f.engine.shared.utils.serverdrivenui.ext.getRandomString
+import ship.f.engine.shared.utils.serverdrivenui.json.ComponentStateSerializer
+import ship.f.engine.shared.utils.serverdrivenui.json.WidgetStateSerializer
 
-
-fun getRandomString(length: Int = 16) : String {
-    val allowedChars = ('A'..'Z') + ('a'..'z') + ('0'..'9')
-    return (1..length)
-        .map { allowedChars.random() }
-        .joinToString("")
-}
 @Serializable
 @SerialName("State")
 sealed class State {
-    open var globalCopy : (state: State) -> State = { error("Not implemented") }
     val id: String = getRandomString() // Has the change to collide so need to do something smarter
 }
 
@@ -405,7 +398,6 @@ data class ToggleState(
     val value: Boolean = false,
     val initialState: Boolean? = null,
     override val valid: Boolean? = null,
-//    val type: String = "ToggleState",
 ) : ComponentState(), Valid<ToggleState> {
     override fun copyValid(v: Boolean) = copy(valid = v)
 }
@@ -414,42 +406,36 @@ data class ToggleState(
 @SerialName("DropDownState")
 data class DropDownState(
     val value: String,
-//    val type: String = "DropDownState",
 ) : ComponentState()
 
 @Serializable
 @SerialName("RadioListState")
 data class RadioListState(
     val value: String,
-//    val type: String = "RadioListState",
 ) : ComponentState()
 
 @Serializable
 @SerialName("TickListState")
 data class TickListState(
     val value: String,
-//    val type: String = "TickListState",
 ) : ComponentState()
 
 @Serializable
 @SerialName("SearchState")
 data class SearchState(
     val value: String,
-//    val type: String = "SearchState",
 ) : ComponentState()
 
 @Serializable
 @SerialName("MenuState")
 data class MenuState(
     val value: String,
-//    val type: String = "MenuState",
 ) : ComponentState()
 
 @Serializable
 @SerialName("BottomRowState")
 data class BottomRowState(
     val value: String,
-//    val type: String = "BottomRowState",
 ) : ComponentState()
 
 @Serializable
@@ -457,7 +443,6 @@ data class BottomRowState(
 data class ImageState(
     val src: Source,
     val accessibilityLabel: String? = null,
-//    val type: String = "ImageState",
 ) : ComponentState() {
     @Serializable
     sealed class Source {
@@ -478,14 +463,12 @@ data class ImageState(
 @SerialName("VideoState")
 data class VideoState(
     val value: String,
-//    val type: String = "VideoState",
 ) : ComponentState()
 
 @Serializable
 @SerialName("CustomState")
 data class CustomState(
     val value: String,
-//    val type: String = "CustomState",
 ) : ComponentState()
 
 @Serializable
@@ -494,7 +477,6 @@ data class ButtonState(
     val value: String,
     val buttonType: ButtonType = ButtonType.Primary,
     override val valid: Boolean? = null,
-//    val type: String = "ButtonState",
 ) : ComponentState(), Valid<ButtonState> {
     override fun copyValid(v: Boolean) = copy(valid = v)
 
@@ -515,56 +497,48 @@ data class ButtonState(
 @SerialName("IconState")
 data class IconState(
     val value: String,
-//    val type: String = "IconState",
 ) : ComponentState()
 
 @Serializable
 @SerialName("LoadingShimmerState")
 data class LoadingShimmerState(
     val value: String,
-//    val type: String = "LoadingShimmerState",
 ) : ComponentState()
 
 @Serializable
 @SerialName("DialogState")
 data class DialogState(
     val value: String,
-//    val type: String = "DialogState",
 ) : ComponentState()
 
 @Serializable
 @SerialName("SnackBarState")
 data class SnackBarState(
     val value: String,
-//    val type: String = "SnackBarState",
 ) : ComponentState()
 
 @Serializable
 @SerialName("LoaderState")
 data class LoaderState(
     val value: String,
-//    val type: String = "LoaderState",
 ) : ComponentState()
 
 @Serializable
 @SerialName("UnknownComponentState")
 data class UnknownComponentState(
     val value: String,
-//    val type: String = "UnknownComponentState",
 ) : ComponentState()
 
 @Serializable
 @SerialName("CardState")
 data class CardState(
     override val children: List<Element<out State>> = listOf(),
-//    val type: String = "CardState",
 ) : WidgetState()
 
 @Serializable
 @SerialName("BottomSheetState")
 data class BottomSheetState(
     override val children: List<Element<out State>> = listOf(),
-//    val type: String = "BottomSheetState",
 ) : WidgetState()
 
 @Serializable
@@ -572,7 +546,6 @@ data class BottomSheetState(
 data class RowState(
     override val children: List<Element<out State>> = listOf(),
     val arrangement: Arrangement,
-//    val type: String = "RowState",
 ) : WidgetState()
 
 @Serializable
@@ -580,40 +553,34 @@ data class RowState(
 data class ColumnState(
     override val children: List<Element<out State>> = listOf(),
     val arrangement: Arrangement = Arrangement.Center,
-    val type2: String = "ColumnState",
 ) : WidgetState()
 
 @Serializable
 @SerialName("FlexRowState")
 data class FlexRowState(
     override val children: List<Element<out State>> = listOf(),
-//    val type: String = "FlexRowState",
 ) : WidgetState()
 
 @Serializable
 @SerialName("FlexColumnState")
 data class FlexColumnState(
     override val children: List<Element<out State>> = listOf(),
-//    val type: String = "FlexColumnState",
 ) : WidgetState()
 
 @Serializable
 @SerialName("GridState")
 data class GridState(
     override val children: List<Element<out State>> = listOf(),
-//    val type: String = "GridState",
 ) : WidgetState()
 
 @Serializable
 @SerialName("FlexGridState")
 data class FlexGridState(
     override val children: List<Element<out State>> = listOf(),
-//    val type: String = "FlexGridState",
 ) : WidgetState()
 
 @Serializable
 @SerialName("UnknownWidgetState")
 data class UnknownWidgetState(
     override val children: List<Element<out State>> = listOf(),
-//    val type: String = "UnknownWidgetState",
 ) : WidgetState()

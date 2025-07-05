@@ -1,0 +1,53 @@
+package ship.f.engine.shared.utils.serverdrivenui.action
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+@SerialName("TriggerAction")
+sealed class Trigger {
+    abstract val meta: Meta
+    abstract val action: Action
+
+    @Serializable
+    @SerialName("OnClickTrigger")
+    data class OnClickTrigger(
+        override val meta: Meta = Meta.None,
+        override val action: Action,
+    ) : Trigger()
+
+    @Serializable
+    @SerialName("OnHoldTrigger")
+    data class OnHoldTrigger(
+        override val meta: Meta = Meta.None,
+        override val action: Action,
+    ) : Trigger()
+
+    @Serializable
+    @SerialName("OnPressTrigger") // TODO what is the difference between this and OnClickTrigger
+    data class OnPressTrigger(
+        override val meta: Meta = Meta.None,
+        override val action: Action,
+    ) : Trigger()
+
+    @Serializable
+    @SerialName("OnFieldUpdate")
+    data class OnFieldUpdateTrigger(
+        override val meta: Meta = Meta.None,
+        override val action: Action,
+    ) : Trigger()
+
+    @Serializable
+    @SerialName("OnToggleUpdateTrigger")
+    data class OnToggleUpdateTrigger(
+        override val meta: Meta = Meta.None,
+        override val action: Action,
+    ) : Trigger()
+
+    @Serializable
+    @SerialName("OnStateUpdate")
+    data class OnStateUpdateTrigger(
+        override val meta: Meta = Meta.None,
+        override val action: Action,
+    ) : Trigger()
+}
