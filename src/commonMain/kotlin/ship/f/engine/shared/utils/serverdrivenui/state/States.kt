@@ -17,6 +17,7 @@ sealed class State {
 @SerialName("WidgetState")
 sealed class WidgetState : State() {
     abstract val children: List<Element<out State>>
+    abstract fun copyChildren(children: List<Element<out State>>): WidgetState
 
     fun spaceState(
         value: Int = 16,
@@ -259,7 +260,6 @@ sealed class ComponentState : State()
 @SerialName("SpaceState")
 data class SpaceState(
     val value: Int = 16,
-//    val type: String = "SpaceState",
 ) : ComponentState()
 
 @Serializable
@@ -267,7 +267,6 @@ data class SpaceState(
 data class TextState(
     override val value: String,
     val style: Style = Style.BodyMedium,
-//    val type: String = "TextState",
 ) : ComponentState(), Value<TextState> {
     override fun copyValue(v: String) = this.copy(value = v)
 
@@ -332,7 +331,6 @@ data class FieldState(
     val validations: List<Validation> = listOf(),
     val restrictions: List<Restriction> = listOf(),
     val localState: LocalState = LocalState(),
-//    val type: String = "FieldState",
 ) : ComponentState(), Value<FieldState>, Valid<FieldState> {
     override fun copyValue(v: String) = this.copy(value = v)
     override fun copyValid(v: Boolean) = this.copy(valid = v)
@@ -535,54 +533,72 @@ data class UnknownComponentState(
 @SerialName("CardState")
 data class CardState(
     override val children: List<Element<out State>> = listOf(),
-) : WidgetState()
+) : WidgetState() {
+    override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
+}
 
 @Serializable
 @SerialName("BottomSheetState")
 data class BottomSheetState(
     override val children: List<Element<out State>> = listOf(),
-) : WidgetState()
+) : WidgetState() {
+    override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
+}
 
 @Serializable
 @SerialName("RowState")
 data class RowState(
     override val children: List<Element<out State>> = listOf(),
     val arrangement: Arrangement,
-) : WidgetState()
+) : WidgetState() {
+    override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
+}
 
 @Serializable
 @SerialName("ColumnState")
 data class ColumnState(
     override val children: List<Element<out State>> = listOf(),
     val arrangement: Arrangement = Arrangement.Center,
-) : WidgetState()
+) : WidgetState() {
+    override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
+}
 
 @Serializable
 @SerialName("FlexRowState")
 data class FlexRowState(
     override val children: List<Element<out State>> = listOf(),
-) : WidgetState()
+) : WidgetState() {
+    override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
+}
 
 @Serializable
 @SerialName("FlexColumnState")
 data class FlexColumnState(
     override val children: List<Element<out State>> = listOf(),
-) : WidgetState()
+) : WidgetState() {
+    override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
+}
 
 @Serializable
 @SerialName("GridState")
 data class GridState(
     override val children: List<Element<out State>> = listOf(),
-) : WidgetState()
+) : WidgetState() {
+    override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
+}
 
 @Serializable
 @SerialName("FlexGridState")
 data class FlexGridState(
     override val children: List<Element<out State>> = listOf(),
-) : WidgetState()
+) : WidgetState() {
+    override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
+}
 
 @Serializable
 @SerialName("UnknownWidgetState")
 data class UnknownWidgetState(
     override val children: List<Element<out State>> = listOf(),
-) : WidgetState()
+) : WidgetState() {
+    override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
+}

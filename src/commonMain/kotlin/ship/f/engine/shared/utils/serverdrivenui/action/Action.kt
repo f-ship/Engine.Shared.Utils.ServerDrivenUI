@@ -3,7 +3,7 @@ package ship.f.engine.shared.utils.serverdrivenui.action
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.Element
-import ship.f.engine.shared.utils.serverdrivenui.action.Meta.None
+import ship.f.engine.shared.utils.serverdrivenui.action.Meta.*
 import ship.f.engine.shared.utils.serverdrivenui.client.Client
 import ship.f.engine.shared.utils.serverdrivenui.ext.fGet
 import ship.f.engine.shared.utils.serverdrivenui.state.State
@@ -36,6 +36,7 @@ sealed class Action {
     @Serializable
     @SerialName("Navigate")
     data class Navigate(
+        val configMeta: Meta,
         override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
@@ -43,9 +44,13 @@ sealed class Action {
             client: Client,
             meta: Meta,
         ) {
-
+            when(configMeta){
+                is ScreenConfigMeta -> client.navigate(configMeta.screenConfig)
+                is ElementConfigMeta -> client.navigate(configMeta.elementConfig)
+                is Json -> Unit
+                is None -> Unit
+            }
         }
-
     }
 
     /**

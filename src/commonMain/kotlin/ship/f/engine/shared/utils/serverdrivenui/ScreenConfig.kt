@@ -20,7 +20,7 @@ data class ScreenConfig(
     val id: ID = auto(),
     val lightColorScheme: ColorSchemeState? = null,
     val darkColorScheme: ColorSchemeState? = null,
-    val state: List<Element<out State>> = emptyList(),
+    val children: List<Element<out State>> = emptyList(),
 ) {
     @Serializable
     @SerialName("ID")
@@ -71,7 +71,10 @@ data class ScreenConfig(
         fun update(
             state: State = this.state,
             listeners: List<RemoteAction> = this.listeners,
-        ) = copy(state = state as S)
+        ) = copy(
+            state = state as S,
+            listeners = listeners,
+        )
         fun update(block: S.() -> S): Widget<S> {
             return copy(state = block(this.state))
         }
@@ -89,7 +92,10 @@ data class ScreenConfig(
         fun update(
             state: State = this.state,
             listeners: List<RemoteAction> = this.listeners,
-        ) = copy(state = state as S)
+        ) = copy(
+            state = state as S,
+            listeners = listeners,
+        )
         fun update(block: S.() -> S): Component<S> {
             return copy(state = block(this.state))
         }
