@@ -192,7 +192,7 @@ sealed class Action {
 
             val valid = targetIds.mapNotNull { client.elementMap.fGet(it.id).state as? Valid<*> }.all { it.valid == true }
             (element.state as? Valid<*>)?.copyValid(valid)?.let { state ->
-                client.updateState(element.updateState(state))
+                client.updateState(element.updateElement(state))
             }
         }
     }
@@ -252,7 +252,7 @@ sealed class Action {
         ) {
             val targetElement = client.elementMap.fGet(targetIds.first().id).state as? Value<*> ?: error("Target element is not a value")
             val updatedElement = (element as Element<Value<*>>).state.copyValue(targetElement.value)
-            client.updateState(element.updateState(updatedElement))
+            client.updateState(element.updateElement(updatedElement))
         }
     }
 }

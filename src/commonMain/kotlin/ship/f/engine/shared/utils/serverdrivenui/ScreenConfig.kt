@@ -36,11 +36,19 @@ data class ScreenConfig(
         abstract val triggers: List<Trigger>
         abstract val listeners: List<RemoteAction>
 
-        fun updateState(state: State) = when (this) {
-            is Component<*> -> update(state = state)
-            is Widget<*> -> update(state = state)
+        fun updateElement(
+            state: State = this.state,
+            listeners: List<RemoteAction> = this.listeners,
+        ) = when (this) {
+            is Component<*> -> update(
+                state = state,
+                listeners = listeners,
+            )
+            is Widget<*> -> update(
+                state = state,
+                listeners = listeners,
+            )
         }
-
         inline fun <reified T : Trigger> trigger() {
             triggers.filterIsInstance<T>().forEach { triggerAction ->
                 triggerAction.action.execute(
@@ -60,7 +68,10 @@ data class ScreenConfig(
         override val triggers: List<Trigger> = emptyList(),
         override val listeners: List<RemoteAction> = emptyList(),
     ) : Element<WidgetState>() {
-        fun update(state: State) = copy(state = state as S)
+        fun update(
+            state: State = this.state,
+            listeners: List<RemoteAction> = this.listeners,
+        ) = copy(state = state as S)
         fun update(block: S.() -> S): Widget<S> {
             return copy(state = block(this.state))
         }
@@ -75,7 +86,10 @@ data class ScreenConfig(
         override val triggers: List<Trigger> = emptyList(),
         override val listeners: List<RemoteAction> = emptyList(),
     ) : Element<ComponentState>() {
-        fun update(state: State) = copy(state = state as S)
+        fun update(
+            state: State = this.state,
+            listeners: List<RemoteAction> = this.listeners,
+        ) = copy(state = state as S)
         fun update(block: S.() -> S): Component<S> {
             return copy(state = block(this.state))
         }

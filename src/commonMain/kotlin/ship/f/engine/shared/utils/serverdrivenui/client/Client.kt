@@ -1,28 +1,39 @@
 package ship.f.engine.shared.utils.serverdrivenui.client
 
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig
+import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.ID
 import ship.f.engine.shared.utils.serverdrivenui.action.Meta
 import ship.f.engine.shared.utils.serverdrivenui.ext.fGet
 import ship.f.engine.shared.utils.serverdrivenui.ext.measureInMillis
 import ship.f.engine.shared.utils.serverdrivenui.state.State
 
-interface Client {
+abstract class Client {
     /**
      * The map of elements that the client keeps of track off
      */
-    val elementMap: MutableMap<ScreenConfig.ID, ScreenConfig.Element<out State>>
+    val elementMap: MutableMap<ID, ScreenConfig.Element<out State>> = mutableMapOf()
+
+    /**
+     * Map of screenConfigs that have been properly initialized
+     */
+    val initScreenConfigMap: MutableMap<ID, Boolean> = mutableMapOf()
+
+    /**
+     * Backstack of screenConfigs that have been visited
+     */
+    val backstack: MutableList<ScreenConfig> = mutableListOf()
 
     /**
      * Map used as session storage for context that may be required by the server but not important for the client
      */
-    val metaMap: MutableMap<ScreenConfig.ID, Meta>
+    val metaMap: MutableMap<ID, Meta> = mutableMapOf()
 
     /**
      * When the server sends the client a component, and it can't render, the component will be rendered with fallback behavior.
      * Typically, a component will hide by default but may also show an optional update required banner.
      * In some cases if a feature is critical, a mandatory update required banner may be shown.
      */
-    var banner: ScreenConfig.Fallback?
+    var banner: ScreenConfig.Fallback? = null
 
     /**
      * Responsible for first updating the state of the element and then propagating the state to all listeners
@@ -30,7 +41,7 @@ interface Client {
     fun updateState(element: ScreenConfig.Element<out State>) = measureInMillis("updateState: ${element.id}") {
         elementMap[element.id] = element
         propagateState(element)
-        postElementUpdateHook(element)
+        postReactiveUpdate(element)
     }
 
     /**
@@ -49,5 +60,5 @@ interface Client {
      * This is done so that the shared library does not need to depend on composed runtime directly, which should reduce its bundle size.
      * Since the shared library will be included in backend environments, it's imperative to keep the bundle lean to make cold starts fast.
      */
-    fun postElementUpdateHook(element: ScreenConfig.Element<out State>)
+    abstract fun postReactiveUpdate(element: ScreenConfig.Element<out State>)
 }
