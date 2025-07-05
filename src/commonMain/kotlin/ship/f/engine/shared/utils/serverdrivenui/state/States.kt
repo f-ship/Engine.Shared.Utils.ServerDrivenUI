@@ -367,8 +367,10 @@ data class FieldState(
         data object Password : FieldType()
     }
 
-    fun isValid(value: String): String? = validations.firstOrNull {
-        !Regex(it.regex).matches(value) || !(it.isRequired && value.isNotEmpty() || !it.isRequired)
+    fun isError(value: String): String? = validations.firstOrNull {
+        val regexCheck = !Regex(it.regex).matches(value)
+        val isRequiredCheck = it.isRequired && value.isEmpty()
+        regexCheck || isRequiredCheck
     }?.error
 
     fun isRestriction(value: String): Boolean = restrictions.any {
