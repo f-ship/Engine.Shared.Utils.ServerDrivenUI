@@ -67,10 +67,18 @@ abstract class Client {
      * Add elements to a screenConfig
      */
     fun navigate(config: ElementConfig) {
+
+        /**
+         * Used to make all new elements that are being added to become reactive
+         */
         config.elements.forEach {
             setState(it)
             setTriggers(it)
         }
+
+        /**
+         * If the screenConfig exists, then update the children of the screenConfig.
+         */
         val possibleScreenConfig = screenConfigMap[config.inside]
         if (possibleScreenConfig != null) {
             val updatedChildren = combineChildren(possibleScreenConfig.children, config)
@@ -86,6 +94,9 @@ abstract class Client {
             }.toMutableList()
             postScreenConfig()
         } else {
+            /**
+             * If not being added to the route of a screen config then add as a child to an element
+             */
             val element = elementMap.fGet(config.inside)
 
             when (element) {
