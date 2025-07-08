@@ -2,6 +2,7 @@ package ship.f.engine.shared.utils.serverdrivenui
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import ship.f.engine.shared.utils.serverdrivenui.action.Meta
 import ship.f.engine.shared.utils.serverdrivenui.action.RemoteAction
 import ship.f.engine.shared.utils.serverdrivenui.action.Trigger
 import ship.f.engine.shared.utils.serverdrivenui.client.ClientHolder.getClient
@@ -36,6 +37,8 @@ data class ScreenConfig(
         abstract val triggers: List<Trigger>
         abstract val listeners: List<RemoteAction>
 
+        abstract val metas: Map<ID, Meta>
+
         fun updateElement(
             state: State = this.state,
             listeners: List<RemoteAction> = this.listeners,
@@ -51,9 +54,11 @@ data class ScreenConfig(
         }
         inline fun <reified T : Trigger> trigger() {
             triggers.filterIsInstance<T>().forEach { triggerAction ->
+                val client = getClient()
                 triggerAction.action.execute(
                     element = this,
-                    client = getClient(),
+                    client = client,
+                    meta = client.metaMap[triggerAction.metaID] ?: Meta.None(),
                 )
             }
         }
@@ -67,6 +72,7 @@ data class ScreenConfig(
         override val fallback: Fallback = Fallback.Hide,
         override val triggers: List<Trigger> = emptyList(),
         override val listeners: List<RemoteAction> = emptyList(),
+        override val metas: Map<ID, Meta> = mapOf(),
     ) : Element<WidgetState>() {
         fun update(
             state: State = this.state,
@@ -88,6 +94,7 @@ data class ScreenConfig(
         override val fallback: Fallback = Fallback.Hide,
         override val triggers: List<Trigger> = emptyList(),
         override val listeners: List<RemoteAction> = emptyList(),
+        override val metas: Map<ID, Meta> = mapOf(),
     ) : Element<ComponentState>() {
         fun update(
             state: State = this.state,

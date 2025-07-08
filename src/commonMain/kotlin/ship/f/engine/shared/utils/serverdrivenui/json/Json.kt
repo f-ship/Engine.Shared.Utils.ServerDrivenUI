@@ -11,6 +11,7 @@ val json = Json {
     ignoreUnknownKeys = true
     prettyPrint = true
     encodeDefaults = true
+    allowStructuredMapKeys = true
     classDiscriminatorMode = ClassDiscriminatorMode.ALL_JSON_OBJECTS
 
     serializersModule = SerializersModule {

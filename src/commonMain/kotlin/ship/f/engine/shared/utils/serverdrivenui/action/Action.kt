@@ -22,7 +22,7 @@ sealed class Action {
     abstract fun execute(
         element: Element<out State>,
         client: Client,
-        meta: Meta = None,
+        meta: Meta = None(),
     )
 
     /**
@@ -36,7 +36,6 @@ sealed class Action {
     @Serializable
     @SerialName("Navigate")
     data class Navigate(
-        val configMeta: Meta,
         override val targetIds: List<Target> = listOf(),
     ) : Action() {
         override fun execute(
@@ -44,9 +43,9 @@ sealed class Action {
             client: Client,
             meta: Meta,
         ) {
-            when(configMeta){
-                is ScreenConfigMeta -> client.navigate(configMeta.screenConfig)
-                is ElementConfigMeta -> client.navigate(configMeta.elementConfig)
+            when(meta){
+                is ScreenConfigMeta -> client.navigate(meta.screenConfig)
+                is ElementConfigMeta -> client.navigate(meta.elementConfig)
                 is Json -> Unit
                 is None -> Unit
             }

@@ -120,6 +120,7 @@ abstract class Client {
             error("Duplicate ID: ${element.id}")
         }
         elementMap[element.id] = element
+        element.metas.forEach { metaMap[it.key] = it.value }
         createReactiveUpdate(element)
 
         when (element) {
