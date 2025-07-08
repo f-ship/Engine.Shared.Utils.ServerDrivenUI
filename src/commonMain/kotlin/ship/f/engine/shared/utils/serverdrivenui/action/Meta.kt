@@ -22,26 +22,26 @@ sealed class Meta {
     @SerialName("Json")
     data class Json(
         val json: JsonObject,
-        override val id: ID = nextId(),
+        override val id: ID = autoMetaId(),
     ) : Meta()
 
     @Serializable
     @SerialName("ScreenConfig")
     data class ScreenConfigMeta(
         val screenConfig: ScreenConfig,
-        override val id: ID = nextId(),
+        override val id: ID = autoMetaId(),
     ) : Meta()
 
     @Serializable
     @SerialName("ElementConfig")
     data class ElementConfigMeta(
         val elementConfig: ElementConfig,
-        override val id: ID = nextId(),
+        override val id: ID = autoMetaId(),
     ) : Meta()
 
     companion object {
         var metaCount = 0
-        fun nextId() = id("meta-${metaCount++}")
+        fun autoMetaId() = id("meta-${metaCount++}")
         val none = id("None")
     }
 }
