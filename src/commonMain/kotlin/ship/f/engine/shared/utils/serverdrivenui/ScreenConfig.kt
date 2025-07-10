@@ -131,4 +131,8 @@ data class ScreenConfig(
         @SerialName("RequireUpdate")
         data object RequireUpdate : Fallback()
     }
+
+    companion object {
+        val empty = ScreenConfig()
+    }
 }
