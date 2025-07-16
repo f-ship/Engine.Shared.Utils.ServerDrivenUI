@@ -24,7 +24,7 @@ val json = Json {
             subclass(ToggleState::class)
             subclass(DropDownState::class)
             subclass(RadioListState::class)
-            subclass(TickListState::class)
+            subclass(CheckboxState::class)
             subclass(SearchState::class)
             subclass(MenuState::class)
             subclass(BottomRowState::class)
@@ -43,6 +43,7 @@ val json = Json {
         polymorphic(WidgetState::class) {
             subclass(CardState::class)
             subclass(BottomSheetState::class)
+            subclass(StackState::class)
             subclass(RowState::class)
             subclass(ColumnState::class)
             subclass(FlexRowState::class)

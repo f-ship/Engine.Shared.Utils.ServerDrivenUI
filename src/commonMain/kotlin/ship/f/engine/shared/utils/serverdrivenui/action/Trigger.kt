@@ -48,6 +48,13 @@ sealed class Trigger {
     ) : Trigger()
 
     @Serializable
+    @SerialName("OnTickUpdateTrigger")
+    data class OnTickUpdateTrigger(
+        override val metaID: ID = none,
+        override val action: Action,
+    ) : Trigger()
+
+    @Serializable
     @SerialName("OnStateUpdate")
     data class OnStateUpdateTrigger(
         override val metaID: ID = none,

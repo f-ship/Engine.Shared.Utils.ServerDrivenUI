@@ -103,9 +103,9 @@ sealed class WidgetState : State() {
         value = value,
     )
 
-    fun tickListState(
-        value: String = "",
-    ) = TickListState(
+    fun tickState(
+        value: Boolean = false,
+    ) = CheckboxState(
         value = value,
     )
 
@@ -206,7 +206,7 @@ sealed class WidgetState : State() {
     )
 
     fun rowState(
-        arrangement: Arrangement = Arrangement.Center,
+        arrangement: Arrange = Arrange.Center,
         children: List<Element<State>> = listOf(),
     ) = RowState(
         arrangement = arrangement,
@@ -214,7 +214,7 @@ sealed class WidgetState : State() {
     )
 
     fun columnState(
-        arrangement: Arrangement = Arrangement.Center,
+        arrangement: Arrange = Arrange.Center,
         children: List<Element<State>> = listOf(),
     ) = ColumnState(
         arrangement = arrangement,
@@ -267,6 +267,8 @@ data class SpaceState(
 data class TextState(
     override val value: String,
     val style: Style = Style.BodyMedium,
+    val color: Long? = null,
+    val textAlign: STextAlign = STextAlign.Start,
 ) : ComponentState(), Value<TextState> {
     override fun copyValue(v: String) = this.copy(value = v)
 
@@ -415,10 +417,15 @@ data class RadioListState(
 ) : ComponentState()
 
 @Serializable
-@SerialName("TickListState")
-data class TickListState(
-    val value: String,
-) : ComponentState()
+@SerialName("TickState")
+data class CheckboxState(
+    val value: Boolean = false,
+    val initialState: Boolean? = null,
+    val manualPadding: Boolean = false,
+    override val valid: Boolean? = null,
+) : ComponentState(), Valid<CheckboxState> {
+    override fun copyValid(v: Boolean) = copy(valid = v)
+}
 
 @Serializable
 @SerialName("SearchState")
@@ -443,6 +450,7 @@ data class BottomRowState(
 data class ImageState(
     val src: Source,
     val accessibilityLabel: String? = null,
+    val size: Size = DefaultSize,
 ) : ComponentState() {
     @Serializable
     sealed class Source {
@@ -450,6 +458,11 @@ data class ImageState(
         @Serializable
         data class Url(
             val url: String
+        ) : Source()
+
+        @Serializable
+        data class Local(
+            val file: String
         ) : Source()
 
         @Serializable
@@ -476,6 +489,8 @@ data class CustomState(
 data class ButtonState(
     val value: String,
     val buttonType: ButtonType = ButtonType.Primary,
+    val leadingIcon: ImageState.Source? = null,
+    val size: Size = DefaultSize,
     override val valid: Boolean? = null,
 ) : ComponentState(), Valid<ButtonState> {
     override fun copyValid(v: Boolean) = copy(valid = v)
@@ -546,10 +561,22 @@ data class BottomSheetState(
 }
 
 @Serializable
+@SerialName("StackState")
+data class StackState(
+    override val children: List<Element<out State>> = listOf(),
+    val alignment: Align = Align.Center,
+    val size: Size = DefaultSize,
+    val background: Long? = null
+) : WidgetState() {
+    override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
+}
+
+@Serializable
 @SerialName("RowState")
 data class RowState(
     override val children: List<Element<out State>> = listOf(),
-    val arrangement: Arrangement,
+    val arrangement: Arrange = Arrange.Center,
+    val size: Size = DefaultSize,
 ) : WidgetState() {
     override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
 }
@@ -558,7 +585,7 @@ data class RowState(
 @SerialName("ColumnState")
 data class ColumnState(
     override val children: List<Element<out State>> = listOf(),
-    val arrangement: Arrangement = Arrangement.Center,
+    val arrangement: Arrange = Arrange.Center,
 ) : WidgetState() {
     override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
 }
@@ -575,6 +602,7 @@ data class FlexRowState(
 @SerialName("FlexColumnState")
 data class FlexColumnState(
     override val children: List<Element<out State>> = listOf(),
+    val arrangement: Arrange = Arrange.Center,
 ) : WidgetState() {
     override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
 }

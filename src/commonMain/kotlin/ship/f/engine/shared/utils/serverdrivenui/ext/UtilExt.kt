@@ -1,7 +1,9 @@
 package ship.f.engine.shared.utils.serverdrivenui.ext
 
 import kotlinx.datetime.Clock
+import kotlinx.serialization.encodeToString
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig
+import ship.f.engine.shared.utils.serverdrivenui.json.json
 
 /**
  * Used to dangerously get a non-nullable value from a map that should have the value
@@ -41,3 +43,8 @@ fun auto() = ScreenConfig.ID(id = "Auto-${count++}", scope = "")
  * Convenience method used to create an id from a string
  */
 fun id(value: String) = ScreenConfig.ID(id = value, scope = "")
+
+fun ScreenConfig.validate() = json
+    .encodeToString(this)
+    .apply { println(this) }
+    .let { json.decodeFromString<ScreenConfig>(it) }

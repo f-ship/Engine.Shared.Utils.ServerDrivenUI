@@ -40,7 +40,7 @@ object ComponentStateSerializer : JsonContentPolymorphicSerializer<ComponentStat
             ToggleState::class.simpleName -> ToggleState.serializer()
             DropDownState::class.simpleName -> DropDownState.serializer()
             RadioListState::class.simpleName -> RadioListState.serializer()
-            TickListState::class.simpleName -> TickListState.serializer()
+            CheckboxState::class.simpleName -> CheckboxState.serializer()
             SearchState::class.simpleName -> SearchState.serializer()
             MenuState::class.simpleName -> MenuState.serializer()
             BottomRowState::class.simpleName -> BottomRowState.serializer()
