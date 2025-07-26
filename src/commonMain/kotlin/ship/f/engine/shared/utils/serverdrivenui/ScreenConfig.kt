@@ -2,9 +2,11 @@ package ship.f.engine.shared.utils.serverdrivenui
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import ship.f.engine.shared.utils.serverdrivenui.action.DeferredAction
 import ship.f.engine.shared.utils.serverdrivenui.action.Meta
 import ship.f.engine.shared.utils.serverdrivenui.action.RemoteAction
 import ship.f.engine.shared.utils.serverdrivenui.action.Trigger
+import ship.f.engine.shared.utils.serverdrivenui.action.Trigger.DeferredTrigger
 import ship.f.engine.shared.utils.serverdrivenui.client.ClientHolder.getClient
 import ship.f.engine.shared.utils.serverdrivenui.ext.auto
 import ship.f.engine.shared.utils.serverdrivenui.state.ColorSchemeState
@@ -53,12 +55,34 @@ data class ScreenConfig(
             )
         }
         inline fun <reified T : Trigger> trigger() {
+            val client = getClient()
             triggers.filterIsInstance<T>().forEach { triggerAction ->
-                val client = getClient()
-                triggerAction.action.execute(
-                    element = this,
-                    client = client,
-                    meta = client.metaMap[triggerAction.metaID] ?: Meta.None(),
+                when(triggerAction){
+                    is DeferredTrigger -> Unit
+                    else -> {
+                        triggerAction.action.execute(
+                            element = this,
+                            client = client,
+                            meta = client.metaMap[triggerAction.metaID] ?: Meta.None(),
+                        )
+                    }
+                }
+            }
+        }
+
+        fun deferredTrigger(restoredElement: Element<out State>? = null) {
+            val client = getClient()
+            triggers.filterIsInstance<DeferredTrigger>().forEach { triggerAction ->
+                if (client.deferredActions[triggerAction.action.targetIds.first().id] == null) {
+                    client.deferredActions[triggerAction.action.targetIds.first().id] = mutableListOf()
+                }
+                client.deferredActions[triggerAction.action.targetIds.first().id]!!.add(
+                    DeferredAction(
+                        action = triggerAction.action,
+                        id = id,
+                        metaID = triggerAction.metaID,
+                        restoredElement = restoredElement,
+                    )
                 )
             }
         }

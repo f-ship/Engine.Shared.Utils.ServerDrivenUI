@@ -9,8 +9,14 @@ import ship.f.engine.shared.utils.serverdrivenui.json.WidgetStateSerializer
 
 @Serializable
 @SerialName("State")
-sealed class State {
+sealed class State : Visibility<State> {
     val id: String = getRandomString() // Has the change to collide so need to do something smarter
+    open val padding: Padding = Padding()
+    open val size: Size = DefaultSize
+
+    open override val visible: Boolean = true
+
+    override fun copyVisibility(v: Boolean): State = TODO("Not yet implemented for ${this::class.simpleName}")
 }
 
 @Serializable(with = WidgetStateSerializer::class)
@@ -158,9 +164,11 @@ sealed class WidgetState : State() {
     )
 
     fun iconState(
-        value: String,
-    ) = IconState(
-        value = value,
+        image: ImageState.Source,
+        number: Int?,
+    ) = NotificationState(
+        image = image,
+        number = number,
     )
 
     fun loadingShimmerState(
@@ -450,7 +458,9 @@ data class BottomRowState(
 data class ImageState(
     val src: Source,
     val accessibilityLabel: String? = null,
-    val size: Size = DefaultSize,
+    val scaleType: ScaleType = Default,
+    override val padding: Padding = Padding(),
+    override val size: Size = DefaultSize,
 ) : ComponentState() {
     @Serializable
     sealed class Source {
@@ -490,7 +500,8 @@ data class ButtonState(
     val value: String,
     val buttonType: ButtonType = ButtonType.Primary,
     val leadingIcon: ImageState.Source? = null,
-    val size: Size = DefaultSize,
+    override val size: Size = DefaultSize,
+    override val padding: Padding = Padding(),
     override val valid: Boolean? = null,
 ) : ComponentState(), Valid<ButtonState> {
     override fun copyValid(v: Boolean) = copy(valid = v)
@@ -510,8 +521,11 @@ data class ButtonState(
 
 @Serializable
 @SerialName("IconState")
-data class IconState(
-    val value: String,
+data class NotificationState(
+    val image: ImageState.Source? = null,
+    val number: Int? = null,
+    val numberAlign: Align = Align.Center,
+    val isActive: Boolean = true, // TODO should probably replace with a sealed class
 ) : ComponentState()
 
 @Serializable
@@ -548,8 +562,13 @@ data class UnknownComponentState(
 @SerialName("CardState")
 data class CardState(
     override val children: List<Element<out State>> = listOf(),
+    override val padding: Padding = padding(all = 16),
+    override val size: Size = DefaultSize,
+    override val visible: Boolean = true,
+    val shape: Shape = roundedRectangle(16),
 ) : WidgetState() {
     override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
+    override fun copyVisibility(v: Boolean) = copy(visible = v)
 }
 
 @Serializable
@@ -565,10 +584,13 @@ data class BottomSheetState(
 data class StackState(
     override val children: List<Element<out State>> = listOf(),
     val alignment: Align = Align.Center,
-    val size: Size = DefaultSize,
+    override val size: Size = DefaultSize,
+    override val padding: Padding = Padding(),
+    override val visible: Boolean = true,
     val background: Long? = null
 ) : WidgetState() {
     override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
+    override fun copyVisibility(v: Boolean) = copy(visible = v)
 }
 
 @Serializable
@@ -576,7 +598,8 @@ data class StackState(
 data class RowState(
     override val children: List<Element<out State>> = listOf(),
     val arrangement: Arrange = Arrange.Center,
-    val size: Size = DefaultSize,
+    override val size: Size = DefaultSize,
+    override val padding: Padding = Padding(),
 ) : WidgetState() {
     override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
 }
@@ -586,6 +609,10 @@ data class RowState(
 data class ColumnState(
     override val children: List<Element<out State>> = listOf(),
     val arrangement: Arrange = Arrange.Center,
+    override val size: Size = DefaultSize,
+    val border: Border? = null,
+    override val padding: Padding = Padding(),
+    val background: Long? = null
 ) : WidgetState() {
     override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
 }

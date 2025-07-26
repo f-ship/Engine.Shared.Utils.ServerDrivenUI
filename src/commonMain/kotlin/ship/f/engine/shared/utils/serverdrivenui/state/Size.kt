@@ -18,6 +18,12 @@ data class Fill(
 ) : Size()
 
 @Serializable
+data class Weight(
+    val horizontalWeight: Float? = null,
+    val verticalWeight: Float? = null,
+) : Size()
+
+@Serializable
 data object Window : Size()
 
 @Serializable

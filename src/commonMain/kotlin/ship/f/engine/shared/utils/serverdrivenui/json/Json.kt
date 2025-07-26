@@ -32,7 +32,7 @@ val json = Json {
             subclass(VideoState::class)
             subclass(CustomState::class)
             subclass(ButtonState::class)
-            subclass(IconState::class)
+            subclass(NotificationState::class)
             subclass(LoadingShimmerState::class)
             subclass(DialogState::class)
             subclass(SnackBarState::class)

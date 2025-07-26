@@ -2,6 +2,8 @@ package ship.f.engine.shared.utils.serverdrivenui.state
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+
+//TODO actually systematically create a much better system for arrangement and alignment
 @Serializable
 sealed class Arrange {
     @Serializable

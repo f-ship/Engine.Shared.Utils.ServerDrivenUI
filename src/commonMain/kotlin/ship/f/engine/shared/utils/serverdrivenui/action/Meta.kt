@@ -39,6 +39,28 @@ sealed class Meta {
         override val id: ID = autoMetaId(),
     ) : Meta()
 
+    @Serializable
+    @SerialName("ListMeta") // TODO this has an awful name, should probably be renamed to be more specific to filters
+    data class FilterMetaStore(
+        val metas: List<ID> = emptyList(),
+        override val id: ID = autoMetaId(),
+    ) : Meta()
+
+    @Serializable
+    @SerialName("FilterMeta")
+    data class FilterMeta(
+        val name: String,
+        val targetGroup: ID,
+        override val id: ID = autoMetaId(),
+    ) : Meta()
+
+    @Serializable
+    @SerialName("FilterGroupMeta")
+    data class FilterGroupMeta(
+        val filters: List<FilterMeta>,
+        override val id: ID = autoMetaId(),
+    ) : Meta()
+
     companion object {
         var metaCount = 0
         fun autoMetaId() = id("meta-${metaCount++}")

@@ -48,7 +48,7 @@ object ComponentStateSerializer : JsonContentPolymorphicSerializer<ComponentStat
             VideoState::class.simpleName -> VideoState.serializer()
             CustomState::class.simpleName -> CustomState.serializer()
             ButtonState::class.simpleName -> ButtonState.serializer()
-            IconState::class.simpleName -> IconState.serializer()
+            NotificationState::class.simpleName -> NotificationState.serializer()
             LoadingShimmerState::class.simpleName -> LoadingShimmerState.serializer()
             DialogState::class.simpleName -> DialogState.serializer()
             SnackBarState::class.simpleName -> SnackBarState.serializer()

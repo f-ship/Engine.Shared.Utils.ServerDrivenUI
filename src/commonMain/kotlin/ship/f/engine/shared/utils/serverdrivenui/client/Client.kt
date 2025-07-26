@@ -3,9 +3,8 @@ package ship.f.engine.shared.utils.serverdrivenui.client
 import ship.f.engine.shared.utils.serverdrivenui.ElementConfig
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.*
-import ship.f.engine.shared.utils.serverdrivenui.action.Meta
-import ship.f.engine.shared.utils.serverdrivenui.action.RemoteAction
-import ship.f.engine.shared.utils.serverdrivenui.action.Trigger
+import ship.f.engine.shared.utils.serverdrivenui.action.*
+import ship.f.engine.shared.utils.serverdrivenui.action.Trigger.OnInitialRenderTrigger
 import ship.f.engine.shared.utils.serverdrivenui.ext.fGet
 import ship.f.engine.shared.utils.serverdrivenui.ext.measureInMillis
 import ship.f.engine.shared.utils.serverdrivenui.state.ComponentState
@@ -34,6 +33,17 @@ abstract class Client {
     val metaMap: MutableMap<ID, Meta> = mutableMapOf()
 
     /**
+     * Map used to store listeners for meta-updates, this is pretty ugly for now, should probably fo
+     */
+    val metaListenerMap: MutableMap<ID, MutableList<RemoteMetaAction>> = mutableMapOf()
+
+    /**
+     * Deferred Actions can be executed or canceled at a later time, this map cache said actions
+     * I probably should at some point replace all these maps and things with a Meta Implementation
+     */
+    val deferredActions: MutableMap<ID, MutableList<DeferredAction>> = mutableMapOf()
+
+    /**
      * When the server sends the client a component, and it can't render, the component will be rendered with fallback behavior.
      * Typically, a component will hide by default but may also show an optional update required banner.
      * In some cases if a feature is critical, a mandatory update required banner may be shown.
@@ -53,8 +63,9 @@ abstract class Client {
 
         if (screenConfigMap[config.id] == null) {
             config.children.forEach {
-                setState(it as Element<State>)
+                setState(it)
                 setTriggers(it)
+                initialTriggers(it)
             }
             screenConfigMap[config.id] = config
         }
@@ -74,6 +85,7 @@ abstract class Client {
         config.elements.forEach {
             setState(it)
             setTriggers(it)
+            initialTriggers(it)
         }
 
         /**
@@ -148,9 +160,54 @@ abstract class Client {
             }
         }
 
+        element.triggers.filterIsInstance<Trigger.OnMetaUpdateTrigger>().forEach {
+            it.action.targetIds.forEach { target ->
+                if (metaListenerMap[target.id] == null) {
+                    metaListenerMap[target.id] = mutableListOf()
+                }
+
+                metaListenerMap[target.id]!!.add(
+                    RemoteMetaAction(
+                        action = it.action,
+                        id = element.id,
+                        metaID = it.metaID,
+                    )
+                )
+            }
+        }
+
         when (element) {
             is Component<*> -> Unit
             is Widget<*> -> element.state.children.forEach { setTriggers(it) }
+        }
+    }
+
+    fun initialTriggers(element: Element<out State>) {
+        element.triggers.filterIsInstance<OnInitialRenderTrigger>().forEach {
+            it.action.execute(
+                element = element,
+                client = this,
+                meta = metaMap[it.metaID] ?: Meta.None(),
+            )
+        }
+
+        when (element) {
+            is Component<*> -> Unit
+            is Widget<*> -> element.state.children.forEach { initialTriggers(it) }
+        }
+    }
+
+    // TODO to be used in the action that toggles the existence of a value in a MetaList
+    fun updateMeta(meta: Meta) {
+        metaMap[meta.id] = meta
+
+        // TODO when a meta updates we want to run the correct action with the correct element
+        metaListenerMap[meta.id]?.forEach {
+            it.action.execute(
+                element = elementMap.fGet(it.id),
+                client = this,
+                meta = metaMap[it.metaID] ?: Meta.None(), // TODO a little dangerous just adding a default value without propper logging, benchmarking and logging will come soon
+            )
         }
     }
 
