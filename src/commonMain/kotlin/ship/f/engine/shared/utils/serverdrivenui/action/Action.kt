@@ -390,16 +390,22 @@ sealed class Action {
         override fun execute(
             element: Element<out State>,
             client: Client,
-            meta: Meta
+            meta: Meta,
         ) {
-            TODO("Not yet implemented")
+            client.deferredActions[targetIds.first().id]?.forEach {
+                it.action.execute(
+                    element = client.elementMap.fGet(it.id),
+                    client = client,
+                    meta = client.metaMap[it.metaID] ?: None(),
+                )
+            }
+            client.deferredActions.remove(targetIds.first().id)
         }
-
     }
 
     @Serializable
     @SerialName("ClearDeferred")
-    data class ClearDeferredTrigger(
+    data class ClearDeferred(
         override val targetIds: List<Target>
     ) : Action() {
         override fun execute(
@@ -407,7 +413,10 @@ sealed class Action {
             client: Client,
             meta: Meta
         ) {
-            TODO("Not yet implemented")
+            client.deferredActions[targetIds.first().id]?.forEach {
+                it.restoredElement?.let { restoredElement -> client.updateState(restoredElement) }
+            }
+            client.deferredActions.remove(targetIds.first().id)
         }
     }
 }
