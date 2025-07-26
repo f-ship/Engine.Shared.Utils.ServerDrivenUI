@@ -80,5 +80,6 @@ sealed class Trigger {
     data class DeferredTrigger(
         override val metaID: ID,
         override val action: Action,
+        val group: ID = none,
     ) : Trigger()
 }

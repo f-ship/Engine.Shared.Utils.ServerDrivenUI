@@ -73,10 +73,10 @@ data class ScreenConfig(
         fun deferredTrigger(restoredElement: Element<out State>? = null) {
             val client = getClient()
             triggers.filterIsInstance<DeferredTrigger>().forEach { triggerAction ->
-                if (client.deferredActions[triggerAction.action.targetIds.first().id] == null) {
-                    client.deferredActions[triggerAction.action.targetIds.first().id] = mutableListOf()
+                if (client.deferredActions[triggerAction.group] == null) {
+                    client.deferredActions[triggerAction.group] = mutableListOf()
                 }
-                client.deferredActions[triggerAction.action.targetIds.first().id]!!.add(
+                client.deferredActions[triggerAction.group]!!.add(
                     DeferredAction(
                         action = triggerAction.action,
                         id = id,
