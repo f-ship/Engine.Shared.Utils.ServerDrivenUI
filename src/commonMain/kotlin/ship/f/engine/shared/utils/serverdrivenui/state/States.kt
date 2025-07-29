@@ -11,10 +11,12 @@ import ship.f.engine.shared.utils.serverdrivenui.json.WidgetStateSerializer
 @SerialName("State")
 sealed class State : Visibility<State> {
     val id: String = getRandomString() // Has the change to collide so need to do something smarter
+
+    open val isStickyHeader: Boolean = false // TODO this somehow feels wrong to bake nonsense like this here
     open val padding: Padding = Padding()
     open val size: Size = DefaultSize
 
-    open override val visible: Boolean = true
+    override val visible: Boolean = true
 
     override fun copyVisibility(v: Boolean): State = TODO("Not yet implemented for ${this::class.simpleName}")
 }
@@ -277,6 +279,7 @@ data class TextState(
     val style: Style = Style.BodyMedium,
     val color: Long? = null,
     val textAlign: STextAlign = STextAlign.Start,
+    override val padding: Padding = Padding(),
 ) : ComponentState(), Value<TextState> {
     override fun copyValue(v: String) = this.copy(value = v)
 
@@ -565,6 +568,8 @@ data class CardState(
     override val padding: Padding = padding(all = 16),
     override val size: Size = DefaultSize,
     override val visible: Boolean = true,
+    override val isStickyHeader: Boolean = false,
+    val background: Long? = null,
     val shape: Shape = roundedRectangle(16),
 ) : WidgetState() {
     override fun copyChildren(children: List<Element<out State>>) = copy(children = children)

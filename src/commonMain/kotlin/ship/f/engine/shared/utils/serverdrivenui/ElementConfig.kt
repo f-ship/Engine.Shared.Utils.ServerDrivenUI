@@ -12,9 +12,13 @@ data class ElementConfig (
      */
     val inside: ID,
     /**
-     * Decides whether the element should be placed after another element or if null on the end of the children
+     * Decides whether the element should be placed after another element or if null on the end of the children, surely there should be before aswell
      */
     val after: ID? = null,
+    /**
+     *  If true, the elements will take the place of another
+     */
+    val replace: ID? = null,
     /**
      * The element to be placed on the screen
      */

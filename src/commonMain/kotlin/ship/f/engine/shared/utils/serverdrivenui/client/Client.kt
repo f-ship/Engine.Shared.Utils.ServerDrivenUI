@@ -77,7 +77,14 @@ abstract class Client {
     /**
      * Add elements to a screenConfig
      */
-    fun navigate(config: ElementConfig) {
+    fun navigate(config: ElementConfig) { // TODO such a disgusting method
+
+        if (config.replace != null) {
+            val replaceElement = config.elements.first()
+            elementMap[config.replace] = replaceElement
+            postReactiveUpdate(replaceElement)
+            return // TODO we should probably utilise some more early returns in this function
+        }
 
         /**
          * Used to make all new elements that are being added to become reactive
@@ -87,6 +94,8 @@ abstract class Client {
             setTriggers(it)
             initialTriggers(it)
         }
+
+
 
         /**
          * If the screenConfig exists, then update the children of the screenConfig.
@@ -129,7 +138,9 @@ abstract class Client {
      */
     fun setState(element: Element<out State>) {
         if (elementMap[element.id] != null && elementMap[element.id] != element) {
-            error("Duplicate ID: ${element.id}")
+            // TODO need a smarter way of handling the detection of duplicate IDs, I think this is where composite IDs should be useful
+//            error("Duplicate ID: ${element.id}")
+            println("Duplicate ID: ${element.id}")
         }
         elementMap[element.id] = element
         element.metas.forEach { metaMap[it.key] = it.value }
