@@ -2,14 +2,32 @@ package ship.f.engine.shared.utils.serverdrivenui.action
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.Element
+import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.*
 import ship.f.engine.shared.utils.serverdrivenui.action.Meta.*
 import ship.f.engine.shared.utils.serverdrivenui.client.Client
 import ship.f.engine.shared.utils.serverdrivenui.ext.fGet
+import ship.f.engine.shared.utils.serverdrivenui.ext.runIf
 import ship.f.engine.shared.utils.serverdrivenui.state.State
 import ship.f.engine.shared.utils.serverdrivenui.state.Valid
 import ship.f.engine.shared.utils.serverdrivenui.state.Value
 import ship.f.engine.shared.utils.serverdrivenui.state.Visibility
+
+interface ElementTargetAction {
+    val targetId: ElementId
+}
+
+interface MultiElementTargetAction {
+    val targetIds: List<ElementId>
+}
+
+interface MetaTargetAction {
+    val targetId: MetaId
+}
+
+interface MultiMetaTargetAction {
+    val targetIds: List<MetaId>
+}
+
 
 /**
  * An action is simply a reusable block of code that can be executed on a subject element.
@@ -18,7 +36,6 @@ import ship.f.engine.shared.utils.serverdrivenui.state.Visibility
  */
 @Serializable
 sealed class Action {
-    abstract val targetIds: List<Target>
 
     abstract fun execute(
         element: Element<out State>,
@@ -36,9 +53,7 @@ sealed class Action {
      */
     @Serializable
     @SerialName("Navigate")
-    data class Navigate(
-        override val targetIds: List<Target> = listOf(),
-    ) : Action() {
+    data object Navigate : Action() {
         override fun execute(
             element: Element<out State>,
             client: Client,
@@ -63,9 +78,7 @@ sealed class Action {
      */
     @Serializable
     @SerialName("Refresh")
-    data class Refresh(
-        override val targetIds: List<Target> = listOf(),
-    ) : Action() {
+    data object Refresh : Action() {
         override fun execute(
             element: Element<out State>,
             client: Client,
@@ -73,7 +86,6 @@ sealed class Action {
         ) {
             TODO("Not yet implemented")
         }
-
     }
 
     /**
@@ -81,9 +93,7 @@ sealed class Action {
      */
     @Serializable
     @SerialName("Copy")
-    data class Copy(
-        override val targetIds: List<Target> = listOf(),
-    ) : Action() {
+    data object Copy : Action() {
         override fun execute(
             element: Element<out State>,
             client: Client,
@@ -91,7 +101,6 @@ sealed class Action {
         ) {
             TODO("Not yet implemented")
         }
-
     }
 
     /**
@@ -101,10 +110,7 @@ sealed class Action {
 
     @Serializable
     @SerialName("ToggleMeta")
-    data class ToggleMeta(
-        override val targetIds: List<Target> = listOf(),
-    ) : Action() {
-
+    data object ToggleMeta : Action() {
         override fun execute(
             element: Element<out State>,
             client: Client,
@@ -116,21 +122,21 @@ sealed class Action {
 
     @Serializable
     @SerialName("MatchMetaVisibility")
-    data class MatchMetaVisibility(
-        override val targetIds: List<Target> = listOf(), // TODO will probably depreciate targetIds as while it's a consistent api, it contextually confusing how it's used
-    ) : Match() {
+    data object MatchMetaVisibility : Match() {
         override fun execute(
             element: Element<out State>,
             client: Client,
             meta: Meta,
         ) {
-            client.metaMap[(meta as? FilterMeta)?.targetGroup]?.let { group ->
-                (group as? FilterMetaStore)?.let { listMeta ->
-                    val isVisible = (listMeta.metas.isEmpty() || listMeta.metas.contains(meta.id))
+            meta.runIf<FilterMeta> {
+                client.metaMap[targetGroup].let { group ->
+                    group?.runIf<FilterMetaStore> {
+                        val isVisible = (metas.isEmpty() || metas.contains(meta.id))
 
-                    // TODO need to actually make sure to implement visibility on components
-                    (element.state as? Visibility<out State>)?.copyVisibility(isVisible)?.let { state ->
-                        client.updateState(element.updateElement(state))
+                        // TODO need to actually make sure to implement visibility on components
+                        (element.state as? Visibility<out State>)?.copyVisibility(isVisible)?.let { state ->
+                            client.updateState(element.updateElement(state))
+                        }
                     }
                 }
             }
@@ -140,52 +146,49 @@ sealed class Action {
     @Serializable
     @SerialName("MatchMetaGroupVisibility")
     data class MatchMetaGroupVisibility(
-        override val targetIds: List<Target> = listOf(), // TODO think of a better use of targetIds
-    ) : Match() {
+        override val targetId: MetaId,
+    ) : Match(), MetaTargetAction {
         override fun execute(
             element: Element<out State>,
             client: Client,
             meta: Meta
         ) {
-            (meta as? FilterGroupMeta)?.filters
-                ?.mapNotNull { client.metaMap[it.id] }
-                ?.mapNotNull { m ->
-                    client.metaMap[(m as? FilterMeta)?.targetGroup]?.let { group ->
-                        (group as? FilterMetaStore)?.let { listMeta ->
-                            (listMeta.metas.isEmpty() || listMeta.metas.contains(m.id))
+            meta.runIf<FilterGroupMeta> {
+                filters.mapNotNull { client.metaMap[it.id] }
+                    .mapNotNull { m ->
+                        client.metaMap[(m as? FilterMeta)?.targetGroup]?.let { group ->
+                            (group as? FilterMetaStore)?.let { listMeta ->
+                                (listMeta.metas.isEmpty() || listMeta.metas.contains(m.id))
+                            }
+                        }
+                    }.all {
+                        it
+                    }.let { isVisible ->
+                        (element.state as? Visibility<out State>)?.copyVisibility(isVisible)?.let { state ->
+                            client.updateState(element.updateElement(state))
                         }
                     }
-                }?.all {
-                    it
-                }?.let { isVisible ->
-                    (element.state as? Visibility<out State>)?.copyVisibility(isVisible)?.let { state ->
-                        client.updateState(element.updateElement(state))
-                    }
-                }
+            }
         }
     }
 
     @Serializable
     @SerialName("ToggleFilterStoreMeta")
-    data class ToggleFilterStoreMeta(
-        override val targetIds: List<Target> = listOf()
-    ) : Match() {
+    data object ToggleFilterStoreMeta : Match() {
         override fun execute(
             element: Element<out State>,
             client: Client,
             meta: Meta
         ) {
-            (meta as? FilterMeta)?.let { filterMeta ->
-                filterMeta.let {
-                    client.metaMap[it.targetGroup]?.let { group ->
-                        (group as? FilterMetaStore)?.let { store ->
-                            val updatedMetas = if (store.metas.contains(it.id)) {
-                                store.metas.filter { id -> id != it.id }
-                            } else {
-                                store.metas + it.id
-                            }
-                            group.copy(metas = updatedMetas)
+            meta.runIf<FilterMeta> {
+                client.metaMap[targetGroup]?.let { group ->
+                    (group as? FilterMetaStore)?.let { store ->
+                        val updatedMetas = if (store.metas.contains(id)) {
+                            store.metas.filter { id -> id != id }
+                        } else {
+                            store.metas + id
                         }
+                        group.copy(metas = updatedMetas)
                     }
                 }?.also { updatedMeta ->
                     client.updateMeta(updatedMeta)
@@ -199,9 +202,7 @@ sealed class Action {
      */
     @Serializable
     @SerialName("UpdateVisibility")
-    data class MatchVisibility(
-        override val targetIds: List<Target> = listOf(),
-    ) : Match() {
+    data object MatchVisibility : Match() {
         override fun execute(
             element: Element<out State>,
             client: Client,
@@ -216,9 +217,7 @@ sealed class Action {
      */
     @Serializable
     @SerialName("UpdateEnabled")
-    data class MatchEnabled(
-        override val targetIds: List<Target> = listOf(),
-    ) : Match() {
+    data object MatchEnabled : Match() {
         override fun execute(
             element: Element<out State>,
             client: Client,
@@ -233,9 +232,7 @@ sealed class Action {
      */
     @Serializable
     @SerialName("MatchToggled")
-    data class MatchToggled(
-        override val targetIds: List<Target> = listOf(),
-    ) : Match() {
+    data object MatchToggled : Match() {
         override fun execute(
             element: Element<out State>,
             client: Client,
@@ -250,9 +247,7 @@ sealed class Action {
      */
     @Serializable
     @SerialName("MatchLoading")
-    data class MatchLoading(
-        override val targetIds: List<Target> = listOf(),
-    ) : Match() {
+    data object MatchLoading : Match() {
         override fun execute(
             element: Element<out State>,
             client: Client,
@@ -267,9 +262,7 @@ sealed class Action {
      */
     @Serializable
     @SerialName("MatchVariant")
-    data class MatchVariant(
-        override val targetIds: List<Target> = listOf(),
-    ) : Match() {
+    data object MatchVariant : Match() {
         override fun execute(
             element: Element<out State>,
             client: Client,
@@ -286,8 +279,8 @@ sealed class Action {
     @Serializable
     @SerialName("MatchValid")
     data class MatchValid(
-        override val targetIds: List<Target> = listOf(),
-    ) : Match() {
+        override val targetIds: List<ElementId> = listOf(),
+    ) : Match(), MultiElementTargetAction {
         override fun execute(
             element: Element<out State>,
             client: Client,
@@ -297,7 +290,7 @@ sealed class Action {
             // TODO this works in the context of when the default value is set correctly, but otherwise will only be correct after the first trigger
             // TODO I think I will probably need a flag to determine if the action should be triggered initially on screen load.
             // TODO Or we might just use another trigger for this to make things generic and clear
-            val valid = targetIds.mapNotNull { client.elementMap.fGet(it.id).state as? Valid<out State> }
+            val valid = targetIds.mapNotNull { client.elementMap.fGet(it).state as? Valid<out State> }
                 .all { it.valid == true }
             (element.state as? Valid<out State>)?.copyValid(valid)?.let { state ->
                 client.updateState(element.updateElement(state))
@@ -312,9 +305,7 @@ sealed class Action {
      */
     @Serializable
     @SerialName("UpdateState")
-    data class UpdateState(
-        override val targetIds: List<Target> = listOf(),
-    ) : Action() {
+    data object UpdateState : Action() {
         override fun execute(
             element: Element<out State>,
             client: Client,
@@ -333,9 +324,7 @@ sealed class Action {
      */
     @Serializable
     @SerialName("SendState")
-    data class SendState(
-        override val targetIds: List<Target> = listOf(),
-    ) : Action() {
+    data object SendState : Action() {
         override fun execute(
             element: Element<out State>,
             client: Client,
@@ -350,16 +339,18 @@ sealed class Action {
      */
     @Serializable
     @SerialName("UpdateValue")
+    @Suppress("UNCHECKED_CAST")
     data class UpdateValue(
-        override val targetIds: List<Target> = listOf(),
-    ) : Action() {
+        override val targetId: ElementId,
+    ) : Action(), ElementTargetAction {
         override fun execute(
             element: Element<out State>,
             client: Client,
             meta: Meta,
         ) {
-            val targetElement = client.elementMap.fGet(targetIds.first().id).state as? Value<out State>
-                ?: error("Target element is not a value")
+            val targetElement =
+                client.elementMap.fGet(targetId).state as? Value<out State>
+                    ?: error("Target element is not a value")
             val updatedElement = (element as Element<Value<out State>>).state.copyValue(targetElement.value)
             client.updateState(element.updateElement(updatedElement))
         }
@@ -368,14 +359,14 @@ sealed class Action {
     @Serializable
     @SerialName("ToggleVisibility")
     data class ToggleVisibility(
-        override val targetIds: List<Target> = listOf(), //TODO hmmm target id seems useful here
-    ) : Action() {
+        override val targetId: ElementId,
+    ) : Action(), ElementTargetAction {
         override fun execute(
             element: Element<out State>,
             client: Client,
             meta: Meta,
         ) {
-            val targetElement = client.elementMap.fGet(targetIds.first().id)
+            val targetElement = client.elementMap.fGet(targetId)
             val updatedState = targetElement.state.copyVisibility(!targetElement.state.visible)
             val updatedElement = targetElement.updateElement(updatedState)
             client.updateState(updatedElement)
@@ -385,38 +376,38 @@ sealed class Action {
     @Serializable
     @SerialName("ExecuteDeferred")
     data class ExecuteDeferred(
-        override val targetIds: List<Target>
-    ) : Action() {
+        override val targetId: MetaId
+    ) : Action(), MetaTargetAction {
         override fun execute(
             element: Element<out State>,
             client: Client,
             meta: Meta,
         ) {
-            client.deferredActions[targetIds.first().id]?.forEach {
+            client.deferredActions[targetId]?.forEach {
                 it.action.execute(
                     element = client.elementMap.fGet(it.id),
                     client = client,
                     meta = client.metaMap[it.metaID] ?: None(),
                 )
             }
-            client.deferredActions.remove(targetIds.first().id)
+            client.deferredActions.remove(targetId)
         }
     }
 
     @Serializable
     @SerialName("ClearDeferred")
     data class ClearDeferred(
-        override val targetIds: List<Target>
-    ) : Action() {
+        override val targetId: MetaId,
+    ) : Action(), MetaTargetAction {
         override fun execute(
             element: Element<out State>,
             client: Client,
             meta: Meta
         ) {
-            client.deferredActions[targetIds.first().id]?.forEach {
+            client.deferredActions[targetId]?.forEach {
                 it.restoredElement?.let { restoredElement -> client.updateState(restoredElement) }
             }
-            client.deferredActions.remove(targetIds.first().id)
+            client.deferredActions.remove(targetId)
         }
     }
 }

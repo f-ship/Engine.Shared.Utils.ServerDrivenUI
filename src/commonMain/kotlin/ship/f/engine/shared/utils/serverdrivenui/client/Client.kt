@@ -15,12 +15,12 @@ abstract class Client {
     /**
      * The map of elements that the client keeps of track off
      */
-    val elementMap: MutableMap<ID, Element<out State>> = mutableMapOf()
+    val elementMap: MutableMap<ElementId, Element<out State>> = mutableMapOf()
 
     /**
      * Map of screenConfigs that have been properly initialized
      */
-    val screenConfigMap: MutableMap<ID, ScreenConfig> = mutableMapOf()
+    val screenConfigMap: MutableMap<ElementId, ScreenConfig> = mutableMapOf()
 
     /**
      * Backstack of screenConfigs that have been visited
@@ -30,18 +30,18 @@ abstract class Client {
     /**
      * Map used as session storage for context that may be required by the server but not important for the client
      */
-    val metaMap: MutableMap<ID, Meta> = mutableMapOf()
+    val metaMap: MutableMap<MetaId, Meta> = mutableMapOf()
 
     /**
      * Map used to store listeners for meta-updates, this is pretty ugly for now, should probably fo
      */
-    val metaListenerMap: MutableMap<ID, MutableList<RemoteMetaAction>> = mutableMapOf()
+    val metaListenerMap: MutableMap<MetaId, MutableList<RemoteAction>> = mutableMapOf()
 
     /**
      * Deferred Actions can be executed or canceled at a later time, this map cache said actions
      * I probably should at some point replace all these maps and things with a Meta Implementation
      */
-    val deferredActions: MutableMap<ID, MutableList<DeferredAction>> = mutableMapOf()
+    val deferredActions: MutableMap<MetaId, MutableList<DeferredAction>> = mutableMapOf()
 
     /**
      * When the server sends the client a component, and it can't render, the component will be rendered with fallback behavior.
@@ -157,33 +157,17 @@ abstract class Client {
      */
     fun setTriggers(element: Element<out State>) {
         element.triggers.filterIsInstance<Trigger.OnStateUpdateTrigger>().forEach {
-            it.action.targetIds.forEach { target ->
-                val targetElement = elementMap.fGet(target.id)
-                val updatedElement = targetElement.updateElement(
-                    listeners = targetElement.listeners + RemoteAction(
-                        action = it.action,
-                        id = element.id,
-                    )
-                )
-
-                elementMap[target.id] = updatedElement
-                createReactiveUpdate(updatedElement)
+            when(it.action){
+                is ElementTargetAction -> setTrigger(element, it.action.targetId, it.action)
+                is MultiElementTargetAction -> it.action.targetIds.forEach { target -> setTrigger(element, target, it.action) }
+                else -> Unit
             }
         }
 
         element.triggers.filterIsInstance<Trigger.OnMetaUpdateTrigger>().forEach {
-            it.action.targetIds.forEach { target ->
-                if (metaListenerMap[target.id] == null) {
-                    metaListenerMap[target.id] = mutableListOf()
-                }
-
-                metaListenerMap[target.id]!!.add(
-                    RemoteMetaAction(
-                        action = it.action,
-                        id = element.id,
-                        metaID = it.metaID,
-                    )
-                )
+            when(it.action){
+                is MetaTargetAction -> setMetaTrigger(element, it.action.targetId, it.action, it.metaID)
+                else -> Unit
             }
         }
 
@@ -191,6 +175,33 @@ abstract class Client {
             is Component<*> -> Unit
             is Widget<*> -> element.state.children.forEach { setTriggers(it) }
         }
+    }
+
+    private fun setTrigger(element: Element<out State>, target: ElementId, action: Action) {
+        val targetElement = elementMap.fGet(target)
+        val updatedElement = targetElement.updateElement(
+            listeners = targetElement.listeners + RemoteAction(
+                action = action,
+                id = element.id,
+            )
+        )
+
+        elementMap[target] = updatedElement
+        createReactiveUpdate(updatedElement)
+    }
+
+    private fun setMetaTrigger(element: Element<out State>, target: MetaId, action: Action, metaId: MetaId) {
+        if (metaListenerMap[target] == null) {
+            metaListenerMap[target] = mutableListOf()
+        }
+
+        metaListenerMap[target]!!.add(
+            RemoteAction(
+                action = action,
+                id = element.id,
+                metaID = metaId,
+            )
+        )
     }
 
     fun initialTriggers(element: Element<out State>) {

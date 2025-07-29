@@ -9,6 +9,7 @@ import ship.f.engine.shared.utils.serverdrivenui.action.Trigger
 import ship.f.engine.shared.utils.serverdrivenui.action.Trigger.DeferredTrigger
 import ship.f.engine.shared.utils.serverdrivenui.client.ClientHolder.getClient
 import ship.f.engine.shared.utils.serverdrivenui.ext.auto
+import ship.f.engine.shared.utils.serverdrivenui.ext.id
 import ship.f.engine.shared.utils.serverdrivenui.state.ColorSchemeState
 import ship.f.engine.shared.utils.serverdrivenui.state.ComponentState
 import ship.f.engine.shared.utils.serverdrivenui.state.State
@@ -20,26 +21,42 @@ import ship.f.engine.shared.utils.serverdrivenui.state.WidgetState
 @Serializable()
 @SerialName("ScreenConfig")
 data class ScreenConfig(
-    val id: ID = auto(),
+    val id: ElementId = auto(),
     val lightColorScheme: ColorSchemeState? = null,
     val darkColorScheme: ColorSchemeState? = null,
     val children: List<Element<out State>> = emptyList(),
 ) {
     @Serializable
-    @SerialName("ID")
-    data class ID(val id: String, val scope: String)
+    sealed class ID {
+        abstract val id: String
+        abstract val scope: String
+    }
+
+    @Serializable
+    @SerialName("ElementId")
+    data class ElementId(
+        override val id: String,
+        override val scope: String,
+    ) : ID()
+
+    @Serializable
+    @SerialName("MetaId")
+    data class MetaId(
+        override val id: String,
+        override val scope: String,
+    ) : ID()
 
     @Serializable()
     @SerialName("Element")
     sealed class Element<S : State> {
-        abstract val id: ID
+        abstract val id: ElementId
         abstract val state: S
         abstract val fallback: Fallback
 
         abstract val triggers: List<Trigger>
         abstract val listeners: List<RemoteAction>
 
-        abstract val metas: Map<ID, Meta>
+        abstract val metas: Map<MetaId, Meta>
 
         fun updateElement(
             state: State = this.state,
@@ -86,17 +103,21 @@ data class ScreenConfig(
                 )
             }
         }
+
+        companion object {
+            val none = id("None")
+        }
     }
 
     @Serializable
     @SerialName("Widget")
     data class Widget<S : WidgetState>(
-        override val id: ID = auto(),
+        override val id: ElementId = auto(),
         override val state: S,
         override val fallback: Fallback = Fallback.Hide,
         override val triggers: List<Trigger> = emptyList(),
         override val listeners: List<RemoteAction> = emptyList(),
-        override val metas: Map<ID, Meta> = mapOf(),
+        override val metas: Map<MetaId, Meta> = mapOf(),
     ) : Element<WidgetState>() {
         fun update(
             state: State = this.state,
@@ -113,12 +134,12 @@ data class ScreenConfig(
     @Serializable
     @SerialName("Component")
     data class Component<S : ComponentState>(
-        override val id: ID = auto(),
+        override val id: ElementId = auto(),
         override val state: S,
         override val fallback: Fallback = Fallback.Hide,
         override val triggers: List<Trigger> = emptyList(),
         override val listeners: List<RemoteAction> = emptyList(),
-        override val metas: Map<ID, Meta> = mapOf(),
+        override val metas: Map<MetaId, Meta> = mapOf(),
     ) : Element<ComponentState>() {
         fun update(
             state: State = this.state,
@@ -139,7 +160,7 @@ data class ScreenConfig(
         @Serializable
         @SerialName("UI")
         data class UI(
-            val id: ID,
+            val id: ElementId,
             val state: State,
         ) : Fallback()
 

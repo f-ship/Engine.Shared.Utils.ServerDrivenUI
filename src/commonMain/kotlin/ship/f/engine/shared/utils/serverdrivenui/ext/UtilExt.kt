@@ -3,6 +3,7 @@ package ship.f.engine.shared.utils.serverdrivenui.ext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.encodeToString
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig
+import ship.f.engine.shared.utils.serverdrivenui.action.Meta
 import ship.f.engine.shared.utils.serverdrivenui.json.json
 
 /**
@@ -33,16 +34,26 @@ fun measureInMillis(id: Any, block: () -> Unit) {
     println("$id: Took ${elapsed.inWholeMilliseconds} ms")
 }
 
+inline fun <reified T> Meta.runIf(block: T.() -> Unit) = when(this){
+    is T -> block(this)
+    else -> TODO("Meta $this is not of type ${T::class}")
+}
+
 /**
  * Used to generate basic unique ids for components
  */
 var count = 0
-fun auto() = ScreenConfig.ID(id = "Auto-${count++}", scope = "")
+fun auto() = ScreenConfig.ElementId(id = "Auto-${count++}", scope = "")
 
 /**
  * Convenience method used to create an id from a string
  */
-fun id(value: String) = ScreenConfig.ID(id = value, scope = "")
+fun id(value: String) = ScreenConfig.ElementId(id = value, scope = "")
+
+/**
+ * Convenience method used to create a meta id from a string
+ */
+fun metaId(value: String) = ScreenConfig.MetaId(id = value, scope = "")
 
 fun ScreenConfig.validate() = json
     .encodeToString(this)

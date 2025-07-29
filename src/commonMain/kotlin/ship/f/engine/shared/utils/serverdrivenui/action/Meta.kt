@@ -5,65 +5,65 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import ship.f.engine.shared.utils.serverdrivenui.ElementConfig
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig
-import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.ID
-import ship.f.engine.shared.utils.serverdrivenui.ext.id
+import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.MetaId
+import ship.f.engine.shared.utils.serverdrivenui.ext.metaId
 
 @Serializable
 @SerialName("Meta")
 sealed class Meta {
-    abstract val id: ID
+    abstract val id: MetaId
     @Serializable
     @SerialName("None")
     data class None(
-        override val id: ID = none,
+        override val id: MetaId = none,
     ) : Meta()
 
     @Serializable
     @SerialName("Json")
     data class Json(
         val json: JsonObject,
-        override val id: ID = autoMetaId(),
+        override val id: MetaId = autoMetaId(),
     ) : Meta()
 
     @Serializable
     @SerialName("ScreenConfig")
     data class ScreenConfigMeta(
         val screenConfig: ScreenConfig,
-        override val id: ID = autoMetaId(),
+        override val id: MetaId = autoMetaId(),
     ) : Meta()
 
     @Serializable
     @SerialName("ElementConfig")
     data class ElementConfigMeta(
         val elementConfig: ElementConfig,
-        override val id: ID = autoMetaId(),
+        override val id: MetaId = autoMetaId(),
     ) : Meta()
 
     @Serializable
     @SerialName("ListMeta") // TODO this has an awful name, should probably be renamed to be more specific to filters
     data class FilterMetaStore(
-        val metas: List<ID> = emptyList(),
-        override val id: ID = autoMetaId(),
+        val metas: List<MetaId> = emptyList(),
+        override val id: MetaId = autoMetaId(),
     ) : Meta()
 
     @Serializable
     @SerialName("FilterMeta")
     data class FilterMeta(
         val name: String,
-        val targetGroup: ID,
-        override val id: ID = autoMetaId(),
+        val targetGroup: MetaId,
+        override val id: MetaId = autoMetaId(),
     ) : Meta()
 
     @Serializable
     @SerialName("FilterGroupMeta")
     data class FilterGroupMeta(
         val filters: List<FilterMeta>,
-        override val id: ID = autoMetaId(),
+        override val id: MetaId = autoMetaId(),
     ) : Meta()
 
     companion object {
         var metaCount = 0
-        fun autoMetaId() = id("meta-${metaCount++}")
-        val none = id("None")
+        fun autoMetaId() = metaId("meta-${metaCount++}")
+        val none = metaId("None")
     }
 }
