@@ -16,18 +16,25 @@ interface ElementTargetAction {
     val targetId: ElementId
 }
 
+interface ElementPublisherAction {
+    val publisherId: ElementId
+}
+
 interface MultiElementTargetAction {
     val targetIds: List<ElementId>
 }
 
-interface MetaTargetAction {
-    val targetId: MetaId
+interface MultiElementPublisherAction {
+    val publisherIds: List<ElementId>
 }
 
-interface MultiMetaTargetAction {
-    val targetIds: List<MetaId>
+interface MetaPublisherAction {
+    val publisherId: MetaId
 }
 
+interface MultiMetaPublisherAction {
+    val publisherIds: List<MetaId>
+}
 
 /**
  * An action is simply a reusable block of code that can be executed on a subject element.
@@ -146,8 +153,8 @@ sealed class Action {
     @Serializable
     @SerialName("MatchMetaGroupVisibility")
     data class MatchMetaGroupVisibility(
-        override val targetId: MetaId,
-    ) : Match(), MetaTargetAction {
+        override val publisherId: MetaId,
+    ) : Match(), MetaPublisherAction {
         override fun execute(
             element: Element<out State>,
             client: Client,
@@ -157,6 +164,7 @@ sealed class Action {
                 filters.mapNotNull { client.metaMap[it.id] }
                     .mapNotNull { m ->
                         client.metaMap[(m as? FilterMeta)?.targetGroup]?.let { group ->
+                            println("SDUILOG ${group.id.id}: ${group}")
                             (group as? FilterMetaStore)?.let { listMeta ->
                                 (listMeta.metas.isEmpty() || listMeta.metas.contains(m.id))
                             }
@@ -184,7 +192,7 @@ sealed class Action {
                 client.metaMap[targetGroup]?.let { group ->
                     (group as? FilterMetaStore)?.let { store ->
                         val updatedMetas = if (store.metas.contains(id)) {
-                            store.metas.filter { id -> id != id }
+                            store.metas.filter { it != id }
                         } else {
                             store.metas + id
                         }
@@ -279,8 +287,8 @@ sealed class Action {
     @Serializable
     @SerialName("MatchValid")
     data class MatchValid(
-        override val targetIds: List<ElementId> = listOf(),
-    ) : Match(), MultiElementTargetAction {
+        override val publisherIds: List<ElementId> = listOf(),
+    ) : Match(), MultiElementPublisherAction {
         override fun execute(
             element: Element<out State>,
             client: Client,
@@ -290,7 +298,7 @@ sealed class Action {
             // TODO this works in the context of when the default value is set correctly, but otherwise will only be correct after the first trigger
             // TODO I think I will probably need a flag to determine if the action should be triggered initially on screen load.
             // TODO Or we might just use another trigger for this to make things generic and clear
-            val valid = targetIds.mapNotNull { client.elementMap.fGet(it).state as? Valid<out State> }
+            val valid = publisherIds.mapNotNull { client.elementMap.fGet(it).state as? Valid<out State> }
                 .all { it.valid == true }
             (element.state as? Valid<out State>)?.copyValid(valid)?.let { state ->
                 client.updateState(element.updateElement(state))
@@ -341,15 +349,15 @@ sealed class Action {
     @SerialName("UpdateValue")
     @Suppress("UNCHECKED_CAST")
     data class UpdateValue(
-        override val targetId: ElementId,
-    ) : Action(), ElementTargetAction {
+        override val publisherId: ElementId,
+    ) : Action(), ElementPublisherAction {
         override fun execute(
             element: Element<out State>,
             client: Client,
             meta: Meta,
         ) {
             val targetElement =
-                client.elementMap.fGet(targetId).state as? Value<out State>
+                client.elementMap.fGet(publisherId).state as? Value<out State>
                     ?: error("Target element is not a value")
             val updatedElement = (element as Element<Value<out State>>).state.copyValue(targetElement.value)
             client.updateState(element.updateElement(updatedElement))
@@ -376,38 +384,38 @@ sealed class Action {
     @Serializable
     @SerialName("ExecuteDeferred")
     data class ExecuteDeferred(
-        override val targetId: MetaId
-    ) : Action(), MetaTargetAction {
+        override val publisherId: MetaId
+    ) : Action(), MetaPublisherAction {
         override fun execute(
             element: Element<out State>,
             client: Client,
             meta: Meta,
         ) {
-            client.deferredActions[targetId]?.forEach {
+            client.deferredActions[publisherId]?.forEach {
                 it.action.execute(
                     element = client.elementMap.fGet(it.id),
                     client = client,
                     meta = client.metaMap[it.metaID] ?: None(),
                 )
             }
-            client.deferredActions.remove(targetId)
+            client.deferredActions.remove(publisherId)
         }
     }
 
     @Serializable
     @SerialName("ClearDeferred")
     data class ClearDeferred(
-        override val targetId: MetaId,
-    ) : Action(), MetaTargetAction {
+        override val publisherId: MetaId,
+    ) : Action(), MetaPublisherAction {
         override fun execute(
             element: Element<out State>,
             client: Client,
             meta: Meta
         ) {
-            client.deferredActions[targetId]?.forEach {
+            client.deferredActions[publisherId]?.forEach {
                 it.restoredElement?.let { restoredElement -> client.updateState(restoredElement) }
             }
-            client.deferredActions.remove(targetId)
+            client.deferredActions.remove(publisherId)
         }
     }
 }

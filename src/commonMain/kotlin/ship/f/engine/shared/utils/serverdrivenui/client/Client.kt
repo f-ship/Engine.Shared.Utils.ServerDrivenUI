@@ -158,15 +158,16 @@ abstract class Client {
     fun setTriggers(element: Element<out State>) {
         element.triggers.filterIsInstance<Trigger.OnStateUpdateTrigger>().forEach {
             when(it.action){
-                is ElementTargetAction -> setTrigger(element, it.action.targetId, it.action)
-                is MultiElementTargetAction -> it.action.targetIds.forEach { target -> setTrigger(element, target, it.action) }
+                is ElementPublisherAction -> setTrigger(element, it.action.publisherId, it.action)
+                is MultiElementPublisherAction -> it.action.publisherIds.forEach { target -> setTrigger(element, target, it.action) }
                 else -> Unit
             }
         }
 
         element.triggers.filterIsInstance<Trigger.OnMetaUpdateTrigger>().forEach {
             when(it.action){
-                is MetaTargetAction -> setMetaTrigger(element, it.action.targetId, it.action, it.metaID)
+                is MetaPublisherAction -> setMetaTrigger(element, it.action.publisherId, it.action, it.metaID)
+                is MultiMetaPublisherAction -> it.action.publisherIds.forEach { target -> setMetaTrigger(element, target, it.action, it.metaID) }
                 else -> Unit
             }
         }
