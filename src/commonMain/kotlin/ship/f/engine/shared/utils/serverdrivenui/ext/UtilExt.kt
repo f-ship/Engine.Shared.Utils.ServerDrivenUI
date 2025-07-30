@@ -3,7 +3,13 @@ package ship.f.engine.shared.utils.serverdrivenui.ext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.encodeToString
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig
+import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.Companion.DEFAULT_SCREEN_SCOPE
+import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.Companion.screenId
+import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.Element.Companion.DEFAULT_ELEMENT_SCOPE
+import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.ElementId
+import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.MetaId
 import ship.f.engine.shared.utils.serverdrivenui.action.Meta
+import ship.f.engine.shared.utils.serverdrivenui.action.Meta.Companion.DEFAULT_META_SCOPE
 import ship.f.engine.shared.utils.serverdrivenui.json.json
 
 /**
@@ -31,7 +37,7 @@ fun measureInMillis(id: Any, block: () -> Unit) {
 
     val end = Clock.System.now()
     val elapsed = end - start
-    println("$id: Took ${elapsed.inWholeMilliseconds} ms")
+//    println("$id: Took ${elapsed.inWholeMilliseconds} ms") // TODO temporarily disabled
 }
 
 inline fun <reified T> Meta.runIf(block: T.() -> Unit) = when(this){
@@ -43,17 +49,19 @@ inline fun <reified T> Meta.runIf(block: T.() -> Unit) = when(this){
  * Used to generate basic unique ids for components
  */
 var count = 0
-fun auto() = ScreenConfig.ElementId(id = "Auto-${count++}", scope = "")
+fun auto() = id(value = "Auto-${count++}")
 
 /**
  * Convenience method used to create an id from a string
  */
-fun id(value: String) = ScreenConfig.ElementId(id = value, scope = "")
+fun id(value: String, scope: String = DEFAULT_ELEMENT_SCOPE) = ElementId(id = value, scope = scope)
 
 /**
  * Convenience method used to create a meta id from a string
  */
-fun metaId(value: String) = ScreenConfig.MetaId(id = value, scope = "")
+fun metaId(value: String, scope: String = DEFAULT_META_SCOPE) = MetaId(id = value, scope = scope)
+
+fun autoScreenId() = screenId(value = "Auto-${count++}", scope = DEFAULT_SCREEN_SCOPE)
 
 fun ScreenConfig.validate() = json
     .encodeToString(this)

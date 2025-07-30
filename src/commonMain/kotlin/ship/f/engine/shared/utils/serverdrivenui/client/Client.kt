@@ -1,13 +1,12 @@
 package ship.f.engine.shared.utils.serverdrivenui.client
 
-import ship.f.engine.shared.utils.serverdrivenui.ElementConfig
+import ship.f.engine.shared.utils.serverdrivenui.ElementOperation
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.*
 import ship.f.engine.shared.utils.serverdrivenui.action.*
 import ship.f.engine.shared.utils.serverdrivenui.action.Trigger.OnInitialRenderTrigger
 import ship.f.engine.shared.utils.serverdrivenui.ext.fGet
 import ship.f.engine.shared.utils.serverdrivenui.ext.measureInMillis
-import ship.f.engine.shared.utils.serverdrivenui.state.ComponentState
 import ship.f.engine.shared.utils.serverdrivenui.state.State
 import ship.f.engine.shared.utils.serverdrivenui.state.WidgetState
 
@@ -15,12 +14,12 @@ abstract class Client {
     /**
      * The map of elements that the client keeps of track off
      */
-    val elementMap: MutableMap<ElementId, Element<out State>> = mutableMapOf()
+    private val elementMap: MutableMap<String, MutableMap<String, Element<out State>>> = mutableMapOf()
 
     /**
      * Map of screenConfigs that have been properly initialized
      */
-    val screenConfigMap: MutableMap<ElementId, ScreenConfig> = mutableMapOf()
+    val screenConfigMap: MutableMap<ScreenId, ScreenConfig> = mutableMapOf()
 
     /**
      * Backstack of screenConfigs that have been visited
@@ -56,11 +55,13 @@ abstract class Client {
      * then the screenConfig will be removed from the backstack as it will be replaced by the new screenConfig.
      */
     fun navigate(config: ScreenConfig) {
+        // TODO acts an informal refresh which resets the current state of the screen with the oncoming screen config
         if (backstack.lastOrNull()?.id == config.id) {
             backstack.removeLast()
             screenConfigMap.remove(config.id)
         }
 
+        // TODO
         if (screenConfigMap[config.id] == null) {
             config.children.forEach {
                 setState(it)
@@ -77,59 +78,103 @@ abstract class Client {
     /**
      * Add elements to a screenConfig
      */
-    fun navigate(config: ElementConfig) { // TODO such a disgusting method
+    fun navigate(config: ElementOperation) { // TODO such a disgusting method
 
-        if (config.replace != null) {
-            val replaceElement = config.elements.first()
-            elementMap[config.replace] = replaceElement
-            postReactiveUpdate(replaceElement)
-            return // TODO we should probably utilise some more early returns in this function
+        val elementsToUpdate = config.elements.filter { safeGetElement(it.id) == null }
+
+        when (config) {
+            is ElementOperation.Replace -> {
+                val replaceElement = config.elements.first()
+                val originalElement = gElement(config.replace).updateElement(activeScope = replaceElement.id.scope)
+                setElement(replaceElement.id, replaceElement)
+                setElement(originalElement.id, originalElement)
+                postReactiveUpdate(replaceElement)
+                postReactiveUpdate(originalElement)
+            }
+
+            is ElementOperation.InsideAndEnd -> {
+                (gElement(config.inside) as? Widget<out WidgetState>)?.let {
+                    val updateElement =
+                        it.updateElement(it.state.copyChildren(children = it.state.children + config.elements))
+                    setElement(config.inside, updateElement)
+                    postReactiveUpdate(updateElement)
+                }
+            }
+
+            is ElementOperation.InsideAndAfter -> {
+                (gElement(config.inside) as? Widget<out WidgetState>)?.let {
+                    val updateElement = it.updateElement(
+                        it.state.copyChildren(
+                            children = combineChildren(it.state.children, config.after, config.elements)
+                        )
+                    )
+                    setElement(config.inside, updateElement)
+                    postReactiveUpdate(updateElement)
+                }
+            }
+
+            is ElementOperation.InsideAndBefore -> {
+                (gElement(config.inside) as? Widget<out WidgetState>)?.let {
+                    val updateElement = it.updateElement(
+                        it.state.copyChildren(
+                            children =
+                                combineChildren(it.state.children, config.before, config.elements, -1)
+                        )
+                    )
+                    setElement(config.inside, updateElement)
+                    postReactiveUpdate(updateElement)
+                }
+            }
+
+            is ElementOperation.InsideAndStart -> {
+                (gElement(config.inside) as? Widget<out WidgetState>)?.let {
+                    val updateElement =
+                        it.updateElement(it.state.copyChildren(children = config.elements + it.state.children))
+                    setElement(config.inside, updateElement)
+                    postReactiveUpdate(updateElement)
+                }
+            }
+
+            is ElementOperation.After -> {
+                gScreenConfig(config.inside).let {
+                    val updateElement = it.copy(children = combineChildren(it.children, config.after, config.elements))
+                    setScreenConfig(config.inside, updateElement)
+                    postScreenConfig()
+                }
+            }
+
+            is ElementOperation.Before -> {
+                gScreenConfig(config.inside).let {
+                    val updateElement = it.copy(children = combineChildren(it.children, config.before, config.elements))
+                    setScreenConfig(config.inside, updateElement)
+                    postScreenConfig()
+                }
+            }
+
+            is ElementOperation.End -> {
+                gScreenConfig(config.inside).let {
+                    val updateElement = it.copy(children = it.children + config.elements)
+                    setScreenConfig(config.inside, updateElement)
+                    postScreenConfig()
+                }
+            }
+
+            is ElementOperation.Start -> {
+                gScreenConfig(config.inside).let {
+                    val updateElement = it.copy(children = config.elements + it.children)
+                    setScreenConfig(config.inside, updateElement)
+                    postScreenConfig()
+                }
+            }
         }
 
         /**
          * Used to make all new elements that are being added to become reactive
          */
-        config.elements.forEach {
+        elementsToUpdate.forEach {
             setState(it)
             setTriggers(it)
             initialTriggers(it)
-        }
-
-
-
-        /**
-         * If the screenConfig exists, then update the children of the screenConfig.
-         */
-        val possibleScreenConfig = screenConfigMap[config.inside]
-        if (possibleScreenConfig != null) {
-            val updatedChildren = combineChildren(possibleScreenConfig.children, config)
-            val updatedConfig = possibleScreenConfig.copy(children = updatedChildren)
-
-            screenConfigMap[config.inside] = updatedConfig
-            backstack = backstack.map {
-                if (it.id == config.inside) {
-                    updatedConfig
-                } else {
-                    it
-                }
-            }.toMutableList()
-            postScreenConfig()
-        } else {
-            /**
-             * If not being added to the route of a screen config then add as a child to an element
-             */
-            val element = elementMap.fGet(config.inside)
-
-            when (element) {
-                is Component<out ComponentState> -> Unit
-                is Widget<out WidgetState> -> {
-                    val updatedChildren = combineChildren(element.state.children, config)
-                    val updatedState = element.state.copyChildren(children = updatedChildren)
-                    val updatedElement = element.updateElement(state = updatedState)
-                    elementMap[element.id] = updatedElement
-                    postReactiveUpdate(updatedElement)
-                }
-            }
         }
     }
 
@@ -137,13 +182,13 @@ abstract class Client {
      * Initially generates the element map for the client
      */
     fun setState(element: Element<out State>) {
-        if (elementMap[element.id] != null && elementMap[element.id] != element) {
+        // TODO this is so stupid, need a cleaner way to detect when an element is duplicate or not. Should we really be setting state on elements that already exist?
+        if (safeGetElement(element.id) != null && safeGetElement(element.id) != element && safeGetElement(element.id)?.activeScope == element.activeScope) {
             // TODO need a smarter way of handling the detection of duplicate IDs, I think this is where composite IDs should be useful
-//            error("Duplicate ID: ${element.id}")
-            println("Duplicate ID: ${element.id}")
+            error("Duplicate ID: ${element.id}, if you need to replace an element make sure id + scope is unique")
         }
-        elementMap[element.id] = element
-        element.metas.forEach { metaMap[it.key] = it.value }
+        setElement(element.id, element)
+        element.metas.forEach { metaMap[it.key] = it.value } // TODO Metas will eventually need to be scoped
         createReactiveUpdate(element)
 
         when (element) {
@@ -157,17 +202,32 @@ abstract class Client {
      */
     fun setTriggers(element: Element<out State>) {
         element.triggers.filterIsInstance<Trigger.OnStateUpdateTrigger>().forEach {
-            when(it.action){
+            when (it.action) {
                 is ElementPublisherAction -> setTrigger(element, it.action.publisherId, it.action)
-                is MultiElementPublisherAction -> it.action.publisherIds.forEach { target -> setTrigger(element, target, it.action) }
+                is MultiElementPublisherAction -> it.action.publisherIds.forEach { target ->
+                    setTrigger(
+                        element,
+                        target,
+                        it.action
+                    )
+                }
+
                 else -> Unit
             }
         }
 
         element.triggers.filterIsInstance<Trigger.OnMetaUpdateTrigger>().forEach {
-            when(it.action){
+            when (it.action) {
                 is MetaPublisherAction -> setMetaTrigger(element, it.action.publisherId, it.action, it.metaID)
-                is MultiMetaPublisherAction -> it.action.publisherIds.forEach { target -> setMetaTrigger(element, target, it.action, it.metaID) }
+                is MultiMetaPublisherAction -> it.action.publisherIds.forEach { target ->
+                    setMetaTrigger(
+                        element,
+                        target,
+                        it.action,
+                        it.metaID
+                    )
+                }
+
                 else -> Unit
             }
         }
@@ -179,7 +239,7 @@ abstract class Client {
     }
 
     private fun setTrigger(element: Element<out State>, target: ElementId, action: Action) {
-        val targetElement = elementMap.fGet(target)
+        val targetElement = gElement(target)
         val updatedElement = targetElement.updateElement(
             listeners = targetElement.listeners + RemoteAction(
                 action = action,
@@ -187,7 +247,7 @@ abstract class Client {
             )
         )
 
-        elementMap[target] = updatedElement
+        setElement(target, updatedElement)
         createReactiveUpdate(updatedElement)
     }
 
@@ -227,9 +287,10 @@ abstract class Client {
         // TODO when a meta updates we want to run the correct action with the correct element
         metaListenerMap[meta.id]?.forEach {
             it.action.execute(
-                element = elementMap.fGet(it.id),
+                element = gElement(it.id),
                 client = this,
-                meta = metaMap[it.metaID] ?: Meta.None(), // TODO a little dangerous just adding a default value without propper logging, benchmarking and logging will come soon
+                meta = metaMap[it.metaID]
+                    ?: Meta.None(), // TODO a little dangerous just adding a default value without propper logging, benchmarking and logging will come soon
             )
         }
     }
@@ -237,31 +298,52 @@ abstract class Client {
     /**
      * Responsible for first updating the state of the element and then propagating the state to all listeners
      */
-    fun updateState(element: Element<out State>) = measureInMillis("updateState: ${element.id}") {
-        elementMap[element.id] = element
+    fun updateElement(element: Element<out State>) = measureInMillis("updateState: ${element.id}") {
+        setElement(element.id, element)
         propagateState(element)
         postReactiveUpdate(element)
     }
 
-    private fun combineChildren(children: List<Element<out State>>, config: ElementConfig) = if (config.after != null) {
-        children
-            .indexOfFirst { it.id == config.after }
-            .let {
-                if (it == -1) {
-                    children + config.elements
-                } else {
-                    children.subList(
-                        0,
-                        it + 1
-                    ) + config.elements + children.subList(
-                        it + 1,
-                        children.size
-                    )
-                }
-            }
-    } else {
-        children + config.elements
+    fun gElement(id: ElementId) = elementMap.fGet(id.id).fGet(id.scope).let {
+        elementMap.fGet(id.id).fGet(it.activeScope)
     }
+
+    fun safeGetElement(id: ElementId) = elementMap[id.id]?.get(id.scope)?.let {
+        elementMap[id.id]?.get(it.activeScope)
+    }
+
+    fun setElement(id: ElementId, element: Element<out State>) {
+        if (elementMap[id.id] == null) {
+            elementMap[id.id] = mutableMapOf()
+        }
+        elementMap[id.id]!![id.scope] = element
+    }
+
+    fun gScreenConfig(id: ScreenId) = screenConfigMap[id]!!
+    fun setScreenConfig(id: ScreenId, screenConfig: ScreenConfig) {
+        screenConfigMap[id] = screenConfig
+    }
+
+    private fun combineChildren(
+        children: List<Element<out State>>,
+        config: ElementId,
+        elements: List<Element<out State>>,
+        offset: Int = 0
+    ) = children
+        .indexOfFirst { it.id == config }
+        .let {
+            if (it == -1) {
+                children + elements
+            } else {
+                children.subList(
+                    0,
+                    it + 1 + offset
+                ) + elements + children.subList(
+                    it + 1 + offset,
+                    children.size
+                )
+            }
+        }
 
 
     /**
@@ -279,7 +361,7 @@ abstract class Client {
      */
     private fun propagateState(element: Element<out State>) {
         element.listeners.forEach { listener ->
-            listener.action.execute(elementMap.fGet(listener.id), this)
+            listener.action.execute(gElement(listener.id), this)
         }
     }
 

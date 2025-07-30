@@ -5,7 +5,6 @@ import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.*
 import ship.f.engine.shared.utils.serverdrivenui.action.Meta.*
 import ship.f.engine.shared.utils.serverdrivenui.client.Client
-import ship.f.engine.shared.utils.serverdrivenui.ext.fGet
 import ship.f.engine.shared.utils.serverdrivenui.ext.runIf
 import ship.f.engine.shared.utils.serverdrivenui.state.State
 import ship.f.engine.shared.utils.serverdrivenui.state.Valid
@@ -70,11 +69,7 @@ sealed class Action {
             when (meta) {
                 is ScreenConfigMeta -> client.navigate(meta.screenConfig)
                 is ElementConfigMeta -> client.navigate(meta.elementConfig)
-                is Json -> Unit
-                is None -> Unit
-                is FilterMetaStore -> Unit
-                is FilterMeta -> Unit
-                is FilterGroupMeta -> Unit
+                else -> Unit
             }
         }
     }
@@ -142,7 +137,7 @@ sealed class Action {
 
                         // TODO need to actually make sure to implement visibility on components
                         (element.state as? Visibility<out State>)?.copyVisibility(isVisible)?.let { state ->
-                            client.updateState(element.updateElement(state))
+                            client.updateElement(element.updateElement(state))
                         }
                     }
                 }
@@ -164,7 +159,6 @@ sealed class Action {
                 filters.mapNotNull { client.metaMap[it.id] }
                     .mapNotNull { m ->
                         client.metaMap[(m as? FilterMeta)?.targetGroup]?.let { group ->
-                            println("SDUILOG ${group.id.id}: ${group}")
                             (group as? FilterMetaStore)?.let { listMeta ->
                                 (listMeta.metas.isEmpty() || listMeta.metas.contains(m.id))
                             }
@@ -173,7 +167,7 @@ sealed class Action {
                         it
                     }.let { isVisible ->
                         (element.state as? Visibility<out State>)?.copyVisibility(isVisible)?.let { state ->
-                            client.updateState(element.updateElement(state))
+                            client.updateElement(element.updateElement(state))
                         }
                     }
             }
@@ -298,10 +292,10 @@ sealed class Action {
             // TODO this works in the context of when the default value is set correctly, but otherwise will only be correct after the first trigger
             // TODO I think I will probably need a flag to determine if the action should be triggered initially on screen load.
             // TODO Or we might just use another trigger for this to make things generic and clear
-            val valid = publisherIds.mapNotNull { client.elementMap.fGet(it).state as? Valid<out State> }
+            val valid = publisherIds.mapNotNull { client.gElement(it).state as? Valid<out State> }
                 .all { it.valid == true }
             (element.state as? Valid<out State>)?.copyValid(valid)?.let { state ->
-                client.updateState(element.updateElement(state))
+                client.updateElement(element.updateElement(state))
             }
         }
     }
@@ -319,7 +313,7 @@ sealed class Action {
             client: Client,
             meta: Meta,
         ) {
-            client.updateState(element)
+            client.updateElement(element)
         }
     }
 
@@ -357,10 +351,10 @@ sealed class Action {
             meta: Meta,
         ) {
             val targetElement =
-                client.elementMap.fGet(publisherId).state as? Value<out State>
+                client.gElement(publisherId).state as? Value<out State>
                     ?: error("Target element is not a value")
             val updatedElement = (element as Element<Value<out State>>).state.copyValue(targetElement.value)
-            client.updateState(element.updateElement(updatedElement))
+            client.updateElement(element.updateElement(updatedElement))
         }
     }
 
@@ -374,10 +368,10 @@ sealed class Action {
             client: Client,
             meta: Meta,
         ) {
-            val targetElement = client.elementMap.fGet(targetId)
+            val targetElement = client.gElement(targetId)
             val updatedState = targetElement.state.copyVisibility(!targetElement.state.visible)
             val updatedElement = targetElement.updateElement(updatedState)
-            client.updateState(updatedElement)
+            client.updateElement(updatedElement)
         }
     }
 
@@ -393,7 +387,7 @@ sealed class Action {
         ) {
             client.deferredActions[publisherId]?.forEach {
                 it.action.execute(
-                    element = client.elementMap.fGet(it.id),
+                    element = client.gElement(it.id),
                     client = client,
                     meta = client.metaMap[it.metaID] ?: None(),
                 )
@@ -413,7 +407,7 @@ sealed class Action {
             meta: Meta
         ) {
             client.deferredActions[publisherId]?.forEach {
-                it.restoredElement?.let { restoredElement -> client.updateState(restoredElement) }
+                it.restoredElement?.let { restoredElement -> client.updateElement(restoredElement) }
             }
             client.deferredActions.remove(publisherId)
         }

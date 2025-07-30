@@ -9,6 +9,7 @@ import ship.f.engine.shared.utils.serverdrivenui.action.Trigger
 import ship.f.engine.shared.utils.serverdrivenui.action.Trigger.DeferredTrigger
 import ship.f.engine.shared.utils.serverdrivenui.client.ClientHolder.getClient
 import ship.f.engine.shared.utils.serverdrivenui.ext.auto
+import ship.f.engine.shared.utils.serverdrivenui.ext.autoScreenId
 import ship.f.engine.shared.utils.serverdrivenui.ext.id
 import ship.f.engine.shared.utils.serverdrivenui.state.ColorSchemeState
 import ship.f.engine.shared.utils.serverdrivenui.state.ComponentState
@@ -21,7 +22,7 @@ import ship.f.engine.shared.utils.serverdrivenui.state.WidgetState
 @Serializable()
 @SerialName("ScreenConfig")
 data class ScreenConfig(
-    val id: ElementId = auto(),
+    val id: ScreenId = autoScreenId(),
     val lightColorScheme: ColorSchemeState? = null,
     val darkColorScheme: ColorSchemeState? = null,
     val children: List<Element<out State>> = emptyList(),
@@ -46,10 +47,18 @@ data class ScreenConfig(
         override val scope: String,
     ) : ID()
 
-    @Serializable()
+    @Serializable
+    @SerialName("ScreenConfigId")
+    data class ScreenId(
+        override val id: String,
+        override val scope: String,
+    ) : ID()
+
+    @Serializable
     @SerialName("Element")
     sealed class Element<S : State> {
         abstract val id: ElementId
+        abstract val activeScope: String
         abstract val state: S
         abstract val fallback: Fallback
 
@@ -61,20 +70,25 @@ data class ScreenConfig(
         fun updateElement(
             state: State = this.state,
             listeners: List<RemoteAction> = this.listeners,
+            activeScope: String = this.activeScope,
         ) = when (this) {
             is Component<*> -> update(
                 state = state,
                 listeners = listeners,
+                activeScope = activeScope,
             )
+
             is Widget<*> -> update(
                 state = state,
                 listeners = listeners,
+                activeScope = activeScope,
             )
         }
+
         inline fun <reified T : Trigger> trigger() {
             val client = getClient()
             triggers.filterIsInstance<T>().forEach { triggerAction ->
-                when(triggerAction){
+                when (triggerAction) {
                     is DeferredTrigger -> Unit
                     else -> {
                         triggerAction.action.execute(
@@ -106,13 +120,16 @@ data class ScreenConfig(
 
         companion object {
             val none = id("None")
+            const val DEFAULT_ELEMENT_SCOPE = "DefaultElementScope"
         }
     }
 
     @Serializable
     @SerialName("Widget")
+    @Suppress("UNCHECKED_CAST")
     data class Widget<S : WidgetState>(
         override val id: ElementId = auto(),
+        override val activeScope: String = id.scope, // TODO this is probably useless to be honest
         override val state: S,
         override val fallback: Fallback = Fallback.Hide,
         override val triggers: List<Trigger> = emptyList(),
@@ -122,10 +139,13 @@ data class ScreenConfig(
         fun update(
             state: State = this.state,
             listeners: List<RemoteAction> = this.listeners,
+            activeScope: String = this.activeScope,
         ) = copy(
             state = state as S,
             listeners = listeners,
+            activeScope = activeScope,
         )
+
         fun update(block: S.() -> S): Widget<S> {
             return copy(state = block(this.state))
         }
@@ -133,8 +153,10 @@ data class ScreenConfig(
 
     @Serializable
     @SerialName("Component")
+    @Suppress("UNCHECKED_CAST")
     data class Component<S : ComponentState>(
         override val id: ElementId = auto(),
+        override val activeScope: String = id.scope,
         override val state: S,
         override val fallback: Fallback = Fallback.Hide,
         override val triggers: List<Trigger> = emptyList(),
@@ -144,10 +166,13 @@ data class ScreenConfig(
         fun update(
             state: State = this.state,
             listeners: List<RemoteAction> = this.listeners,
+            activeScope: String = this.activeScope,
         ) = copy(
             state = state as S,
             listeners = listeners,
+            activeScope = activeScope,
         )
+
         fun update(block: S.() -> S): Component<S> {
             return copy(state = block(this.state))
         }
@@ -179,5 +204,7 @@ data class ScreenConfig(
 
     companion object {
         val empty = ScreenConfig()
+        const val DEFAULT_SCREEN_SCOPE = "DefaultScreenScope"
+        fun screenId(value: String, scope: String = DEFAULT_SCREEN_SCOPE) = ScreenId(value, scope)
     }
 }

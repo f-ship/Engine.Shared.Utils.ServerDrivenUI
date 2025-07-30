@@ -3,7 +3,7 @@ package ship.f.engine.shared.utils.serverdrivenui.action
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-import ship.f.engine.shared.utils.serverdrivenui.ElementConfig
+import ship.f.engine.shared.utils.serverdrivenui.ElementOperation
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.MetaId
 import ship.f.engine.shared.utils.serverdrivenui.ext.metaId
@@ -35,7 +35,7 @@ sealed class Meta {
     @Serializable
     @SerialName("ElementConfig")
     data class ElementConfigMeta(
-        val elementConfig: ElementConfig,
+        val elementConfig: ElementOperation,
         override val id: MetaId = autoMetaId(),
     ) : Meta()
 
@@ -65,5 +65,6 @@ sealed class Meta {
         var metaCount = 0
         fun autoMetaId() = metaId("meta-${metaCount++}")
         val none = metaId("None")
+        const val DEFAULT_META_SCOPE = "DefaultMetaScope"
     }
 }
