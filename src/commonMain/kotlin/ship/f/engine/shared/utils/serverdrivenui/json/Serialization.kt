@@ -27,6 +27,7 @@ object WidgetStateSerializer : JsonContentPolymorphicSerializer<WidgetState>(Wid
     }
 }
 
+// TODO this bloody thing isn't even running anymore, so looks like UnknownComponentState is a versioning issue I don't have time to fix now as is a massive time sink!!!
 /**
  * Custom serializer for the ComponentState class makes it possible to gracefully handle unknown types.
  */
@@ -53,6 +54,7 @@ object ComponentStateSerializer : JsonContentPolymorphicSerializer<ComponentStat
             DialogState::class.simpleName -> DialogState.serializer()
             SnackBarState::class.simpleName -> SnackBarState.serializer()
             LoaderState::class.simpleName -> LoaderState.serializer()
+            DividerState::class.simpleName -> DividerState.serializer()
             else -> UnknownComponentState.serializer()
         }
     }

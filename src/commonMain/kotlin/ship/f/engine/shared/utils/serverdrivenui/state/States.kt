@@ -556,6 +556,12 @@ data class LoaderState(
 ) : ComponentState()
 
 @Serializable
+@SerialName("DividerState")
+data class DividerState(
+    override val size: Size = Fill(horizontalFill = 1f),
+) : ComponentState()
+
+@Serializable
 @SerialName("UnknownComponentState")
 data class UnknownComponentState(
     val value: String,

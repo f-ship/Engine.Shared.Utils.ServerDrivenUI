@@ -37,6 +37,7 @@ val json = Json {
             subclass(DialogState::class)
             subclass(SnackBarState::class)
             subclass(LoaderState::class)
+            subclass(DividerState::class)
             subclass(UnknownComponentState::class)
         }
 

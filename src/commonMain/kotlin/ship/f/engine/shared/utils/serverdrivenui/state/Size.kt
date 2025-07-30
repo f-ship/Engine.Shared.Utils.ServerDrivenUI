@@ -28,3 +28,22 @@ data object Window : Size()
 
 @Serializable
 data object DefaultSize : Size()
+
+/**
+ * A size that matches the parent's height without influencing the parent's height calculation.
+ * Only other components in the parent will determine the parent's height.
+ * 
+ * Example usage:
+ * ```
+ * // Create a component that matches parent height without affecting parent sizing
+ * val myComponent = ComponentState(
+ *     size = MatchParent,
+ *     // other properties...
+ * )
+ * ```
+ * 
+ * This is useful for components that need to fill the available height in a container
+ * without forcing the container to expand to their size.
+ */
+@Serializable
+data object MatchParent : Size()
