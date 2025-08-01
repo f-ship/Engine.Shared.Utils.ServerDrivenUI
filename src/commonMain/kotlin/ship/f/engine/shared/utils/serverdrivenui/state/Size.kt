@@ -9,7 +9,14 @@ sealed class Size
 data class Fixed(
     val height: Int,
     val width: Int,
-) : Size()
+) : Size() {
+    companion object {
+        val IconSmall = Fixed(12, 12)
+        val IconStandard = Fixed(16, 16)
+        val IconLarge = Fixed(24, 24)
+        val IconExtraLarge = Fixed(32, 32)
+    }
+}
 
 @Serializable
 data class Fill(

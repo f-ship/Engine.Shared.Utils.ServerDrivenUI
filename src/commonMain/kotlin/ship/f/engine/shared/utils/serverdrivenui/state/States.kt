@@ -66,6 +66,8 @@ sealed class WidgetState : State() {
     fun colorSchemeState(
         primary: Long,
         onPrimary: Long,
+        secondary: Long,
+        onSecondary: Long,
         onSecondaryContainer: Long,
         secondaryContainer: Long,
         background: Long,
@@ -75,9 +77,12 @@ sealed class WidgetState : State() {
         surfaceVariant: Long,
         onSurfaceVariant: Long,
         outline: Long,
+        outlineVariant: Long,
     ) = ColorSchemeState(
         primary = primary,
         onPrimary = onPrimary,
+        secondary = secondary,
+        onSecondary = onSecondary,
         onSecondaryContainer = onSecondaryContainer,
         secondaryContainer = secondaryContainer,
         background = background,
@@ -87,6 +92,7 @@ sealed class WidgetState : State() {
         surfaceVariant = surfaceVariant,
         onSurfaceVariant = onSurfaceVariant,
         outline = outline,
+        outlineVariant = outlineVariant,
     )
 
     fun toggleState(
@@ -277,11 +283,25 @@ data class SpaceState(
 data class TextState(
     override val value: String,
     val style: Style = Style.BodyMedium,
-    val color: Long? = null,
+    val fontWeight: Weight = Weight.Normal,
+    val color: ColorSchemeState.Color? = null,
     val textAlign: STextAlign = STextAlign.Start,
     override val padding: Padding = Padding(),
 ) : ComponentState(), Value<TextState> {
     override fun copyValue(v: String) = this.copy(value = v)
+
+    @Serializable
+    sealed class Weight {
+        @Serializable
+        data object Normal : Weight()
+        @Serializable
+        data object SemiBold : Weight()
+        @Serializable
+        data object Bold : Weight()
+        @Serializable
+        data object ExtraBold : Weight()
+
+    }
 
     @Serializable
     sealed class Style {
@@ -394,8 +414,10 @@ data class FieldState(
 data class ColorSchemeState(
     val primary: Long,
     val onPrimary: Long,
-    val onSecondaryContainer: Long,
+    val secondary: Long,
+    val onSecondary: Long,
     val secondaryContainer: Long,
+    val onSecondaryContainer: Long,
     val background: Long,
     val onBackground: Long,
     val surface: Long,
@@ -403,7 +425,45 @@ data class ColorSchemeState(
     val surfaceVariant: Long,
     val onSurfaceVariant: Long,
     val outline: Long,
-)
+    val outlineVariant: Long,
+) {
+    @Serializable
+    sealed class Color {
+        @Serializable
+        data object Primary : Color()
+        @Serializable
+        data object OnPrimary : Color()
+
+        @Serializable
+        data object Secondary : Color()
+        @Serializable
+        data object OnSecondary : Color()
+
+        @Serializable
+        data object SecondaryContainer : Color()
+        @Serializable
+        data object OnSecondaryContainer : Color()
+
+        @Serializable
+        data object Background : Color()
+        @Serializable
+        data object OnBackground : Color()
+
+        @Serializable
+        data object Surface : Color()
+        @Serializable
+        data object SurfaceVariant : Color()
+        @Serializable
+        data object OnSurface : Color()
+        @Serializable
+        data object OnSurfaceVariant : Color()
+
+        @Serializable
+        data object Outline : Color()
+        @Serializable
+        data object OutlineVariant : Color()
+    }
+}
 
 @Serializable
 @SerialName("ToggleState")
@@ -462,6 +522,7 @@ data class ImageState(
     val src: Source,
     val accessibilityLabel: String? = null,
     val scaleType: ScaleType = Default,
+    val color: ColorSchemeState.Color? = null,
     override val padding: Padding = Padding(),
     override val size: Size = DefaultSize,
 ) : ComponentState() {
@@ -529,6 +590,7 @@ data class NotificationState(
     val number: Int? = null,
     val numberAlign: Align = Align.Center,
     val isActive: Boolean = true, // TODO should probably replace with a sealed class
+    override val size: Size = DefaultSize,
 ) : ComponentState()
 
 @Serializable
