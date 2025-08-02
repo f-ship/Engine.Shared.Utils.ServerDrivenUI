@@ -50,6 +50,26 @@ abstract class Client {
     var banner: Fallback? = null
 
     /**
+     * Sometimes the backend may return more than one screen,
+     * in such a case the first screen is usually rendered while the others should be stored and referenced
+     */
+    fun store(config: ScreenConfig) {
+        config.children.forEach {
+            setState(it)
+            setTriggers(it)
+            initialTriggers(it)
+        }
+        screenConfigMap[config.id] = config
+    }
+
+    /**
+     * Sometimes the backend may not need to return with any UI, but may return with a meta that contains information
+     */
+    fun store(config: Meta) {
+
+    }
+
+    /**
      * Push a new screenConfig onto the backstack and set the state of the screenConfig.
      * If the last screen in the backstack has the same ID as the new screenConfig,
      * then the screenConfig will be removed from the backstack as it will be replaced by the new screenConfig.
