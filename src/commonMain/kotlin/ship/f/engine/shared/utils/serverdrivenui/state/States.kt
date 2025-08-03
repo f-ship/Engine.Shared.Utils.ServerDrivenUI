@@ -694,6 +694,9 @@ data class ColumnState(
 @SerialName("FlexRowState")
 data class FlexRowState(
     override val children: List<Element<out State>> = listOf(),
+    val arrangement: Arrange = Arrange.Center,
+    override val size: Size = DefaultSize,
+    override val padding: Padding = Padding(),
 ) : WidgetState() {
     override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
 }
