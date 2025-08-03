@@ -57,7 +57,6 @@ abstract class Client {
         config.children.forEach {
             setState(it)
             setTriggers(it)
-            initialTriggers(it)
         }
         screenConfigMap[config.id] = config
     }
@@ -96,7 +95,6 @@ abstract class Client {
             config.children.forEach {
                 setState(it)
                 setTriggers(it)
-                initialTriggers(it)
             }
             screenConfigMap[config.id] = config
         }
@@ -295,7 +293,7 @@ abstract class Client {
         )
     }
 
-    // TODO this doesn't get reliably triggered when opening app from background
+    // TODO this doesn't get reliably triggered when opening app from background, this also triggers when the screen is stored but not rendered
     fun initialTriggers(element: Element<out State>) {
         element.triggers.filterIsInstance<OnInitialRenderTrigger>().forEach {
             it.action.execute(
@@ -381,6 +379,9 @@ abstract class Client {
      * Add a screenConfig to the backstack
      */
     private fun addConfig(config: ScreenConfig) {
+        config.children.forEach { // TODO this will be triggered everytime the screen is navigated to, will need to differentiate and optimize
+            initialTriggers(it)
+        }
         backstack.add(config)
         postScreenConfig()
     }
