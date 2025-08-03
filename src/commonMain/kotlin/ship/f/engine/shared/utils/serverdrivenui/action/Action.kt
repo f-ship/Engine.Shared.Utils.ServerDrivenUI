@@ -69,6 +69,7 @@ sealed class Action {
             when (meta) {
                 is ScreenConfigMeta -> client.navigate(meta.screenConfig)
                 is ElementConfigMeta -> client.navigate(meta.elementConfig)
+                is ScreenReferenceMeta -> client.navigate(meta.screenId)
                 else -> Unit
             }
         }
@@ -332,7 +333,11 @@ sealed class Action {
             client: Client,
             meta: Meta,
         ) {
-            TODO("Not yet implemented")
+            meta.runIf<SideEffectMeta> {
+                val elements = elements.map { client.gElement(it) }
+                val metas = metas.map { client.metaMap[it]!! }
+                client.emitConfig(screenId, id, elements, metas)
+            }
         }
     }
 

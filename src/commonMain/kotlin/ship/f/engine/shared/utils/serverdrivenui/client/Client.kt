@@ -66,7 +66,17 @@ abstract class Client {
      * Sometimes the backend may not need to return with any UI, but may return with a meta that contains information
      */
     fun store(config: Meta) {
+        metaMap[config.id] = config
+    }
 
+    /**
+     * This is used to emit side effects outside the SDUI environment
+     */
+    var emitConfig: (screenId: ScreenId, metaId: MetaId, elements: List<Element<out State>>, metas: List<Meta>) -> Unit = { _, _, _, _ -> }
+
+    fun navigate(screenId: ScreenId) {
+        val screen = gScreenConfig(screenId)
+        navigate(screen)
     }
 
     /**
@@ -208,7 +218,7 @@ abstract class Client {
             error("Duplicate ID: ${element.id}, if you need to replace an element make sure id + scope is unique")
         }
         setElement(element.id, element)
-        element.metas.forEach { metaMap[it.key] = it.value } // TODO Metas will eventually need to be scoped
+        element.metas.forEach { metaMap[it.key] = it.value } // TODO Metas will eventually need to be scoped, try to avoid this actually
         createReactiveUpdate(element)
 
         when (element) {
@@ -285,6 +295,7 @@ abstract class Client {
         )
     }
 
+    // TODO this doesn't get reliably triggered when opening app from background
     fun initialTriggers(element: Element<out State>) {
         element.triggers.filterIsInstance<OnInitialRenderTrigger>().forEach {
             it.action.execute(

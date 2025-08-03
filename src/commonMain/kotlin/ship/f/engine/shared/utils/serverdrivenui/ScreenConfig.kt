@@ -52,7 +52,11 @@ data class ScreenConfig(
     data class ScreenId(
         override val id: String,
         override val scope: String,
-    ) : ID()
+    ) : ID() {
+        companion object {
+            val none = ScreenId("None", "None")
+        }
+    }
 
     @Serializable
     @SerialName("Element")

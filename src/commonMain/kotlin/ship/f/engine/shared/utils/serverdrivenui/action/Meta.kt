@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import ship.f.engine.shared.utils.serverdrivenui.ElementOperation
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig
-import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.MetaId
+import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.*
 import ship.f.engine.shared.utils.serverdrivenui.ext.metaId
 
 @Serializable
@@ -26,16 +26,23 @@ sealed class Meta {
     ) : Meta()
 
     @Serializable
-    @SerialName("ScreenConfig")
+    @SerialName("ScreenConfigMeta")
     data class ScreenConfigMeta(
         val screenConfig: ScreenConfig,
         override val id: MetaId = autoMetaId(),
     ) : Meta()
 
     @Serializable
-    @SerialName("ElementConfig")
+    @SerialName("ElementConfigMeta")
     data class ElementConfigMeta(
         val elementConfig: ElementOperation,
+        override val id: MetaId = autoMetaId(),
+    ) : Meta()
+
+    @Serializable
+    @SerialName("ScreenReferenceMeta")
+    data class ScreenReferenceMeta(
+        val screenId: ScreenId,
         override val id: MetaId = autoMetaId(),
     ) : Meta()
 
@@ -59,6 +66,15 @@ sealed class Meta {
     data class FilterGroupMeta(
         val filters: List<FilterMeta>,
         override val id: MetaId = autoMetaId(),
+    ) : Meta()
+
+    @Serializable
+    @SerialName("SideEffectMeta")
+    data class SideEffectMeta(
+        override val id: MetaId,
+        val screenId: ScreenId = ScreenId.none,
+        val elements: List<ElementId> = listOf(),
+        val metas: List<MetaId> = listOf(),
     ) : Meta()
 
     companion object {
