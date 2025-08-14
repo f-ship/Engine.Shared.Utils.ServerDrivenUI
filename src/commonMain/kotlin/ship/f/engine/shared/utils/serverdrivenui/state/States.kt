@@ -78,6 +78,8 @@ sealed class WidgetState : State() {
         onSurfaceVariant: Long,
         outline: Long,
         outlineVariant: Long,
+        error: Long,
+        onError: Long,
     ) = ColorSchemeState(
         primary = primary,
         onPrimary = onPrimary,
@@ -93,6 +95,8 @@ sealed class WidgetState : State() {
         onSurfaceVariant = onSurfaceVariant,
         outline = outline,
         outlineVariant = outlineVariant,
+        error = error,
+        onError = onError,
     )
 
     fun toggleState(
@@ -426,6 +430,8 @@ data class ColorSchemeState(
     val onSurfaceVariant: Long,
     val outline: Long,
     val outlineVariant: Long,
+    val error: Long,
+    val onError: Long,
 ) {
     @Serializable
     sealed class Color {
@@ -462,6 +468,12 @@ data class ColorSchemeState(
         data object Outline : Color()
         @Serializable
         data object OutlineVariant : Color()
+
+        @Serializable
+        data object Error : Color()
+
+        @Serializable
+        data object OnError : Color()
     }
 }
 
@@ -567,8 +579,10 @@ data class ButtonState(
     override val size: Size = DefaultSize,
     override val padding: Padding = Padding(),
     override val valid: Boolean? = null,
-) : ComponentState(), Valid<ButtonState> {
+    override val loading: Boolean = false,
+) : ComponentState(), Valid<ButtonState>, Loading<ButtonState> {
     override fun copyValid(v: Boolean) = copy(valid = v)
+    override fun copyLoading(v: Boolean) = copy(loading = v)
 
     @Serializable
     sealed class ButtonType {
@@ -637,7 +651,11 @@ data class CardState(
     override val size: Size = DefaultSize,
     override val visible: Boolean = true,
     override val isStickyHeader: Boolean = false,
+    val innerPadding: Padding = Padding(),
+    val alignment: Align = Align.Center, // TODO this is really bad
+    val border: Border? = Border(color = ColorSchemeState.Color.OutlineVariant, width = 1),
     val background: Long? = null,
+    val color: ColorSchemeState.Color? = null,
     val shape: Shape = roundedRectangle(16),
 ) : WidgetState() {
     override fun copyChildren(children: List<Element<out State>>) = copy(children = children)

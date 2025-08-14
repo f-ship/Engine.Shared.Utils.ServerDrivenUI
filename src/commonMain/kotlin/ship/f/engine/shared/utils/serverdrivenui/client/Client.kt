@@ -34,13 +34,13 @@ abstract class Client {
     /**
      * Map used to store listeners for meta-updates, this is pretty ugly for now, should probably fo
      */
-    val metaListenerMap: MutableMap<MetaId, MutableList<RemoteAction>> = mutableMapOf()
+    val metaListenerMap: MutableMap<MetaId, MutableList<RemoteActionHolder>> = mutableMapOf()
 
     /**
      * Deferred Actions can be executed or canceled at a later time, this map cache said actions
      * I probably should at some point replace all these maps and things with a Meta Implementation
      */
-    val deferredActions: MutableMap<MetaId, MutableList<DeferredAction>> = mutableMapOf()
+    val deferredActionHolders: MutableMap<MetaId, MutableList<DeferredActionHolder>> = mutableMapOf()
 
     /**
      * When the server sends the client a component, and it can't render, the component will be rendered with fallback behavior.
@@ -68,10 +68,16 @@ abstract class Client {
         metaMap[config.id] = config
     }
 
+    // TODO should really combine all side effects of the client into sealed class? Maybe should be Metas
     /**
      * This is used to emit side effects outside the SDUI environment
      */
     var emitConfig: (screenId: ScreenId, metaId: MetaId, elements: List<Element<out State>>, metas: List<Meta>) -> Unit = { _, _, _, _ -> }
+
+    /**
+     * This is used to emit open url
+     */
+    var emitWebAction: (url: Action.SendUrl) -> Unit = { }
 
     fun navigate(screenId: ScreenId) {
         val screen = gScreenConfig(screenId)
@@ -111,7 +117,7 @@ abstract class Client {
         val elementsToUpdate = config.elements.filter { safeGetElement(it.id) == null }
 
         when (config) {
-            is ElementOperation.Replace -> {
+            is ElementOperation.Replace -> { // TODO this implementation is a bit too simple, don't think it will actually work
                 val replaceElement = config.elements.first()
                 val originalElement = gElement(config.replace).updateElement(activeScope = replaceElement.id.scope)
                 setElement(replaceElement.id, replaceElement)
@@ -269,7 +275,7 @@ abstract class Client {
     private fun setTrigger(element: Element<out State>, target: ElementId, action: Action) {
         val targetElement = gElement(target)
         val updatedElement = targetElement.updateElement(
-            listeners = targetElement.listeners + RemoteAction(
+            listeners = targetElement.listeners + RemoteActionHolder(
                 action = action,
                 id = element.id,
             )
@@ -285,7 +291,7 @@ abstract class Client {
         }
 
         metaListenerMap[target]!!.add(
-            RemoteAction(
+            RemoteActionHolder(
                 action = action,
                 id = element.id,
                 metaID = metaId,

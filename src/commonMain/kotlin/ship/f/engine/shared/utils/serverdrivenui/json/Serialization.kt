@@ -12,6 +12,7 @@ import ship.f.engine.shared.utils.serverdrivenui.state.*
  */
 object WidgetStateSerializer : JsonContentPolymorphicSerializer<WidgetState>(WidgetState::class) {
     override fun selectDeserializer(element: JsonElement): DeserializationStrategy<WidgetState> {
+        println("SDUILOG does this still run Widget")
         val discriminator = element.jsonObject["type"]?.jsonPrimitive?.content ?: element.jsonObject["type2"]?.jsonPrimitive?.content
         return when (discriminator) {
             CardState::class.simpleName -> CardState.serializer()
@@ -33,6 +34,7 @@ object WidgetStateSerializer : JsonContentPolymorphicSerializer<WidgetState>(Wid
  */
 object ComponentStateSerializer : JsonContentPolymorphicSerializer<ComponentState>(ComponentState::class) {
     override fun selectDeserializer(element: JsonElement): DeserializationStrategy<ComponentState> {
+        println("SDUILOG does this still run Component")
         val discriminator = element.jsonObject["type"]?.jsonPrimitive?.content
         return when (discriminator) {
             SpaceState::class.simpleName -> SpaceState.serializer()

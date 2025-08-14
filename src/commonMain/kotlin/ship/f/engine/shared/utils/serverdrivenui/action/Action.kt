@@ -75,6 +75,21 @@ sealed class Action {
         }
     }
 
+    @Serializable
+    @SerialName("StartLoading")
+    data class Loading(
+        val metaPublisherIds: List<MetaId> = listOf(), // TODO need to make this listen to metas
+    ) : Action() { // TODO need to make another for match loading so that more fields can benefit from this
+        override fun execute(
+            element: Element<out State>,
+            client: Client,
+            meta: Meta,
+        ) {
+            val state = (element.state as ship.f.engine.shared.utils.serverdrivenui.state.Loading<out State>).copyLoading(true)
+            client.updateElement(element.updateElement(state))
+        }
+    }
+
     /**
      * It's not clear how refresh will be used yet
      * Potentially when it's triggered, the id of the screen is sent in some sort of event outside the SDUI system with the expectation of an updated screen config.
@@ -341,6 +356,33 @@ sealed class Action {
         }
     }
 
+    @Serializable
+    @SerialName("SendUrl")
+    data class SendUrl(
+        val url: String,
+        val urlIntercept: Intercept? = null
+    ) : Action() {
+        override fun execute(
+            element: Element<out State>,
+            client: Client,
+            meta: Meta,
+        ) {
+            client.emitWebAction(this)
+        }
+
+        @Serializable
+        data class Intercept(
+            val url: String,
+            val action: InterceptAction
+        ) {
+            @Serializable
+            sealed class InterceptAction {
+                @Serializable
+                data class Param(val key: String) : InterceptAction()
+            }
+        }
+    }
+
     /**
      * This action is used to update the value of a single element based on a single target element.
      */
@@ -390,14 +432,14 @@ sealed class Action {
             client: Client,
             meta: Meta,
         ) {
-            client.deferredActions[publisherId]?.forEach {
+            client.deferredActionHolders[publisherId]?.forEach {
                 it.action.execute(
                     element = client.gElement(it.id),
                     client = client,
                     meta = client.metaMap[it.metaID] ?: None(),
                 )
             }
-            client.deferredActions.remove(publisherId)
+            client.deferredActionHolders.remove(publisherId)
         }
     }
 
@@ -411,10 +453,10 @@ sealed class Action {
             client: Client,
             meta: Meta
         ) {
-            client.deferredActions[publisherId]?.forEach {
+            client.deferredActionHolders[publisherId]?.forEach {
                 it.restoredElement?.let { restoredElement -> client.updateElement(restoredElement) }
             }
-            client.deferredActions.remove(publisherId)
+            client.deferredActionHolders.remove(publisherId)
         }
     }
 }

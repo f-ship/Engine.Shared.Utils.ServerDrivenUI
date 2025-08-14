@@ -2,9 +2,9 @@ package ship.f.engine.shared.utils.serverdrivenui
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import ship.f.engine.shared.utils.serverdrivenui.action.DeferredAction
+import ship.f.engine.shared.utils.serverdrivenui.action.DeferredActionHolder
 import ship.f.engine.shared.utils.serverdrivenui.action.Meta
-import ship.f.engine.shared.utils.serverdrivenui.action.RemoteAction
+import ship.f.engine.shared.utils.serverdrivenui.action.RemoteActionHolder
 import ship.f.engine.shared.utils.serverdrivenui.action.Trigger
 import ship.f.engine.shared.utils.serverdrivenui.action.Trigger.DeferredTrigger
 import ship.f.engine.shared.utils.serverdrivenui.client.ClientHolder.getClient
@@ -67,13 +67,13 @@ data class ScreenConfig(
         abstract val fallback: Fallback
 
         abstract val triggers: List<Trigger>
-        abstract val listeners: List<RemoteAction>
+        abstract val listeners: List<RemoteActionHolder>
 
         abstract val metas: Map<MetaId, Meta>
 
         fun updateElement(
             state: State = this.state,
-            listeners: List<RemoteAction> = this.listeners,
+            listeners: List<RemoteActionHolder> = this.listeners,
             activeScope: String = this.activeScope,
         ) = when (this) {
             is Component<*> -> update(
@@ -108,11 +108,11 @@ data class ScreenConfig(
         fun deferredTrigger(restoredElement: Element<out State>? = null) {
             val client = getClient()
             triggers.filterIsInstance<DeferredTrigger>().forEach { triggerAction ->
-                if (client.deferredActions[triggerAction.group] == null) {
-                    client.deferredActions[triggerAction.group] = mutableListOf()
+                if (client.deferredActionHolders[triggerAction.group] == null) {
+                    client.deferredActionHolders[triggerAction.group] = mutableListOf()
                 }
-                client.deferredActions[triggerAction.group]!!.add(
-                    DeferredAction(
+                client.deferredActionHolders[triggerAction.group]!!.add(
+                    DeferredActionHolder(
                         action = triggerAction.action,
                         id = id,
                         metaID = triggerAction.metaID,
@@ -137,12 +137,12 @@ data class ScreenConfig(
         override val state: S,
         override val fallback: Fallback = Fallback.Hide,
         override val triggers: List<Trigger> = emptyList(),
-        override val listeners: List<RemoteAction> = emptyList(),
+        override val listeners: List<RemoteActionHolder> = emptyList(),
         override val metas: Map<MetaId, Meta> = mapOf(),
     ) : Element<WidgetState>() {
         fun update(
             state: State = this.state,
-            listeners: List<RemoteAction> = this.listeners,
+            listeners: List<RemoteActionHolder> = this.listeners,
             activeScope: String = this.activeScope,
         ) = copy(
             state = state as S,
@@ -164,12 +164,12 @@ data class ScreenConfig(
         override val state: S,
         override val fallback: Fallback = Fallback.Hide,
         override val triggers: List<Trigger> = emptyList(),
-        override val listeners: List<RemoteAction> = emptyList(),
+        override val listeners: List<RemoteActionHolder> = emptyList(),
         override val metas: Map<MetaId, Meta> = mapOf(),
     ) : Element<ComponentState>() {
         fun update(
             state: State = this.state,
-            listeners: List<RemoteAction> = this.listeners,
+            listeners: List<RemoteActionHolder> = this.listeners,
             activeScope: String = this.activeScope,
         ) = copy(
             state = state as S,

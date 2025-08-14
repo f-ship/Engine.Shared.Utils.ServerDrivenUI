@@ -20,8 +20,9 @@ interface Enable : StateExtension {
     val enable: Boolean
 }
 
-interface Loading : StateExtension {
+interface Loading<T : State> : StateExtension {
     val loading: Boolean
+    fun copyLoading(v: Boolean): T
 }
 
 interface Visibility<T : State> : StateExtension {

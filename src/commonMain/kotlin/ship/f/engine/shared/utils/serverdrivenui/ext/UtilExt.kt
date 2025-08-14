@@ -49,7 +49,7 @@ inline fun <reified T> Meta.runIf(block: T.() -> Unit) = when(this){
  * Used to generate basic unique ids for components
  */
 var count = 0
-fun auto() = id(value = "Auto-${count++}")
+fun auto() = id(value = "${getRandomString()}-Auto-${count++}") // TODO() Super janky and still have a random chance of crashing very rarely
 
 /**
  * Convenience method used to create an id from a string
