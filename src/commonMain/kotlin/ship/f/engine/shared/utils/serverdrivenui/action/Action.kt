@@ -76,7 +76,7 @@ sealed class Action {
     }
 
     @Serializable
-    @SerialName("StartLoading")
+    @SerialName("Loading")
     data class Loading(
         val metaPublisherIds: List<MetaId> = listOf(), // TODO need to make this listen to metas
     ) : Action() { // TODO need to make another for match loading so that more fields can benefit from this
@@ -86,6 +86,21 @@ sealed class Action {
             meta: Meta,
         ) {
             val state = (element.state as ship.f.engine.shared.utils.serverdrivenui.state.Loading<out State>).copyLoading(true)
+            client.updateElement(element.updateElement(state))
+        }
+    }
+
+    @Serializable
+    @SerialName("CancelLoading")
+    data class CancelLoading(
+        val metaPublisherIds: List<MetaId> = listOf(), // TODO need to make this listen to metas
+    ) : Action() { // TODO need to make another for match loading so that more fields can benefit from this
+        override fun execute(
+            element: Element<out State>,
+            client: Client,
+            meta: Meta,
+        ) {
+            val state = (element.state as ship.f.engine.shared.utils.serverdrivenui.state.Loading<out State>).copyLoading(false)
             client.updateElement(element.updateElement(state))
         }
     }
@@ -343,6 +358,22 @@ sealed class Action {
     @Serializable
     @SerialName("SendState")
     data object SendState : Action() {
+        override fun execute(
+            element: Element<out State>,
+            client: Client,
+            meta: Meta,
+        ) {
+            meta.runIf<SideEffectMeta> {
+                val elements = elements.map { client.gElement(it) }
+                val metas = metas.map { client.metaMap[it]!! }
+                client.emitConfig(screenId, id, elements, metas)
+            }
+        }
+    }
+
+    @Serializable
+    @SerialName("SendStateAsync")
+    data object SendStateAsync : Action() {
         override fun execute(
             element: Element<out State>,
             client: Client,

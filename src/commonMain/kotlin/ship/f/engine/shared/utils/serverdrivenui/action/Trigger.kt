@@ -72,6 +72,7 @@ sealed class Trigger {
     data class OnInitialRenderTrigger(
         override val metaID: MetaId = none,
         override val action: Action,
+        val alwaysFire: Boolean = false,
     ) : Trigger()
 
     @Serializable

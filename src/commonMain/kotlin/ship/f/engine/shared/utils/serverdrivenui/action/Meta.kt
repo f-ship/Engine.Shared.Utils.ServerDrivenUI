@@ -19,6 +19,13 @@ sealed class Meta {
     ) : Meta()
 
     @Serializable
+    @SerialName("Acknowledge")
+    data class Acknowledge(
+        override val id: MetaId = autoMetaId(),
+        val completedId: MetaId = none,
+    ) : Meta()
+
+    @Serializable
     @SerialName("Json")
     data class Json(
         val json: JsonObject,

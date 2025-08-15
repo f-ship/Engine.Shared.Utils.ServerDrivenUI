@@ -16,10 +16,15 @@ abstract class Client {
      */
     private val elementMap: MutableMap<String, MutableMap<String, Element<out State>>> = mutableMapOf()
 
+    private var reverseIdTree: MutableMap<String, Node> = mutableMapOf()
+    private val reverseIdMap: MutableMap<ID, ID> = mutableMapOf()
+
     /**
      * Map of screenConfigs that have been properly initialized
      */
     val screenConfigMap: MutableMap<ScreenId, ScreenConfig> = mutableMapOf()
+
+    val firedInitialTriggers: MutableSet<MetaId> = mutableSetOf()
 
     /**
      * Backstack of screenConfigs that have been visited
@@ -72,7 +77,8 @@ abstract class Client {
     /**
      * This is used to emit side effects outside the SDUI environment
      */
-    var emitConfig: (screenId: ScreenId, metaId: MetaId, elements: List<Element<out State>>, metas: List<Meta>) -> Unit = { _, _, _, _ -> }
+    var emitConfig: (screenId: ScreenId, metaId: MetaId, elements: List<Element<out State>>, metas: List<Meta>) -> Unit =
+        { _, _, _, _ -> }
 
     /**
      * This is used to emit open url
@@ -89,41 +95,78 @@ abstract class Client {
      * If the last screen in the backstack has the same ID as the new screenConfig,
      * then the screenConfig will be removed from the backstack as it will be replaced by the new screenConfig.
      */
-    fun navigate(config: ScreenConfig) {
-        // TODO acts an informal refresh which resets the current state of the screen with the oncoming screen config
+    fun navigate(config: ScreenConfig) {        // TODO acts an informal refresh which resets the current state of the screen with the oncoming screen config
         if (backstack.lastOrNull()?.id == config.id) {
             backstack.removeLast()
-            screenConfigMap.remove(config.id)
         }
 
-        // TODO
         if (screenConfigMap[config.id] == null) {
             config.children.forEach {
                 setState(it)
                 setTriggers(it)
+                setReverseId(config.id, it)
             }
             screenConfigMap[config.id] = config
         }
 
         addConfig(config)
-        postScreenConfig()
+    }
+
+    fun setReverseId(parent: ID, child: Element<out State>) {
+        reverseIdMap[child.id] = parent
+        when (child) {
+            is Component<*> -> Unit
+            is Widget<*> -> child.state.children.forEach { setReverseId(child.id, it) }
+        }
     }
 
     /**
      * Add elements to a screenConfig
      */
     fun navigate(config: ElementOperation) { // TODO such a disgusting method
-
         val elementsToUpdate = config.elements.filter { safeGetElement(it.id) == null }
-
         when (config) {
             is ElementOperation.Replace -> { // TODO this implementation is a bit too simple, don't think it will actually work
+                val originalElement = gElement(config.replace)
                 val replaceElement = config.elements.first()
-                val originalElement = gElement(config.replace).updateElement(activeScope = replaceElement.id.scope)
-                setElement(replaceElement.id, replaceElement)
-                setElement(originalElement.id, originalElement)
-                postReactiveUpdate(replaceElement)
-                postReactiveUpdate(originalElement)
+                val parentId = reverseIdMap[originalElement.id]
+                parentId?.let { id ->
+                    when (id) {
+                        is ElementId -> elementMap[id.id]?.let { map ->
+                            map[id.scope]?.run {
+                                when (this) {
+                                    is Component<*> -> Unit
+                                    is Widget<*> -> {
+                                        map[id.scope] = update(
+                                            state = state.copyChildren(
+                                                children = state.children.map { child ->
+                                                    if (child.id.id == originalElement.id.id) replaceElement else child
+                                                }
+                                            )
+                                        )
+                                        map[id.scope]?.let{
+                                            postReactiveUpdate(it)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        is ScreenId -> {
+                            screenConfigMap[id]?.run {
+                                screenConfigMap[id] = copy(
+                                    children = children.map {
+                                        if (it == originalElement.id) replaceElement else it
+                                    }
+                                )
+                                postScreenConfig()
+                            }
+                        }
+
+                        is MetaId -> Unit
+                    }
+                }
+
             }
 
             is ElementOperation.InsideAndEnd -> {
@@ -219,10 +262,13 @@ abstract class Client {
         // TODO this is so stupid, need a cleaner way to detect when an element is duplicate or not. Should we really be setting state on elements that already exist?
         if (safeGetElement(element.id) != null && safeGetElement(element.id) != element && safeGetElement(element.id)?.activeScope == element.activeScope) {
             // TODO need a smarter way of handling the detection of duplicate IDs, I think this is where composite IDs should be useful
-            error("Duplicate ID: ${element.id}, if you need to replace an element make sure id + scope is unique")
+            // TODO This is where merge strategies become important
+            println("Duplicate ID: ${element.id}, if you need to replace an element make sure id + scope is unique")
         }
         setElement(element.id, element)
-        element.metas.forEach { metaMap[it.key] = it.value } // TODO Metas will eventually need to be scoped, try to avoid this actually
+        element.metas.forEach {
+            metaMap[it.key] = it.value
+        } // TODO Metas will eventually need to be scoped, try to avoid this actually
         createReactiveUpdate(element)
 
         when (element) {
@@ -302,11 +348,14 @@ abstract class Client {
     // TODO this doesn't get reliably triggered when opening app from background, this also triggers when the screen is stored but not rendered
     fun initialTriggers(element: Element<out State>) {
         element.triggers.filterIsInstance<OnInitialRenderTrigger>().forEach {
-            it.action.execute(
-                element = element,
-                client = this,
-                meta = metaMap[it.metaID] ?: Meta.None(),
-            )
+            if (!firedInitialTriggers.contains(it.metaID) || it.alwaysFire) {
+                firedInitialTriggers.add(it.metaID)
+                it.action.execute(
+                    element = element,
+                    client = this,
+                    meta = metaMap[it.metaID] ?: Meta.None(),
+                )
+            }
         }
 
         when (element) {
@@ -354,7 +403,7 @@ abstract class Client {
         elementMap[id.id]!![id.scope] = element
     }
 
-    fun gScreenConfig(id: ScreenId) = screenConfigMap[id]!!
+    fun gScreenConfig(id: ScreenId) = checkNotNull(screenConfigMap[id]) { "$id is null" }
     fun setScreenConfig(id: ScreenId, screenConfig: ScreenConfig) {
         screenConfigMap[id] = screenConfig
     }

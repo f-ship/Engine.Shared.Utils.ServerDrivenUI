@@ -26,6 +26,8 @@ data class ScreenConfig(
     val lightColorScheme: ColorSchemeState? = null,
     val darkColorScheme: ColorSchemeState? = null,
     val children: List<Element<out State>> = emptyList(),
+    val keepInBackstack: Boolean = true,
+    val forward: Boolean = true,
 ) {
     @Serializable
     sealed class ID {
@@ -59,6 +61,12 @@ data class ScreenConfig(
     }
 
     @Serializable
+    data class Node(
+        val parent: ID,
+        val children: MutableList<Node> = mutableListOf()
+    )
+
+    @Serializable
     @SerialName("Element")
     sealed class Element<S : State> {
         abstract val id: ElementId
@@ -70,6 +78,8 @@ data class ScreenConfig(
         abstract val listeners: List<RemoteActionHolder>
 
         abstract val metas: Map<MetaId, Meta>
+
+        var treeLocation: Node? = null
 
         fun updateElement(
             state: State = this.state,
@@ -208,6 +218,8 @@ data class ScreenConfig(
 
     companion object {
         val empty = ScreenConfig()
+        val rootId = screenId("root")
+        val root = ScreenConfig(id = rootId)
         const val DEFAULT_SCREEN_SCOPE = "DefaultScreenScope"
         fun screenId(value: String, scope: String = DEFAULT_SCREEN_SCOPE) = ScreenId(value, scope)
     }
