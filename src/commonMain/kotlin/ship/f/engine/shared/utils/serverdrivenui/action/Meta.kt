@@ -7,6 +7,7 @@ import ship.f.engine.shared.utils.serverdrivenui.ElementOperation
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig
 import ship.f.engine.shared.utils.serverdrivenui.ScreenConfig.*
 import ship.f.engine.shared.utils.serverdrivenui.ext.metaId
+import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.Action2
 
 @Serializable
 @SerialName("Meta")
@@ -82,6 +83,7 @@ sealed class Meta {
         val screenId: ScreenId = ScreenId.none,
         val elements: List<ElementId> = listOf(),
         val metas: List<MetaId> = listOf(),
+        val onExpected: Map<ID, Action2> = mapOf(),
     ) : Meta()
 
     companion object {

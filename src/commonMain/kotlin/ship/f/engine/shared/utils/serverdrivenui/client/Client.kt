@@ -16,7 +16,6 @@ abstract class Client {
      */
     private val elementMap: MutableMap<String, MutableMap<String, Element<out State>>> = mutableMapOf()
 
-    private var reverseIdTree: MutableMap<String, Node> = mutableMapOf()
     private val reverseIdMap: MutableMap<ID, ID> = mutableMapOf()
 
     /**
@@ -29,7 +28,7 @@ abstract class Client {
     /**
      * Backstack of screenConfigs that have been visited
      */
-    var backstack: MutableList<ScreenConfig> = mutableListOf()
+    val backstack: MutableList<ScreenConfig> = mutableListOf()
 
     /**
      * Map used as session storage for context that may be required by the server but not important for the client
@@ -39,13 +38,15 @@ abstract class Client {
     /**
      * Map used to store listeners for meta-updates, this is pretty ugly for now, should probably fo
      */
-    val metaListenerMap: MutableMap<MetaId, MutableList<RemoteActionHolder>> = mutableMapOf()
+    val metaListenerMap: MutableMap<MetaId, MutableList<RemoteActionModifier>> = mutableMapOf()
 
     /**
      * Deferred Actions can be executed or canceled at a later time, this map cache said actions
      * I probably should at some point replace all these maps and things with a Meta Implementation
      */
-    val deferredActionHolders: MutableMap<MetaId, MutableList<DeferredActionHolder>> = mutableMapOf()
+    val deferredActionHolders: MutableMap<ID, MutableList<DeferredActionModifier>> = mutableMapOf() // TODO definitely needs a rewrite
+
+    val deferredActions: MutableList<Map<ID,DeferredActionModifier>> = mutableListOf()
 
     /**
      * When the server sends the client a component, and it can't render, the component will be rendered with fallback behavior.
@@ -77,8 +78,8 @@ abstract class Client {
     /**
      * This is used to emit side effects outside the SDUI environment
      */
-    var emitConfig: (screenId: ScreenId, metaId: MetaId, elements: List<Element<out State>>, metas: List<Meta>) -> Unit =
-        { _, _, _, _ -> }
+    var emitConfig: (screenId: ScreenId, metaId: MetaId, elements: List<Element<out State>>, metas: List<Meta>, expected: List<ID>) -> Unit =
+        { _, _, _, _, _ -> }
 
     /**
      * This is used to emit open url
@@ -95,7 +96,9 @@ abstract class Client {
      * If the last screen in the backstack has the same ID as the new screenConfig,
      * then the screenConfig will be removed from the backstack as it will be replaced by the new screenConfig.
      */
-    fun navigate(config: ScreenConfig) {        // TODO acts an informal refresh which resets the current state of the screen with the oncoming screen config
+    fun navigate(config: ScreenConfig) {
+        println("Navigating to ${config.id}")
+        // TODO acts an informal refresh which resets the current state of the screen with the oncoming screen config
         if (backstack.lastOrNull()?.id == config.id) {
             backstack.removeLast()
         }
@@ -321,7 +324,7 @@ abstract class Client {
     private fun setTrigger(element: Element<out State>, target: ElementId, action: Action) {
         val targetElement = gElement(target)
         val updatedElement = targetElement.updateElement(
-            listeners = targetElement.listeners + RemoteActionHolder(
+            listeners = targetElement.listeners + RemoteActionModifier(
                 action = action,
                 id = element.id,
             )
@@ -337,7 +340,7 @@ abstract class Client {
         }
 
         metaListenerMap[target]!!.add(
-            RemoteActionHolder(
+            RemoteActionModifier(
                 action = action,
                 id = element.id,
                 metaID = metaId,

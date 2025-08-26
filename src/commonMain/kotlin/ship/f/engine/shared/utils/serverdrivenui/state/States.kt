@@ -12,7 +12,8 @@ import ship.f.engine.shared.utils.serverdrivenui.json.WidgetStateSerializer
 sealed class State : Visibility<State> {
     val id: String = getRandomString() // Has the change to collide so need to do something smarter
 
-    open val isStickyHeader: Boolean = false // TODO this somehow feels wrong to bake nonsense like this here
+    open val isStickyHeader: Boolean =
+        false // TODO this somehow feels wrong to bake nonsense like this here, should have just been a component!
     open val padding: Padding = Padding()
     open val size: Size = DefaultSize
 
@@ -128,7 +129,7 @@ sealed class WidgetState : State() {
     )
 
     fun searchState(
-        value: String = ""
+        value: String = "",
     ) = SearchState(
         value = value,
     )
@@ -291,20 +292,24 @@ data class TextState(
     val color: ColorSchemeState.Color? = null,
     val textAlign: STextAlign = STextAlign.Start,
     override val padding: Padding = Padding(),
-) : ComponentState(), Value<TextState> {
+) :
+    ComponentState(),
+    Value<TextState> {
     override fun copyValue(v: String) = this.copy(value = v)
 
     @Serializable
     sealed class Weight {
         @Serializable
         data object Normal : Weight()
+
         @Serializable
         data object SemiBold : Weight()
+
         @Serializable
         data object Bold : Weight()
+
         @Serializable
         data object ExtraBold : Weight()
-
     }
 
     @Serializable
@@ -368,7 +373,9 @@ data class FieldState(
     val validations: List<Validation> = listOf(),
     val restrictions: List<Restriction> = listOf(),
     val localState: LocalState = LocalState(),
-) : ComponentState(), Value<FieldState>, Valid<FieldState> {
+) : ComponentState(),
+    Value<FieldState>,
+    Valid<FieldState> {
     override fun copyValue(v: String) = this.copy(value = v)
     override fun copyValid(v: Boolean) = this.copy(valid = v)
 
@@ -387,7 +394,7 @@ data class FieldState(
 
     @Serializable
     data class Restriction(
-        val regex: String = ""
+        val regex: String = "",
     )
 
     @Serializable
@@ -437,35 +444,43 @@ data class ColorSchemeState(
     sealed class Color {
         @Serializable
         data object Primary : Color()
+
         @Serializable
         data object OnPrimary : Color()
 
         @Serializable
         data object Secondary : Color()
+
         @Serializable
         data object OnSecondary : Color()
 
         @Serializable
         data object SecondaryContainer : Color()
+
         @Serializable
         data object OnSecondaryContainer : Color()
 
         @Serializable
         data object Background : Color()
+
         @Serializable
         data object OnBackground : Color()
 
         @Serializable
         data object Surface : Color()
+
         @Serializable
         data object SurfaceVariant : Color()
+
         @Serializable
         data object OnSurface : Color()
+
         @Serializable
         data object OnSurfaceVariant : Color()
 
         @Serializable
         data object Outline : Color()
+
         @Serializable
         data object OutlineVariant : Color()
 
@@ -500,7 +515,7 @@ data class RadioListState(
 ) : ComponentState()
 
 @Serializable
-@SerialName("TickState")
+@SerialName("CheckboxState")
 data class CheckboxState(
     val value: Boolean = false,
     val initialState: Boolean? = null,
@@ -543,17 +558,17 @@ data class ImageState(
 
         @Serializable
         data class Url(
-            val url: String
+            val url: String,
         ) : Source()
 
         @Serializable
         data class Local(
-            val file: String
+            val file: String,
         ) : Source()
 
         @Serializable
         data class Resource(
-            val resource: String
+            val resource: String,
         ) : Source()
     }
 }
@@ -598,7 +613,8 @@ data class ButtonState(
 }
 
 @Serializable
-@SerialName("IconState")
+@SerialName("NotificationState")
+@Deprecated("Should no longer be used, instead will eventually be replaced with a rive implementation")
 data class NotificationState(
     val image: ImageState.Source? = null,
     val number: Int? = null,
@@ -666,6 +682,8 @@ data class CardState(
 @SerialName("BottomSheetState")
 data class BottomSheetState(
     override val children: List<Element<out State>> = listOf(),
+    val alignment: Align = Align.Center,
+    override val size: Size = DefaultSize,
 ) : WidgetState() {
     override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
 }
@@ -678,7 +696,7 @@ data class StackState(
     override val size: Size = DefaultSize,
     override val padding: Padding = Padding(),
     override val visible: Boolean = true,
-    val background: Long? = null
+    val background: Long? = null,
 ) : WidgetState() {
     override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
     override fun copyVisibility(v: Boolean) = copy(visible = v)
@@ -703,7 +721,7 @@ data class ColumnState(
     override val size: Size = DefaultSize,
     val border: Border? = null,
     override val padding: Padding = Padding(),
-    val background: Long? = null
+    val background: Long? = null,
 ) : WidgetState() {
     override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
 }
@@ -733,6 +751,8 @@ data class FlexColumnState(
 @SerialName("GridState")
 data class GridState(
     override val children: List<Element<out State>> = listOf(),
+    override val padding: Padding = Padding(),
+    val arrangement: Arrange = Arrange.Center,
 ) : WidgetState() {
     override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
 }
@@ -741,6 +761,8 @@ data class GridState(
 @SerialName("FlexGridState")
 data class FlexGridState(
     override val children: List<Element<out State>> = listOf(),
+    override val padding: Padding = Padding(),
+    val arrangement: Arrange = Arrange.Center,
 ) : WidgetState() {
     override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
 }
@@ -749,6 +771,7 @@ data class FlexGridState(
 @SerialName("UnknownWidgetState")
 data class UnknownWidgetState(
     override val children: List<Element<out State>> = listOf(),
-) : WidgetState() {
+    override val padding: Padding = Padding(),
+    val arrangement: Arrange = Arrange.Center,) : WidgetState() {
     override fun copyChildren(children: List<Element<out State>>) = copy(children = children)
 }

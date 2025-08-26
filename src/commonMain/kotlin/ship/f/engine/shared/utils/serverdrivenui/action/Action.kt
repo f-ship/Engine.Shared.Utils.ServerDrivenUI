@@ -366,23 +366,8 @@ sealed class Action {
             meta.runIf<SideEffectMeta> {
                 val elements = elements.map { client.gElement(it) }
                 val metas = metas.map { client.metaMap[it]!! }
-                client.emitConfig(screenId, id, elements, metas)
-            }
-        }
-    }
 
-    @Serializable
-    @SerialName("SendStateAsync")
-    data object SendStateAsync : Action() {
-        override fun execute(
-            element: Element<out State>,
-            client: Client,
-            meta: Meta,
-        ) {
-            meta.runIf<SideEffectMeta> {
-                val elements = elements.map { client.gElement(it) }
-                val metas = metas.map { client.metaMap[it]!! }
-                client.emitConfig(screenId, id, elements, metas)
+                client.emitConfig(screenId, id, elements, metas, listOf())
             }
         }
     }

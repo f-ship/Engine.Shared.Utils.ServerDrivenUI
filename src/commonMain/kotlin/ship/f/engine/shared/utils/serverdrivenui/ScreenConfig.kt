@@ -2,9 +2,9 @@ package ship.f.engine.shared.utils.serverdrivenui
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import ship.f.engine.shared.utils.serverdrivenui.action.DeferredActionHolder
+import ship.f.engine.shared.utils.serverdrivenui.action.DeferredActionModifier
 import ship.f.engine.shared.utils.serverdrivenui.action.Meta
-import ship.f.engine.shared.utils.serverdrivenui.action.RemoteActionHolder
+import ship.f.engine.shared.utils.serverdrivenui.action.RemoteActionModifier
 import ship.f.engine.shared.utils.serverdrivenui.action.Trigger
 import ship.f.engine.shared.utils.serverdrivenui.action.Trigger.DeferredTrigger
 import ship.f.engine.shared.utils.serverdrivenui.client.ClientHolder.getClient
@@ -69,21 +69,20 @@ data class ScreenConfig(
     @Serializable
     @SerialName("Element")
     sealed class Element<S : State> {
-        abstract val id: ElementId
-        abstract val activeScope: String
-        abstract val state: S
-        abstract val fallback: Fallback
+        abstract val id: ElementId // Keep
+        abstract val activeScope: String // Remove
+        abstract val state: S // Keep
+        abstract val fallback: Fallback // Remove
 
-        abstract val triggers: List<Trigger>
-        abstract val listeners: List<RemoteActionHolder>
+        abstract val triggers: List<Trigger> // Moving onto the state
+        abstract val listeners: List<RemoteActionModifier> // Moving onto listeners
 
-        abstract val metas: Map<MetaId, Meta>
-
-        var treeLocation: Node? = null
+        abstract val metas: Map<MetaId, Meta> // Actually, do we need this? Let's Remove
+        // metas have moved to a more central storage spot to make them easier to work with
 
         fun updateElement(
             state: State = this.state,
-            listeners: List<RemoteActionHolder> = this.listeners,
+            listeners: List<RemoteActionModifier> = this.listeners,
             activeScope: String = this.activeScope,
         ) = when (this) {
             is Component<*> -> update(
@@ -122,7 +121,7 @@ data class ScreenConfig(
                     client.deferredActionHolders[triggerAction.group] = mutableListOf()
                 }
                 client.deferredActionHolders[triggerAction.group]!!.add(
-                    DeferredActionHolder(
+                    DeferredActionModifier(
                         action = triggerAction.action,
                         id = id,
                         metaID = triggerAction.metaID,
@@ -147,12 +146,12 @@ data class ScreenConfig(
         override val state: S,
         override val fallback: Fallback = Fallback.Hide,
         override val triggers: List<Trigger> = emptyList(),
-        override val listeners: List<RemoteActionHolder> = emptyList(),
+        override val listeners: List<RemoteActionModifier> = emptyList(),
         override val metas: Map<MetaId, Meta> = mapOf(),
     ) : Element<WidgetState>() {
         fun update(
             state: State = this.state,
-            listeners: List<RemoteActionHolder> = this.listeners,
+            listeners: List<RemoteActionModifier> = this.listeners,
             activeScope: String = this.activeScope,
         ) = copy(
             state = state as S,
@@ -174,12 +173,12 @@ data class ScreenConfig(
         override val state: S,
         override val fallback: Fallback = Fallback.Hide,
         override val triggers: List<Trigger> = emptyList(),
-        override val listeners: List<RemoteActionHolder> = emptyList(),
+        override val listeners: List<RemoteActionModifier> = emptyList(),
         override val metas: Map<MetaId, Meta> = mapOf(),
     ) : Element<ComponentState>() {
         fun update(
             state: State = this.state,
-            listeners: List<RemoteActionHolder> = this.listeners,
+            listeners: List<RemoteActionModifier> = this.listeners,
             activeScope: String = this.activeScope,
         ) = copy(
             state = state as S,

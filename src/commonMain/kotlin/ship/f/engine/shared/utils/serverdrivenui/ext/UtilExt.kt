@@ -65,5 +65,5 @@ fun autoScreenId() = screenId(value = "Auto-${count++}", scope = DEFAULT_SCREEN_
 
 fun ScreenConfig.validate() = json
     .encodeToString(this)
-    .apply { println(this) }
+//    .apply { println(this) }
     .let { json.decodeFromString<ScreenConfig>(it) }

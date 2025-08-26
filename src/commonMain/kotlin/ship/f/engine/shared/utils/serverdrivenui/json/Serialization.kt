@@ -15,8 +15,10 @@ object WidgetStateSerializer : JsonContentPolymorphicSerializer<WidgetState>(Wid
         println("SDUILOG does this still run Widget")
         val discriminator = element.jsonObject["type"]?.jsonPrimitive?.content ?: element.jsonObject["type2"]?.jsonPrimitive?.content
         return when (discriminator) {
+// TODO this isn't doing shit anymore except allow me to use open values in sealed classes
             CardState::class.simpleName -> CardState.serializer()
             BottomSheetState::class.simpleName -> BottomSheetState.serializer()
+            StackState::class.simpleName -> StackState.serializer()
             RowState::class.simpleName -> RowState.serializer()
             ColumnState::class.simpleName -> ColumnState.serializer()
             FlexRowState::class.simpleName -> FlexRowState.serializer()
@@ -37,6 +39,7 @@ object ComponentStateSerializer : JsonContentPolymorphicSerializer<ComponentStat
         println("SDUILOG does this still run Component")
         val discriminator = element.jsonObject["type"]?.jsonPrimitive?.content
         return when (discriminator) {
+// TODO this isn't doing shit anymore except allow me to use open values in sealed classes
             SpaceState::class.simpleName -> SpaceState.serializer()
             TextState::class.simpleName -> TextState.serializer()
             FieldState::class.simpleName -> FieldState.serializer()

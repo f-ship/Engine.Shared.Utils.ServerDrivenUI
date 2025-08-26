@@ -1,5 +1,6 @@
 package ship.f.engine.shared.utils.serverdrivenui.json
 
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.json.ClassDiscriminatorMode
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -7,6 +8,7 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import ship.f.engine.shared.utils.serverdrivenui.state.*
 
+@OptIn(InternalSerializationApi::class)
 val json = Json {
     ignoreUnknownKeys = true
     prettyPrint = true
@@ -15,7 +17,9 @@ val json = Json {
     classDiscriminatorMode = ClassDiscriminatorMode.ALL_JSON_OBJECTS
 
     serializersModule = SerializersModule {
-        polymorphic(ComponentState::class) {
+        polymorphic(
+            baseClass = ComponentState::class,
+        ) {
             subclass(ImageState::class)
             subclass(SpaceState::class)
             subclass(SpaceState::class)
@@ -39,9 +43,12 @@ val json = Json {
             subclass(LoaderState::class)
             subclass(DividerState::class)
             subclass(UnknownComponentState::class)
+            defaultDeserializer { UnknownComponentState.serializer() }
         }
 
-        polymorphic(WidgetState::class) {
+        polymorphic(
+            baseClass = WidgetState::class,
+        ) {
             subclass(CardState::class)
             subclass(BottomSheetState::class)
             subclass(StackState::class)
@@ -52,6 +59,7 @@ val json = Json {
             subclass(GridState::class)
             subclass(FlexGridState::class)
             subclass(UnknownWidgetState::class)
+            defaultDeserializer { UnknownWidgetState.serializer() }
         }
     }
 }

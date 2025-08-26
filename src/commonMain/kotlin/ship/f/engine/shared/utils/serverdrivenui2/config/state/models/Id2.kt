@@ -1,0 +1,57 @@
+package ship.f.engine.shared.utils.serverdrivenui2.config.state.models
+
+import kotlinx.datetime.Clock
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+sealed class Id2 {
+    abstract val name: String
+    abstract val scope: String
+
+    @Serializable
+    @SerialName("ElementId2")
+    data class StateId2(
+        override val name: String = NONE,
+        override val scope: String = NONE,
+    ) : Id2() {
+        companion object Companion {
+            val seed = Clock.System.now()
+            var count = 0
+            val none = StateId2(NONE, NONE)
+            fun autoStateId2() = StateId2(name = "Auto-${count++}-${seed}")
+        }
+    }
+
+    @Serializable
+    @SerialName("MetaId2")
+    data class MetaId2(
+        override val name: String = NONE,
+        override val scope: String = NONE,
+    ) : Id2() {
+        companion object Companion {
+            val seed = Clock.System.now()
+            var count = 0
+            val none = MetaId2(NONE, NONE)
+            fun autoMetaId2() = MetaId2(name = "Auto-${count++}-${seed}")
+        }
+    }
+
+    @Serializable
+    @SerialName("ActionId2")
+    data class ActionId2(
+        override val name: String = NONE,
+        override val scope: String = NONE,
+    ) : Id2() {
+        companion object Companion {
+            val seed = Clock.System.now()
+            var count = 0
+            val none = ActionId2(NONE, NONE)
+            fun autoActionId2() = ActionId2(name = "Auto-${count++}-${seed}")
+        }
+    }
+
+    companion object Companion {
+        const val NONE = "None"
+    }
+}
