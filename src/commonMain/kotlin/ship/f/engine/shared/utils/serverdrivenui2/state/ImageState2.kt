@@ -32,7 +32,7 @@ data class ImageState2(
     override val weight: Weight2? = null,
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
     override val onClickTrigger: OnClickTrigger2 = OnClickTrigger2(),
-    override val metas: Set<Meta2> = setOf(),
+    override val metas: List<Meta2> = listOf(),
     val src: Source2,
     val contentDescription: String? = null,
     val contentScale: ContentScale2 = None2,
@@ -40,7 +40,7 @@ data class ImageState2(
     PaddingModifier2<ImageState2>,
     ColorModifier2<ImageState2>,
     OnClickModifier2 {
-    override fun c(metas: Set<Meta2>) = copy(metas = metas)
+    override fun cM(metas: List<Meta2>) = copy(metas = metas)
     override fun c(id: StateId2) = copy(id = id)
     override fun c(padding: PaddingValues2) = copy(padding = padding)
     override fun c(visible: Visible2) = copy(visible = visible)

@@ -31,7 +31,7 @@ data class TextState2(
     override val fontWeight: FontWeight2 = Normal2,
     override val weight: Weight2? = null,
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
-    override val metas: Set<Meta2> = setOf(),
+    override val metas: List<Meta2> = listOf(),
     val textAlign: TextAlign2 = TextAlign2.Start2,
     val text: String,
 ) : State2(),
@@ -39,7 +39,7 @@ data class TextState2(
     ColorModifier2<TextState2>,
     PaddingModifier2<TextState2>,
     FontWeightModifier2<TextState2> {
-    override fun c(metas: Set<Meta2>) = copy(metas = metas)
+    override fun cM(metas: List<Meta2>) = copy(metas = metas)
     override fun c(id: StateId2) = copy(id = id)
     override fun c(padding: PaddingValues2) = copy(padding = padding)
     override fun c(visible: Visible2) = copy(visible = visible)

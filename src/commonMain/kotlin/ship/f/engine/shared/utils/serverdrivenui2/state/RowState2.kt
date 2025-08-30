@@ -35,7 +35,7 @@ data class RowState2(
     override val shape: CornerBasedShape2 = DefaultShapes2.small,
     override val weight: Weight2? = null,
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
-    override val metas: Set<Meta2> = setOf(),
+    override val metas: List<Meta2> = listOf(),
 ) : State2(),
     ChildrenModifier2<RowState2>,
     ArrangementModifier2<RowState2>,
@@ -44,7 +44,7 @@ data class RowState2(
     ShapeModifier2<RowState2>,
     InnerPaddingModifier2<RowState2>,
     BorderModifier2<RowState2> {
-    override fun c(metas: Set<Meta2>) = copy(metas = metas)
+    override fun cM(metas: List<Meta2>) = copy(metas = metas)
     override fun c(id: StateId2) = copy(id = id)
     override fun c(visible: Visible2) = copy(visible = visible)
     override fun c(size: Size2) = copy(size = size)

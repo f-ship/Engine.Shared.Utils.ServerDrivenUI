@@ -32,12 +32,12 @@ data class CheckboxState2(
     override val weight: Weight2? = null,
     override val onToggleTrigger: OnToggleTrigger2 = OnToggleTrigger2(),
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
-    override val metas: Set<Meta2> = setOf(),
+    override val metas: List<Meta2> = listOf(),
 ) : State2(),
     PaddingModifier2<CheckboxState2>,
     ValidModifier2<CheckboxState2>,
     OnToggleModifier2<CheckboxState2> {
-    override fun c(metas: Set<Meta2>) = copy(metas = metas)
+    override fun cM(metas: List<Meta2>) = copy(metas = metas)
     override fun c(id: StateId2) = copy(id = id)
     override fun c(padding: PaddingValues2) = copy(padding = padding)
     override fun c(visible: Visible2) = copy(visible = visible)
