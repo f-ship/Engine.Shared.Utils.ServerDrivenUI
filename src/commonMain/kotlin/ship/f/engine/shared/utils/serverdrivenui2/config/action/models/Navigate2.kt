@@ -2,7 +2,7 @@ package ship.f.engine.shared.utils.serverdrivenui2.config.action.models
 
 import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.client.Client2
-import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.StatePublisherActionModifier2
+import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.LoadingModifier2
@@ -13,8 +13,6 @@ import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
 @Serializable
 data class Navigate2(
-    override val deferKey: String? = null,
-    override val cachedState: State2? = null,
     val config: NavigationConfig2,
 ) : Action2() {
     override fun execute(
@@ -27,8 +25,6 @@ data class Navigate2(
 
 @Serializable
 data class Loading2(
-    override val deferKey: String? = null,
-    override val cachedState: State2? = null,
     val value: Boolean,
 ) : Action2() {
     override fun execute(
@@ -43,8 +39,6 @@ data class Loading2(
 
 @Serializable
 data class ToggleFilter2(
-    override val deferKey: String? = null,
-    override val cachedState: State2? = null,
     val filter: FilterMeta2,
 ) : Action2() {
     override fun execute(
@@ -64,8 +58,6 @@ data class ToggleFilter2(
 
 @Serializable
 data class FilterVisibility2(
-    override val deferKey: String? = null,
-    override val cachedState: State2? = null,
     val filterGroup: FilterGroupMeta2,
 ) : Action2() {
     override fun execute(
@@ -80,8 +72,6 @@ data class FilterVisibility2(
 
 @Serializable
 data class MatchValid2(
-    override val deferKey: String? = null,
-    override val cachedState: State2? = null,
     override val publishers: List<StateId2>,
 ) : Action2(),
     StatePublisherActionModifier2 {
@@ -98,8 +88,6 @@ data class MatchValid2(
 
 @Serializable
 data class EmitSideEffect2(
-    override val deferKey: String? = null,
-    override val cachedState: State2? = null,
     val sideEffect: SideEffectMeta2,
 ) : Action2() {
     override fun execute(
@@ -112,10 +100,8 @@ data class EmitSideEffect2(
 
 @Serializable
 data class ToggleVisibility2(
-    override val deferKey: String? = null,
-    override val cachedState: State2? = null,
-    val targetId: StateId2,
-) : Action2() {
+    override val targetId: StateId2,
+) : Action2(), TargetableModifier2 {
     override fun execute(
         state: State2,
         client: Client2,
@@ -129,16 +115,18 @@ data class ToggleVisibility2(
 
 @Serializable
 data class ExecuteDeferred2(
-    override val deferKey: String? = null,
-    override val cachedState: State2?,
-) : Action2() {
+    override val deferKey: String,
+) : Action2(), DeferredModifier2 {
     override fun execute(
         state: State2,
         client: Client2,
     ) {
         client.getDeferredActions(deferKey)?.let { actions ->
-            actions.forEach { action ->
-                action.second.runDeferred(state = client.get(action.first), client = client)
+            actions.forEach { remoteAction ->
+                remoteAction.action.action.run(
+                    state = client.get(remoteAction.targetId),
+                    client = client,
+                )
             }
         }
         client.clearDeferredActions(deferKey)
@@ -147,18 +135,52 @@ data class ExecuteDeferred2(
 
 @Serializable
 data class ClearDeferred2(
-    override val deferKey: String?,
-    override val cachedState: State2?,
-) : Action2() {
+    override val deferKey: String,
+) : Action2(), DeferredModifier2 {
     override fun execute(
         state: State2,
         client: Client2,
     ) {
         client.getDeferredActions(deferKey)?.let { actions ->
             actions.forEach { action ->
-                action.third?.let{ client.update(it) }
+                action.action.cachedState?.let { client.update(it) }
             }
         }
         client.clearDeferredActions(deferKey)
+    }
+}
+
+@Serializable
+data class DeferredAction2<T : Action2>(
+    override val action: T,
+    override val deferKey: String,
+    override val cachedState: State2? = null,
+) : Action2(), HigherOrderModifier2, DeferredModifier2, CacheableModifier2 {
+    override fun execute(
+        state: State2,
+        client: Client2,
+    ) {
+        client.addDeferredAction(
+            RemoteAction2(
+                targetId = state.id,
+                action = this,
+            )
+        )
+    }
+}
+
+@Serializable
+data class RemoteAction2<T : Action2>(
+    override val action: T,
+    override val targetId: StateId2,
+) : Action2(), HigherOrderModifier2, TargetableModifier2 {
+    override fun execute(
+        state: State2,
+        client: Client2,
+    ) {
+        action.run(
+            state = client.get(targetId),
+            client = client,
+        )
     }
 }
