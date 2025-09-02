@@ -4,7 +4,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.client.BackStackEntry2.Directi
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.Action2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.DeferredAction2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.FilterVisibility2
-import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.RemoteAction2
+import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.RemoteAction2State
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.MetaPublisherActionModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.StatePublisherActionModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
@@ -24,10 +24,10 @@ abstract class Client2(open val projectName: String? = null) {
     val stateMap: MutableMap<StateId2, State2> = mutableMapOf()
     val metaMap: MutableMap<Id2, Meta2> = mutableMapOf()
 
-    val stateListeners2: MutableMap<StateId2, MutableList<RemoteAction2<*>>> = mutableMapOf()
+    val stateListeners2: MutableMap<StateId2, MutableList<RemoteAction2State<*>>> = mutableMapOf()
 
-    val metaListeners2: MutableMap<MetaId2, MutableList<RemoteAction2<*>>> = mutableMapOf()
-    val deferredActionMap: MutableMap<String, List<RemoteAction2<DeferredAction2<*>>>> = mutableMapOf()
+    val metaListeners2: MutableMap<MetaId2, MutableList<RemoteAction2State<*>>> = mutableMapOf()
+    val deferredActionMap: MutableMap<String, List<RemoteAction2State<DeferredAction2<*>>>> = mutableMapOf()
 
     val firedActionMap: MutableMap<ActionId2, Action2> = mutableMapOf()
 
@@ -39,7 +39,7 @@ abstract class Client2(open val projectName: String? = null) {
         firedActionMap[action.id] = action
     }
 
-    fun addDeferredAction(remoteAction: RemoteAction2<DeferredAction2<*>>) {
+    fun addDeferredAction(remoteAction: RemoteAction2State<DeferredAction2<*>>) {
         if (deferredActionMap[remoteAction.action.deferKey] == null) {
             deferredActionMap[remoteAction.action.deferKey] = listOf()
         }
@@ -75,7 +75,7 @@ abstract class Client2(open val projectName: String? = null) {
     fun propagate(state: State2) {
         stateListeners2[state.id]?.forEach { listener ->
             listener.action.run(
-                state = get(listener.targetId),
+                state = get(listener.targetStateId),
                 client = this,
             )
         }
@@ -84,7 +84,7 @@ abstract class Client2(open val projectName: String? = null) {
     fun propagate(meta: Meta2) {
         metaListeners2[meta.id]?.forEach { it ->
             it.action.run(
-                state = get(it.targetId),
+                state = get(it.targetStateId),
                 client = this
             )
         }
@@ -175,8 +175,8 @@ abstract class Client2(open val projectName: String? = null) {
                     stateListeners2[publisher] = mutableListOf()
                 }
                 stateListeners2[publisher]?.add(
-                    RemoteAction2(
-                        targetId = state.id,
+                    RemoteAction2State(
+                        targetStateId = state.id,
                         action = action as Action2
                     )
                 )
@@ -190,8 +190,8 @@ abstract class Client2(open val projectName: String? = null) {
                     metaListeners2[publisher] = mutableListOf()
                 }
                 metaListeners2[publisher]?.add(
-                    RemoteAction2(
-                        targetId = state.id,
+                    RemoteAction2State(
+                        targetStateId = state.id,
                         action = action as Action2
                     )
                 )
@@ -205,8 +205,8 @@ abstract class Client2(open val projectName: String? = null) {
                     metaListeners2[filter.targetGroup] = mutableListOf()
                 }
                 metaListeners2[filter.targetGroup]?.add(
-                    RemoteAction2(
-                        targetId = state.id,
+                    RemoteAction2State(
+                        targetStateId = state.id,
                         action = action as Action2
                     )
                 )

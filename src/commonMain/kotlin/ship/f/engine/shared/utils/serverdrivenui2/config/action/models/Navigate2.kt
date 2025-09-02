@@ -1,14 +1,17 @@
 package ship.f.engine.shared.utils.serverdrivenui2.config.action.models
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import ship.f.engine.shared.utils.serverdrivenui2.client.Client2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.*
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.LoadingModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ValidModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
+import ship.f.engine.shared.utils.serverdrivenui2.json.json2
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
 @Serializable
@@ -99,14 +102,14 @@ data class EmitSideEffect2(
 }
 
 @Serializable
-data class ToggleVisibility2(
-    override val targetId: StateId2,
-) : Action2(), TargetableModifier2 {
+data class ToggleVisibility2State(
+    override val targetStateId: StateId2,
+) : Action2(), TargetableStateModifier2 {
     override fun execute(
         state: State2,
         client: Client2,
     ) {
-        val targetState = client.get<State2>(targetId)
+        val targetState = client.get<State2>(targetStateId)
         (targetState as? VisibilityModifier2<*>)?.c(visible = Visible2(!targetState.visible.value))?.let {
             client.update(it)
         }
@@ -124,7 +127,7 @@ data class ExecuteDeferred2(
         client.getDeferredActions(deferKey)?.let { actions ->
             actions.forEach { remoteAction ->
                 remoteAction.action.action.run(
-                    state = client.get(remoteAction.targetId),
+                    state = client.get(remoteAction.targetStateId),
                     client = client,
                 )
             }
@@ -161,8 +164,8 @@ data class DeferredAction2<T : Action2>(
         client: Client2,
     ) {
         client.addDeferredAction(
-            RemoteAction2(
-                targetId = state.id,
+            RemoteAction2State(
+                targetStateId = state.id,
                 action = this,
             )
         )
@@ -170,17 +173,36 @@ data class DeferredAction2<T : Action2>(
 }
 
 @Serializable
-data class RemoteAction2<T : Action2>(
+data class RemoteAction2State<T : Action2>(
     override val action: T,
-    override val targetId: StateId2,
-) : Action2(), HigherOrderModifier2, TargetableModifier2 {
+    override val targetStateId: StateId2,
+) : Action2(), HigherOrderModifier2, TargetableStateModifier2 {
     override fun execute(
         state: State2,
         client: Client2,
     ) {
         action.run(
-            state = client.get(targetId),
+            state = client.get(targetStateId),
             client = client,
         )
+    }
+}
+
+@Serializable
+data class ToJsonAction2(
+    override val targetStateId: StateId2,
+    override val targetMetaId: MetaId2,
+) : Action2(), TargetableStateModifier2, TargetableMetaModifier2 {
+    override fun execute(
+        state: State2,
+        client: Client2,
+    ) {
+        val state = client.get<State2>(targetStateId)
+        (client.get(targetMetaId) as? JsonMeta2)?.let { jsonMeta ->
+            val jsonString = json2.encodeToString(state)
+            val jsonElement = json2.parseToJsonElement(jsonString)
+            client.update(jsonMeta.copy(json = jsonElement))
+            println(client.get(targetMetaId))
+        }
     }
 }

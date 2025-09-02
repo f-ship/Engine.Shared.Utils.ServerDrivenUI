@@ -37,6 +37,7 @@ data class BoxState2(
     override val shape: CornerBasedShape2 = DefaultShapes2.small,
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
     override val metas: List<Meta2> = listOf(),
+    override val counter: Int = 0,
 ) : State2(),
     ChildrenModifier2<BoxState2>,
     AlignmentModifier2<BoxState2>,
@@ -54,6 +55,7 @@ data class BoxState2(
     override fun c(shape: CornerBasedShape2) = copy(shape = shape)
     override fun c(weight: Weight2) = copy(weight = weight)
     override fun c(border: Border2) = copy(border = border)
+    override fun reset(counter: Int) = copy(counter = counter)
     override fun c(
         padding: PaddingValues2,
         innerPadding: PaddingValues2,

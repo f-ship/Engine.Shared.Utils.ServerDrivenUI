@@ -20,10 +20,12 @@ data class HorizontalDividerState2(
     override val weight: Weight2? = null,
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
     override val metas: List<Meta2> = listOf(),
+    override val counter: Int = 0,
 ) : State2() {
     override fun cM(metas: List<Meta2>) = copy(metas = metas)
     override fun c(id: StateId2) = copy(id = id)
     override fun c(visible: Visible2) = copy(visible = visible)
     override fun c(size: Size2) = copy(size = size)
     override fun c(weight: Weight2) = copy(weight = weight)
+    override fun reset(counter: Int) = copy(counter = counter)
 }

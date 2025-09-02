@@ -15,6 +15,7 @@ sealed class State2 :
     SizeModifier2<State2>,
     WeightModifier2<State2>,
     MetaModifier2<State2>,
+    ResetModifier2<State2>,
     OnInitialRenderModifier2 {
     val triggers: MutableList<Trigger2> = mutableListOf()
 

@@ -33,6 +33,7 @@ data class ImageState2(
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
     override val onClickTrigger: OnClickTrigger2 = OnClickTrigger2(),
     override val metas: List<Meta2> = listOf(),
+    override val counter: Int = 0,
     val src: Source2,
     val contentDescription: String? = null,
     val contentScale: ContentScale2 = None2,
@@ -47,4 +48,5 @@ data class ImageState2(
     override fun c(size: Size2) = copy(size = size)
     override fun c(color: Color2) = copy(color = color)
     override fun c(weight: Weight2) = copy(weight = weight)
+    override fun reset(counter: Int) = copy(counter = counter)
 }

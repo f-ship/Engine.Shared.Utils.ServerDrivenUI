@@ -31,6 +31,7 @@ data class TextFieldState2(
     override val onFieldUpdateTrigger: OnFieldUpdateTrigger2 = OnFieldUpdateTrigger2(),
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
     override val metas: List<Meta2> = listOf(),
+    override val counter: Int = 0,
     val initialValue: String = "",
     val placeholder: String = "",
     val label: String = "",
@@ -54,6 +55,7 @@ data class TextFieldState2(
     override fun c(shape: CornerBasedShape2) = copy(shape = shape)
     override fun c(valid: Valid2) = copy(valid = valid)
     override fun c(weight: Weight2) = copy(weight = weight)
+    override fun reset(counter: Int) = copy(counter = counter)
 
     fun isError(text: String): String? = validations.firstOrNull {
         val regexCheck = it.regex?.let { regex -> !Regex(regex).matches(text) } ?: false

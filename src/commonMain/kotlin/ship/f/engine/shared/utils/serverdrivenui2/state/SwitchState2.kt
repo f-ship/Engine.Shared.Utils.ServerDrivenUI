@@ -33,6 +33,7 @@ data class SwitchState2(
     override val onToggleTrigger: OnToggleTrigger2 = OnToggleTrigger2(),
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
     override val metas: List<Meta2> = listOf(),
+    override val counter: Int = 0,
 ) : State2(),
     PaddingModifier2<SwitchState2>,
     ValidModifier2<SwitchState2>,
@@ -44,6 +45,7 @@ data class SwitchState2(
     override fun c(size: Size2) = copy(size = size)
     override fun c(valid: Valid2) = copy(valid = valid)
     override fun c(weight: Weight2) = copy(weight = weight)
+    override fun reset(counter: Int) = copy(counter = counter)
     override fun update(
         toggle: Toggle2,
         modified: Boolean,

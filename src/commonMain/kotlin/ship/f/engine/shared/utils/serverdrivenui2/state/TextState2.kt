@@ -32,6 +32,7 @@ data class TextState2(
     override val weight: Weight2? = null,
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
     override val metas: List<Meta2> = listOf(),
+    override val counter: Int = 0,
     val textAlign: TextAlign2 = TextAlign2.Start2,
     val text: String,
 ) : State2(),
@@ -48,4 +49,5 @@ data class TextState2(
     override fun c(color: Color2) = copy(color = color)
     override fun c(value: FontWeight2) = copy(fontWeight = value)
     override fun c(weight: Weight2) = copy(weight = weight)
+    override fun reset(counter: Int) = copy(counter = counter)
 }

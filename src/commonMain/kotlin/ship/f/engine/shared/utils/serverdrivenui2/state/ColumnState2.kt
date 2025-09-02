@@ -36,6 +36,7 @@ data class ColumnState2(
     override val weight: Weight2? = null,
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
     override val metas: List<Meta2> = listOf(),
+    override val counter: Int = 0,
 ) : State2(),
     ChildrenModifier2<ColumnState2>,
     AlignmentModifier2<ColumnState2>,
@@ -55,6 +56,7 @@ data class ColumnState2(
     override fun c(shape: CornerBasedShape2) = copy(shape = shape)
     override fun c(border: Border2) = copy(border = border)
     override fun c(weight: Weight2) = copy(weight = weight)
+    override fun reset(counter: Int) = copy(counter = counter)
     override fun c(
         padding: PaddingValues2,
         innerPadding: PaddingValues2,
