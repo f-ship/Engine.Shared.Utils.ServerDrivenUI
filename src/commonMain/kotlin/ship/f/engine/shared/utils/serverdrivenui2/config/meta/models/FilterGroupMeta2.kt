@@ -9,7 +9,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId
 @Serializable
 @SerialName("FilterGroupMeta2")
 data class FilterGroupMeta2(
-    override val id: MetaId2 = autoMetaId2(),
+    override val metaId: MetaId2 = autoMetaId2(),
     val filters: List<FilterMeta2>,
 ) : Meta2() {
     fun filtersSatisfied(client: Client2) = filters.mapNotNull { filter ->

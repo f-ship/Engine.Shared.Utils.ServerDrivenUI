@@ -12,13 +12,13 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateI
 @Serializable
 @SerialName("SideEffectMeta2")
 data class SideEffectMeta2(
-    override val id: MetaId2 = autoMetaId2(),
+    override val metaId: MetaId2 = autoMetaId2(),
     val states: List<StateId2> = listOf(),
     val metas: List<MetaId2> = listOf(),
     val onExpected: Map<Id2, List<Pair<StateId2, Action2>>> = mapOf(),
 ) : Meta2() {
     fun toPopulated(client: Client2) = PopulatedSideEffectMeta2(
-        id = id,
+        metaId = metaId,
         states = states.map { client.get(it) },
         metas = metas.map { client.get(it) },
         onExpected = onExpected,

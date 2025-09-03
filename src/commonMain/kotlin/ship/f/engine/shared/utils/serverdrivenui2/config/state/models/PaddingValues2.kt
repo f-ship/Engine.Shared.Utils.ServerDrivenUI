@@ -1,8 +1,10 @@
 package ship.f.engine.shared.utils.serverdrivenui2.config.state.models
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+@SerialName("PaddingValues2")
 data class PaddingValues2(
     val top: Int = 0,
     val bottom: Int = 0,

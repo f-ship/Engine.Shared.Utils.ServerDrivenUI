@@ -1,5 +1,6 @@
 package ship.f.engine.shared.utils.serverdrivenui2.config.action.models
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import ship.f.engine.shared.utils.serverdrivenui2.client.Client2
@@ -7,6 +8,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ChildrenModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.LoadingModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ValidModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2
@@ -15,6 +17,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.json.json2
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
 @Serializable
+@SerialName("Navigate2")
 data class Navigate2(
     val config: NavigationConfig2,
 ) : Action2() {
@@ -27,6 +30,7 @@ data class Navigate2(
 }
 
 @Serializable
+@SerialName("Loading2")
 data class Loading2(
     val value: Boolean,
 ) : Action2() {
@@ -41,6 +45,7 @@ data class Loading2(
 }
 
 @Serializable
+@SerialName("ToggleFilter2")
 data class ToggleFilter2(
     val filter: FilterMeta2,
 ) : Action2() {
@@ -60,6 +65,7 @@ data class ToggleFilter2(
 }
 
 @Serializable
+@SerialName("FilterVisibility2")
 data class FilterVisibility2(
     val filterGroup: FilterGroupMeta2,
 ) : Action2() {
@@ -74,6 +80,7 @@ data class FilterVisibility2(
 }
 
 @Serializable
+@SerialName("MatchValid2")
 data class MatchValid2(
     override val publishers: List<StateId2>,
 ) : Action2(),
@@ -90,6 +97,7 @@ data class MatchValid2(
 }
 
 @Serializable
+@SerialName("EmitSideEffect2")
 data class EmitSideEffect2(
     val sideEffect: SideEffectMeta2,
 ) : Action2() {
@@ -102,7 +110,8 @@ data class EmitSideEffect2(
 }
 
 @Serializable
-data class ToggleVisibility2State(
+@SerialName("ToggleVisibility2")
+data class ToggleVisibility2(
     override val targetStateId: StateId2,
 ) : Action2(), TargetableStateModifier2 {
     override fun execute(
@@ -117,6 +126,7 @@ data class ToggleVisibility2State(
 }
 
 @Serializable
+@SerialName("ExecuteDeferred2")
 data class ExecuteDeferred2(
     override val deferKey: String,
 ) : Action2(), DeferredModifier2 {
@@ -137,6 +147,7 @@ data class ExecuteDeferred2(
 }
 
 @Serializable
+@SerialName("ClearDeferred2")
 data class ClearDeferred2(
     override val deferKey: String,
 ) : Action2(), DeferredModifier2 {
@@ -154,6 +165,7 @@ data class ClearDeferred2(
 }
 
 @Serializable
+@SerialName("DeferredAction2")
 data class DeferredAction2<T : Action2>(
     override val action: T,
     override val deferKey: String,
@@ -164,7 +176,7 @@ data class DeferredAction2<T : Action2>(
         client: Client2,
     ) {
         client.addDeferredAction(
-            RemoteAction2State(
+            RemoteAction2(
                 targetStateId = state.id,
                 action = this,
             )
@@ -173,7 +185,8 @@ data class DeferredAction2<T : Action2>(
 }
 
 @Serializable
-data class RemoteAction2State<T : Action2>(
+@SerialName("RemoteAction2")
+data class RemoteAction2<T : Action2>(
     override val action: T,
     override val targetStateId: StateId2,
 ) : Action2(), HigherOrderModifier2, TargetableStateModifier2 {
@@ -189,6 +202,7 @@ data class RemoteAction2State<T : Action2>(
 }
 
 @Serializable
+@SerialName("ToJsonAction2")
 data class ToJsonAction2(
     override val targetStateId: StateId2,
     override val targetMetaId: MetaId2,
@@ -198,11 +212,26 @@ data class ToJsonAction2(
         client: Client2,
     ) {
         val state = client.get<State2>(targetStateId)
+        val parentState = (state as? ChildrenModifier2<out State2>)?.c(emptyList())
         (client.get(targetMetaId) as? JsonMeta2)?.let { jsonMeta ->
-            val jsonString = json2.encodeToString(state)
+            val jsonString = json2.encodeToString(parentState ?: state)
             val jsonElement = json2.parseToJsonElement(jsonString)
             client.update(jsonMeta.copy(json = jsonElement))
             println(client.get(targetMetaId))
         }
+    }
+}
+
+@Serializable
+@SerialName("ResetState2")
+data class ResetState2(
+    override val targetStateId: StateId2,
+    override val targetMetaId: MetaId2,
+) : Action2(), TargetableStateModifier2, TargetableMetaModifier2 {
+    override fun execute(
+        state: State2,
+        client: Client2
+    ) {
+        client.update(client.get<State2>(targetStateId).reset())
     }
 }

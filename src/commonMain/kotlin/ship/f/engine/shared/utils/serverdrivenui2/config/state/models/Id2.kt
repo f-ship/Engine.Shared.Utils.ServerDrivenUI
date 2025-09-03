@@ -10,7 +10,7 @@ sealed class Id2 {
     abstract val scope: String
 
     @Serializable
-    @SerialName("ElementId2")
+    @SerialName("StateId2")
     data class StateId2(
         override val name: String = NONE,
         override val scope: String = NONE,

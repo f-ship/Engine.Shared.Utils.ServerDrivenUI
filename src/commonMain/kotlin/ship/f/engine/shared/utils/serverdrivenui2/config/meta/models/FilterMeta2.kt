@@ -7,6 +7,6 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId
 @Serializable
 @SerialName("FilterMeta2")
 data class FilterMeta2(
-    override val id: MetaId2,
+    override val metaId: MetaId2,
     val targetGroup: MetaId2,
 ) : Meta2()

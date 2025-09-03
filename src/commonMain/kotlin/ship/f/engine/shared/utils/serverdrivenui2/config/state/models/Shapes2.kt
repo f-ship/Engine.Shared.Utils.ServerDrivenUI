@@ -1,8 +1,10 @@
 package ship.f.engine.shared.utils.serverdrivenui2.config.state.models
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+@SerialName("Shapes2")
 data class Shapes2(
     val extraSmall: CornerBasedShape2,
     val small: CornerBasedShape2,
@@ -12,6 +14,7 @@ data class Shapes2(
 ) {
     // TODO(Alpha-1 <MaterialTheme Update>: Support more corner based shapes)
     @Serializable
+    @SerialName("CornerBasedShape2")
     data class CornerBasedShape2(
         val topStart: Float,
         val topEnd: Float,

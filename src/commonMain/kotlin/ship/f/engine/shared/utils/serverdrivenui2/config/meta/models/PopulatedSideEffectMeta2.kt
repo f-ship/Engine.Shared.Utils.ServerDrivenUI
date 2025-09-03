@@ -11,7 +11,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 @Serializable
 @SerialName("PopulatedSideEffectMeta2")
 data class PopulatedSideEffectMeta2(
-    override val id: MetaId2,
+    override val metaId: MetaId2,
     val states: List<State2>,
     val metas: List<Meta2>,
     val onExpected: Map<Id2, List<Pair<StateId2, Action2>>> = mapOf(),
