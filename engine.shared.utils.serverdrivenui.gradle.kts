@@ -6,6 +6,8 @@ import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeCompiler)
     kotlin("plugin.serialization") version "1.8.0"
 }
 
@@ -45,6 +47,8 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(compose.runtime)
+            implementation(compose.components.resources)
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.6.3")
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
