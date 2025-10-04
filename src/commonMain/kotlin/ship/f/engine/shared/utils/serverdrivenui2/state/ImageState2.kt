@@ -3,16 +3,13 @@ package ship.f.engine.shared.utils.serverdrivenui2.state
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2.Unspecified
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ContentScale2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ContentScale2.None2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.PaddingValues2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Source2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ColorModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.PaddingModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
@@ -37,6 +34,7 @@ data class ImageState2(
     val src: Source2,
     val contentDescription: String? = null,
     val contentScale: ContentScale2 = None2,
+    override val draws: List<Draw2> = listOf(),
 ) : State2(),
     PaddingModifier2<ImageState2>,
     ColorModifier2<ImageState2>,
@@ -48,5 +46,6 @@ data class ImageState2(
     override fun c(size: Size2) = copy(size = size)
     override fun c(color: Color2) = copy(color = color)
     override fun c(weight: Weight2) = copy(weight = weight)
+    override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
 }

@@ -34,6 +34,7 @@ data class ScreenState2(
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
     override val metas: List<Meta2> = listOf(),
     override val counter: Int = 0,
+    override val draws: List<Draw2> = listOf(),
 ) : State2(),
     ChildrenModifier2<ScreenState2>,
     ColorSchemeModifier2<ScreenState2>,
@@ -52,6 +53,7 @@ data class ScreenState2(
     override fun c(weight: Weight2) = copy(weight = weight)
     override fun c(font: String) = copy(font = font)
     override fun c(alignment: Alignment2) = copy(alignment = alignment)
+    override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
     override fun c(
         lightColorScheme: ColorScheme2,

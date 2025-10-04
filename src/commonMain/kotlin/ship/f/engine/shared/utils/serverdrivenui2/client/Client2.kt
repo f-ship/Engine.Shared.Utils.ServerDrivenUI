@@ -1,7 +1,10 @@
 package ship.f.engine.shared.utils.serverdrivenui2.client
 
 import ship.f.engine.shared.utils.serverdrivenui2.client.BackStackEntry2.Direction2.Backward2
-import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.*
+import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.Action2
+import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.DeferredAction2
+import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.FilterVisibility2
+import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.RemoteAction2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.MetaPublisherActionModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.StatePublisherActionModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
@@ -44,17 +47,30 @@ abstract class Client2(open val projectName: String? = null) {
             deferredActionMap.g2(remoteAction.action.deferKey) + listOf(remoteAction)
     }
 
+    fun addRemoteAction(metaId: MetaId2, stateId: StateId2, action: Action2) {
+        if (metaListeners2[metaId] == null) {
+            metaListeners2[metaId] = mutableListOf()
+        }
+
+        metaListeners2[metaId]?.add(
+            RemoteAction2(
+                action = action,
+                targetStateId = stateId,
+            )
+        )
+    }
+
     fun clearDeferredActions(key: String?) = deferredActionMap.remove(key)
     fun getDeferredActions(key: String?) = deferredActionMap[key]
 
     inline fun <reified T : State2> get(stateId2: StateId2): T = stateMap.g2(stateId2) as T
     fun get(metaId2: MetaId2): Meta2 = metaMap.g2(metaId2)
 
-    fun update(state: State2) {
-        if (stateMap[state.id] == null) {
+    fun update(state: State2, forceUpdate: Boolean = false) { //TODO probably need to find a better way of dynamic tree building incase a view isn't found as a fallback
+        if (stateMap[state.id] == null || forceUpdate) {
             setTriggers(state)
             (state as? ChildrenModifier2<*>)?.children?.forEach { child ->
-                update(child)
+                update(child, forceUpdate)
                 reverseIdMap[child.id] = state.id
             }
             state.metas.forEach { meta -> metaMap[meta.metaId] = meta }
@@ -106,6 +122,10 @@ abstract class Client2(open val projectName: String? = null) {
                 push(get<State2>(op.stateId))
                 reactivePush()
                 return
+            }
+
+            is NavigationConfig2.StateOperation2.Swap2 -> (get<State2>(reverseIdMap.g2(op.swap.id)) as? ChildrenModifier2<*>)?.let { // TODO really dangerous, need a better way to handle variants
+                it.c(it.children.map { child -> if (child.id == op.swap.id) op.swap.also{ swap -> update(swap, true) } else child })
             }
         }?.let {
             update(it)
@@ -208,19 +228,6 @@ abstract class Client2(open val projectName: String? = null) {
                     )
                 )
             }
-        }
-
-        val resetMetaActions = triggers.flatMap { it.actions }.filterIsInstance<ResetState2>()
-        resetMetaActions.forEach { action ->
-            if (metaListeners2[action.targetMetaId] == null) {
-                metaListeners2[action.targetMetaId] = mutableListOf()
-            }
-            metaListeners2[action.targetMetaId]?.add(
-                RemoteAction2(
-                    targetStateId = action.targetStateId,
-                    action = action as Action2
-                )
-            )
         }
     }
 }

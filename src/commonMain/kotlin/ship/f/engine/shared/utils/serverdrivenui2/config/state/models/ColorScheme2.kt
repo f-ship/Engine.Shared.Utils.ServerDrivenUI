@@ -165,11 +165,37 @@ data class ColorScheme2(
         @Serializable
         @SerialName("Unspecified")
         data object Unspecified : Color2()
+
+        @Serializable
+        @SerialName("Transparent")
+        data object Transparent : Color2()
+
+        @Serializable
+        @SerialName("Gradient")
+        data class Gradient(
+            val direction: GradientDirection = GradientDirection.Vertical,
+            val colors: List<AlphaColor2>,
+        ): Color2() {
+            @Serializable
+            @SerialName("GradientDirection")
+            sealed class GradientDirection {
+                data object Horizontal : GradientDirection()
+                data object Vertical : GradientDirection()
+            }
+
+            @Serializable
+            @SerialName("AlphaColor2")
+            data class AlphaColor2(
+                val color: Color2,
+                val alpha: Float,
+            )
+        }
     }
     
     companion object {
         val DefaultLightColorScheme2 = ColorScheme2(
-            primary = 0xFFE64A19,
+//            primary = 0xFFE64A19,
+            primary = 0xFFFF8F26,
             onPrimary = 0xFFFFFFFF,
             secondary = 0xFF717680,
             onSecondary = 0xFFFFFFFF,
@@ -188,18 +214,18 @@ data class ColorScheme2(
             primaryContainer = 0xFFFF00FF, // Not yet implemented,
             onPrimaryContainer = 0xFFFF00FF, // Not yet implemented,
             inversePrimary = 0xFFFF00FF, // Not yet implemented,
-            tertiary = 0xFFFF00FF, // Not yet implemented,
+            tertiary = 0xFF3F3F3F,
             onTertiary = 0xFFFF00FF, // Not yet implemented,
-            tertiaryContainer = 0xFFFF00FF, // Not yet implemented,
+            tertiaryContainer = 0xFF999999,
             onTertiaryContainer = 0xFFFF00FF, // Not yet implemented,
             surfaceTint = 0xFFFF00FF, // Not yet implemented,
             inverseSurface = 0xFF000000,
-            inverseOnSurface = 0xFFFF00FF, // Not yet implemented,
+            inverseOnSurface = 0xFF000000, // Not yet implemented,
             errorContainer = 0xFFFF00FF, // Not yet implemented,
             onErrorContainer = 0xFFFF00FF, // Not yet implemented,
             scrim = 0xFFFF00FF, // Not yet implemented,
             surfaceBright = 0xFFFF00FF, // Not yet implemented,
-            surfaceDim = 0xFFFF00FF, // Not yet implemented,
+            surfaceDim = 0xFFF4F4F4,
             surfaceContainer = 0xFFFF00FF, // Not yet implemented,
             surfaceContainerHigh = 0xFFFF00FF, // Not yet implemented,
             surfaceContainerHighest = 0xFFFF00FF, // Not yet implemented,

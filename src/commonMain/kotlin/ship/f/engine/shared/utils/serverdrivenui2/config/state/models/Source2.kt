@@ -20,6 +20,12 @@ sealed class Source2 {
     ) : Source2()
 
     @Serializable
+    @SerialName("Material2")
+    data class Material2(
+        override val location: String,
+    ) : Source2()
+
+    @Serializable
     @SerialName("Resource2")
     data class Resource2(
         override val location: String,

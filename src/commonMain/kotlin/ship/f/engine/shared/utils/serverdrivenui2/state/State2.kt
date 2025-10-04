@@ -14,6 +14,7 @@ sealed class State2 :
     VisibilityModifier2<State2>,
     SizeModifier2<State2>,
     WeightModifier2<State2>,
+    DrawModifier2<State2>,
     MetaModifier2<State2>,
     ResetModifier2<State2>,
     OnInitialRenderModifier2 {

@@ -49,6 +49,8 @@ kotlin {
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.components.resources)
+            // I've recently added this because it was complaining material icons was missing? I think this should be extracted somewhere else
+            implementation(compose.materialIconsExtended)
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.6.3")
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")

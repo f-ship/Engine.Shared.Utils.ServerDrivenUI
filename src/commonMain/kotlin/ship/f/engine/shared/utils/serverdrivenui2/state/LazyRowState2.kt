@@ -37,6 +37,7 @@ data class LazyRowState2(
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
     override val metas: List<Meta2> = listOf(),
     override val counter: Int = 0,
+    override val draws: List<Draw2> = listOf(),
 ) : State2(),
     ChildrenModifier2<LazyRowState2>,
     AlignmentModifier2<LazyRowState2>,
@@ -56,6 +57,7 @@ data class LazyRowState2(
     override fun c(shape: CornerBasedShape2) = copy(shape = shape)
     override fun c(weight: Weight2) = copy(weight = weight)
     override fun c(border: Border2) = copy(border = border)
+    override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
     override fun c(
         padding: PaddingValues2,

@@ -7,11 +7,11 @@ import kotlinx.serialization.Serializable
 @SerialName("FontWeight2")
 sealed class FontWeight2 {
     @Serializable
-    @SerialName("Light2")
+    @SerialName("Normal2")
     data object Normal2 : FontWeight2()
 
     @Serializable
-    @SerialName("Medium2")
+    @SerialName("SemiBold2")
     data object SemiBold2 : FontWeight2()
 
     @Serializable

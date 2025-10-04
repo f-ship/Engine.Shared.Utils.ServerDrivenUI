@@ -3,6 +3,7 @@ package ship.f.engine.shared.utils.serverdrivenui2.state
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Draw2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.PaddingValues2
@@ -34,6 +35,7 @@ data class CheckboxState2(
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
     override val metas: List<Meta2> = listOf(),
     override val counter: Int = 0,
+    override val draws: List<Draw2> = listOf(),
 ) : State2(),
     PaddingModifier2<CheckboxState2>,
     ValidModifier2<CheckboxState2>,
@@ -46,6 +48,7 @@ data class CheckboxState2(
     override fun c(valid: Valid2) = copy(valid = valid)
     override fun c(weight: Weight2) = copy(weight = weight)
     override fun reset(counter: Int) = copy(counter = counter)
+    override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun update(
         toggle: Toggle2,
         modified: Boolean,

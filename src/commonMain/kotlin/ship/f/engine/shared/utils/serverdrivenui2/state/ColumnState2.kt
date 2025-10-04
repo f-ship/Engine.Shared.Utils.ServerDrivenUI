@@ -17,7 +17,9 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.Defa
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.WeightModifier2.Weight2
+import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnClickTrigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnInitialRenderTrigger2
+import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.modifiers.OnClickModifier2
 
 @Serializable
 @SerialName("ColumnState2")
@@ -35,8 +37,10 @@ data class ColumnState2(
     override val shape: CornerBasedShape2 = DefaultShapes2.small,
     override val weight: Weight2? = null,
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
+    override val onClickTrigger: OnClickTrigger2 = OnClickTrigger2(),
     override val metas: List<Meta2> = listOf(),
     override val counter: Int = 0,
+    override val draws: List<Draw2> = listOf(),
 ) : State2(),
     ChildrenModifier2<ColumnState2>,
     AlignmentModifier2<ColumnState2>,
@@ -44,7 +48,8 @@ data class ColumnState2(
     ColorModifier2<ColumnState2>,
     ShapeModifier2<ColumnState2>,
     InnerPaddingModifier2<ColumnState2>,
-    BorderModifier2<ColumnState2> {
+    BorderModifier2<ColumnState2>,
+    OnClickModifier2 {
     override fun cM(metas: List<Meta2>) = copy(metas = metas)
     override fun c(id: StateId2) = copy(id = id)
     override fun c(visible: Visible2) = copy(visible = visible)
@@ -57,6 +62,7 @@ data class ColumnState2(
     override fun c(border: Border2) = copy(border = border)
     override fun c(weight: Weight2) = copy(weight = weight)
     override fun reset(counter: Int) = copy(counter = counter)
+    override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun c(
         padding: PaddingValues2,
         innerPadding: PaddingValues2,

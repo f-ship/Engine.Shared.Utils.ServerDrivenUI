@@ -1,0 +1,45 @@
+package ship.f.engine.shared.utils.serverdrivenui2.config.state.models
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+@SerialName("Draw2")
+sealed class Draw2 {
+    @Serializable
+    @SerialName("Behind2")
+    sealed class Behind2 : Draw2() {
+        @Serializable
+        @SerialName("Circle2")
+        data class Circle2(
+            val radius: Float? = null,
+            val color: ColorScheme2.Color2,
+        ) : Behind2()
+
+        @Serializable
+        @SerialName("Rectangle2")
+        data class Rectangle2(
+            val roundRect: RoundRect2 = RoundRect2(),
+            val color: ColorScheme2.Color2,
+        ) : Behind2() {
+            @Serializable
+            @SerialName("RoundRect2")
+            data class RoundRect2(
+                val rect: Rect2 = Rect2(),
+                val topLeft: Float = 0f,
+                val topRight: Float = 0f,
+                val bottomLeft: Float = 0f,
+                val bottomRight: Float = 0f,
+            )
+
+            @Serializable
+            @SerialName("Rect2")
+            data class Rect2(
+                val left: Float? = null, // Defaults to 0
+                val top: Float? = null, // Defaults to 0
+                val right: Float? = null, // Defaults to size.width
+                val bottom: Float? = null, // Defaults to size.height
+            )
+        }
+    }
+}

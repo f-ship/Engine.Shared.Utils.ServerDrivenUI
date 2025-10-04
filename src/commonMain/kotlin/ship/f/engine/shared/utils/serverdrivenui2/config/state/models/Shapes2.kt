@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("Shapes2")
 data class Shapes2(
+    val none: CornerBasedShape2,
     val extraSmall: CornerBasedShape2,
     val small: CornerBasedShape2,
     val medium: CornerBasedShape2,
@@ -24,6 +25,7 @@ data class Shapes2(
 
     companion object {
         val DefaultShapes2 = Shapes2(
+            none = CornerBasedShape2(0f, 0f, 0f, 0f),
             extraSmall = CornerBasedShape2(4f, 4f, 4f, 4f),
             small = CornerBasedShape2(8f, 8f, 8f, 8f),
             medium = CornerBasedShape2(12f, 12f, 12f, 12f),

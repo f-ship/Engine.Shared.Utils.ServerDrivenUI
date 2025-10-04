@@ -2,9 +2,12 @@ package ship.f.engine.shared.utils.serverdrivenui2.config.meta.models
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.Navigate2
+import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.RemoteAction2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2.Companion.autoMetaId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
+import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
 @Serializable
 @SerialName("NavigationConfig2")
@@ -71,6 +74,27 @@ data class NavigationConfig2(
             val replace: StateId2,
             override val stateId: StateId2,
         ) : StateOperation2()
+
+        @Serializable
+        @SerialName("Swap2")
+        data class Swap2(
+            val swap: State2,
+            override val stateId: StateId2,
+        ) : StateOperation2() {
+            companion object {
+                fun State2.swap2() = RemoteAction2(
+                    targetStateId = id,
+                    action = Navigate2(
+                        config = NavigationConfig2(
+                            operation = Swap2(
+                                swap = this,
+                                stateId = id
+                            )
+                        )
+                    )
+                )
+            }
+        }
     }
 }
 

@@ -3,6 +3,7 @@ package ship.f.engine.shared.utils.serverdrivenui2.state
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Draw2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.PaddingValues2
@@ -26,12 +27,14 @@ data class DropDownState2(
     val items: List<DropDownItem2>,
     val selectedItem: DropDownItem2? = null,
     val isExpanded: Boolean = false,
+    override val draws: List<Draw2> = listOf(),
 ) : State2(), PaddingModifier2<DropDownState2> {
     override fun c(id: StateId2) = copy(id = id)
     override fun c(visible: Visible2) = copy(visible = visible)
     override fun c(size: Size2) = copy(size = size)
     override fun c(weight: Weight2) = copy(weight = weight)
     override fun c(padding: PaddingValues2) = copy(padding = padding)
+    override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
     override fun cM(metas: List<Meta2>) = copy(metas = metas)
 

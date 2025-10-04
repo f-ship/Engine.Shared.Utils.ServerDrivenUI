@@ -3,18 +3,15 @@ package ship.f.engine.shared.utils.serverdrivenui2.state
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Alignment2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Alignment2.HorizontalAndVerticalAlignment2.Center2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Border2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Border2.Companion.default
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2.Unspecified
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.PaddingValues2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.Companion.DefaultShapes2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.CornerBasedShape2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
@@ -38,6 +35,7 @@ data class BoxState2(
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
     override val metas: List<Meta2> = listOf(),
     override val counter: Int = 0,
+    override val draws: List<Draw2> = listOf(),
 ) : State2(),
     ChildrenModifier2<BoxState2>,
     AlignmentModifier2<BoxState2>,
@@ -56,6 +54,7 @@ data class BoxState2(
     override fun c(weight: Weight2) = copy(weight = weight)
     override fun c(border: Border2) = copy(border = border)
     override fun reset(counter: Int) = copy(counter = counter)
+    override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun c(
         padding: PaddingValues2,
         innerPadding: PaddingValues2,

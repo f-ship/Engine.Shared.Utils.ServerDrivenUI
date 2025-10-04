@@ -38,6 +38,7 @@ data class ButtonState2(
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
     override val metas: List<Meta2> = listOf(),
     override val counter: Int = 0,
+    override val draws: List<Draw2> = listOf(),
     val leadingIcon: ImageState2? = null,
     val text: String? = null,
 ) : State2(),
@@ -61,5 +62,6 @@ data class ButtonState2(
     override fun c(value: FontWeight2) = copy(fontWeight = value)
     override fun c(weight: Weight2) = copy(weight = weight)
     override fun c(loading: Loading2) = copy(loading = loading)
+    override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
 }

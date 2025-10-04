@@ -30,6 +30,48 @@ data class Navigate2(
 }
 
 @Serializable
+@SerialName("StateUpdateOnMetaUpdate2")
+data class StateUpdateOnMetaUpdate2(
+    override val targetMetaId: MetaId2
+) : Action2(), TargetableMetaModifier2 {
+    override fun execute(
+        state: State2,
+        client: Client2,
+    ) {
+        client.addRemoteAction(
+            metaId = targetMetaId,
+            stateId = state.id,
+            action = ResetState2(
+                targetStateId = state.id
+            )
+        )
+    }
+}
+
+@Serializable
+@SerialName("SideEffectOnMetaUpdate2")
+data class SideEffectOnMetaUpdate2(
+    val metaId: MetaId2,
+    override val targetMetaId: MetaId2,
+) : Action2(), TargetableMetaModifier2 {
+    override fun execute(
+        state: State2,
+        client: Client2,
+    ) {
+        client.addRemoteAction(
+            metaId = targetMetaId,
+            stateId = state.id,
+            action = EmitSideEffect2(
+                sideEffect = SideEffectMeta2(
+                    metaId = metaId,
+                    metas = listOf(targetMetaId),
+                ),
+            ),
+        )
+    }
+}
+
+@Serializable
 @SerialName("Loading2")
 data class Loading2(
     val value: Boolean,
@@ -121,6 +163,33 @@ data class ToggleVisibility2(
         val targetState = client.get<State2>(targetStateId)
         (targetState as? VisibilityModifier2<*>)?.c(visible = Visible2(!targetState.visible.value))?.let {
             client.update(it)
+        }
+    }
+}
+
+@Serializable
+@SerialName("Select")
+data class Select2(
+    override val targetMetaId: MetaId2,
+    val selected: String,
+) : Action2(), TargetableMetaModifier2 {
+    override fun execute(
+        state: State2,
+        client: Client2
+    ) {
+        (client.get(targetMetaId) as? SelectedStoreMeta2)?.let { store ->
+            client.update(store.copy(selected = selected))
+            for (item in store.map) {
+                if (item.key == selected) {
+                    item.value.first.forEach { action ->
+                        action.run(state, client)
+                    }
+                } else {
+                    item.value.second.forEach { action ->
+                        action.run(state, client)
+                    }
+                }
+            }
         }
     }
 }
@@ -226,8 +295,7 @@ data class ToJsonAction2(
 @SerialName("ResetState2")
 data class ResetState2(
     override val targetStateId: StateId2,
-    override val targetMetaId: MetaId2,
-) : Action2(), TargetableStateModifier2, TargetableMetaModifier2 {
+) : Action2(), TargetableStateModifier2 {
     override fun execute(
         state: State2,
         client: Client2
