@@ -42,4 +42,27 @@ sealed class Draw2 {
             )
         }
     }
+
+    @Serializable
+    @SerialName("Border2")
+    data class Border2(
+        val width: Float = 1f,
+        val color: ColorScheme2.Color2,
+        val padding: PaddingValues2 = PaddingValues2(),
+        val shape: Shapes2.CornerBasedShape2 = Shapes2.DefaultShapes2.small,
+    ) : Draw2()
+
+    @Serializable
+    @SerialName("Offset2")
+    data class Offset2(
+        val x: Float = 0f,
+        val y: Float = 0f,
+    ) : Draw2()
+
+    @Serializable
+    @SerialName("RadialOffset2")
+    data class RadialOffset2(
+        val radius: Float = 0f,
+        val angle: Float = 0f,
+    ) : Draw2()
 }
