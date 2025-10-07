@@ -118,6 +118,8 @@ abstract class Client2(open val projectName: String? = null) {
                 it.c(it.children.map { child -> if (child.id == op.replace) get<State2>(op.stateId) else child })
             }
 
+            is NavigationConfig2.StateOperation2.ReplaceChild2 -> (get<State2>(op.container) as? ChildrenModifier2<*>)?.c(listOf(get<State2>(op.stateId)))
+
             is NavigationConfig2.StateOperation2.Push2 -> {
                 push(get<State2>(op.stateId))
                 reactivePush()

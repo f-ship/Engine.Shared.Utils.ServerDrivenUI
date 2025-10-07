@@ -75,6 +75,14 @@ data class NavigationConfig2(
             override val stateId: StateId2,
         ) : StateOperation2()
 
+
+        @Serializable
+        @SerialName("ReplaceChild2")
+        data class ReplaceChild2(
+            val container: StateId2,
+            override val stateId: StateId2,
+        ) : StateOperation2()
+
         @Serializable
         @SerialName("Swap2")
         data class Swap2(
