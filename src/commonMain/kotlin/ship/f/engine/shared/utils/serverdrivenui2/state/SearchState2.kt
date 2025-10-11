@@ -33,6 +33,7 @@ data class SearchState2(
     override val counter: Int = 0,
     override val draws: List<Draw2> = listOf(),
     val leadingIcon: ImageState2? = null,
+    val trailingIcon: ImageState2? = null,
     val initialValue: String = "",
     val placeholder: String = "",
     val label: String = "",

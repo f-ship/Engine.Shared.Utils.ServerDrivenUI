@@ -14,7 +14,7 @@ data class SelectedStoreMeta2(
     override val metaId: MetaId2 = autoMetaId2(),
     val map: MutableMap<String, Pair<MutableList<RemoteAction2<*>>, MutableList<RemoteAction2<*>>>> = mutableMapOf(),
     val selected: String? = null,
-) : Meta2() {
+) : Meta2() { // TODO optimise to only run on positive and negative based on previous selection
     fun addSwap(key: String, positive: State2, negative: State2? = null) {
         if (map[key] == null) {
             map[key] = Pair(mutableListOf(), mutableListOf())

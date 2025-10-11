@@ -179,16 +179,15 @@ data class Select2(
     ) {
         (client.get(targetMetaId) as? SelectedStoreMeta2)?.let { store ->
             client.update(store.copy(selected = selected))
-            for (item in store.map) {
-                if (item.key == selected) {
-                    item.value.first.forEach { action ->
-                        action.run(state, client)
-                    }
-                } else {
+            for (item in store.map) { // TODO this needs to be optimised
+                if (item.key != selected) {
                     item.value.second.forEach { action ->
                         action.run(state, client)
                     }
                 }
+            }
+            store.map[selected]?.first?.forEach { action ->
+                action.run(state, client)
             }
         }
     }
