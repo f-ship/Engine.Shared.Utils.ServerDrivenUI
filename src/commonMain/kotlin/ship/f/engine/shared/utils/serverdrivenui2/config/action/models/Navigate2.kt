@@ -152,6 +152,20 @@ data class EmitSideEffect2(
 }
 
 @Serializable
+@SerialName("EmitPopulatedSideEffect2")
+data class EmitPopulatedSideEffect2(
+    val sideEffect: PopulatedSideEffectMeta2,
+) : Action2() {
+    override fun execute(
+        state: State2,
+        client: Client2,
+    ) {
+        val enrichedSideEffect = sideEffect.copy(metas = sideEffect.metas.map { if (it is DataMeta2) it.toPopulatedDataMeta2(client) else it })
+        client.emitSideEffect(enrichedSideEffect)
+    }
+}
+
+@Serializable
 @SerialName("ToggleVisibility2")
 data class ToggleVisibility2(
     override val targetStateId: StateId2,

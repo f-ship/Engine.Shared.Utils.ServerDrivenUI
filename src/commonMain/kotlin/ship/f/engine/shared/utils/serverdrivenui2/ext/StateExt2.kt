@@ -8,6 +8,7 @@ fun PopulatedSideEffectMeta2.getText(id: Id2.StateId2) = when (val state = state
     is ButtonState2 -> state.text
     is DropDownState2 -> state.selectedItem?.title
     is TextFieldState2 -> state.text
+    is SearchState2 -> state.text
     is TextState2 -> state.text
     else -> null
 }
@@ -16,6 +17,7 @@ fun PopulatedSideEffectMeta2.getTextByAlias(alias: String) = when (val state = s
     is ButtonState2 -> state.text
     is DropDownState2 -> state.selectedItem?.title
     is TextFieldState2 -> state.text
+    is SearchState2 -> state.text
     is TextState2 -> state.text
     else -> null
 }

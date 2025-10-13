@@ -26,4 +26,10 @@ data class SelectedStoreMeta2(
             }
         )
     }
+
+    //TODO is hacky but need to refresh a swap, damn I just need to reimplement this completely
+    fun replaceSwap(key: String, positive: State2) {
+        map.remove(key)
+        addSwap(key, positive)
+    }
 }
