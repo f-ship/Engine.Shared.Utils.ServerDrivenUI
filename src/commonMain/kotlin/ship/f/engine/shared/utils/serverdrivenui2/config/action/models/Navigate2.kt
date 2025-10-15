@@ -6,6 +6,7 @@ import kotlinx.serialization.encodeToString
 import ship.f.engine.shared.utils.serverdrivenui2.client.Client2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.*
+import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.StateMachineMeta2.StateMachineOperation2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ChildrenModifier2
@@ -160,7 +161,8 @@ data class EmitPopulatedSideEffect2(
         state: State2,
         client: Client2,
     ) {
-        val enrichedSideEffect = sideEffect.copy(metas = sideEffect.metas.map { if (it is DataMeta2) it.toPopulatedDataMeta2(client) else it })
+        val enrichedSideEffect =
+            sideEffect.copy(metas = sideEffect.metas.map { if (it is DataMeta2) it.toPopulatedDataMeta2(client) else it })
         client.emitSideEffect(enrichedSideEffect)
     }
 }
@@ -202,6 +204,61 @@ data class Select2(
             }
             store.map[selected]?.first?.forEach { action ->
                 action.run(state, client)
+            }
+        }
+    }
+}
+
+@Serializable
+@SerialName("StateMachineSelect2")
+data class StateMachineSelect2(
+    override val targetMetaId: MetaId2,
+    val selected: List<String>,
+) : Action2(), TargetableMetaModifier2 {
+    override fun execute(
+        state: State2,
+        client: Client2
+    ) {
+        println("StateMachineSelect2: $selected")
+        (client.get(targetMetaId) as? StateMachineMeta2)?.let { store ->
+            // Update inactive operations
+            val inactiveOperations = store.getOperations(store.selected)
+            inactiveOperations.runOps(isActive = false, client = client)
+
+            // Update active operations
+            client.update(store.copy(selected = selected))
+            val activeOperations = store.getOperations(selected)
+            activeOperations.runOps(isActive = true, client = client)
+        }
+    }
+
+    fun List<StateMachineOperation2>.runOps(isActive: Boolean, client: Client2) {
+        forEach { operation ->
+            when (operation) {
+                is StateMachineOperation2.NestedOperation2 -> Unit
+                is StateMachineOperation2.PushOperation2 -> {
+                    if (isActive) {
+                        client.navigate(
+                            NavigationConfig2(
+                                operation = NavigationConfig2.StateOperation2.ReplaceChild2(
+                                    container = operation.container,
+                                    stateId = operation.stateId
+                                )
+                            )
+                        )
+                    }
+                }
+
+                is StateMachineOperation2.SwapOperation2 -> {
+                    client.navigate(
+                        NavigationConfig2(
+                            operation = NavigationConfig2.StateOperation2.Swap2(
+                                swap = if (isActive) operation.active else operation.inactive,
+                                stateId = if (isActive) operation.active.id else operation.inactive.id,
+                            )
+                        )
+                    )
+                }
             }
         }
     }

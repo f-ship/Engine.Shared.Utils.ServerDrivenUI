@@ -44,17 +44,22 @@ data class StateMachineMeta2(
 ) : Meta2() {
 
     @Serializable
+    @SerialName("StateMachineOperation2")
     sealed class StateMachineOperation2 {
+        @Serializable
+        @SerialName("SwapOperation2")
         data class SwapOperation2(
             val active: State2,
             val inactive: State2,
         ) : StateMachineOperation2()
-
+        @Serializable
+        @SerialName("PushOperation2")
         data class PushOperation2(
             val container: StateId2,
             val stateId: StateId2,
         ) : StateMachineOperation2()
-
+        @Serializable
+        @SerialName("NestedOperation2")
         data class NestedOperation2(
             val map: MutableMap<String, List<StateMachineOperation2>> = mutableMapOf(),
         ) : StateMachineOperation2()
@@ -88,5 +93,17 @@ data class StateMachineMeta2(
         }.also {
             map[key] = map.getOrElse(key) { listOf() } + it
         }
+    }
+
+    fun getOperations(keys: List<String>, map: MutableMap<String, List<StateMachineOperation2>> = this.map): List<StateMachineOperation2> {
+        val operations = mutableListOf<StateMachineOperation2>()
+        keys.forEachIndexed { index, key ->
+            val newOps = map[key] ?: listOf()
+            operations += newOps
+            operations += newOps.filterIsInstance<StateMachineOperation2.NestedOperation2>().flatMap {
+                getOperations(keys.drop(1), it.map)
+            }
+        }
+        return operations
     }
 }

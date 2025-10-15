@@ -7,7 +7,9 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.Action2
+import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.StateMachineSelect2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.ToggleFilter2
+import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.StateMachineMeta2
 
 @OptIn(InternalSerializationApi::class)
 val json2 = Json {
@@ -30,6 +32,13 @@ val json2 = Json {
         ) {
             // TODO add all actions
             subclass(ToggleFilter2::class)
+            subclass(StateMachineSelect2::class)
+        }
+
+        polymorphic(
+            baseClass = StateMachineMeta2.StateMachineOperation2::class
+        ) {
+            subclass(StateMachineMeta2.StateMachineOperation2.SwapOperation2::class)
         }
     }
 }
