@@ -6,6 +6,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.RemoteAct
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2.Swap2.Companion.swap2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2.Companion.autoMetaId2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
 @Serializable
@@ -31,5 +32,61 @@ data class SelectedStoreMeta2(
     fun replaceSwap(key: String, positive: State2) {
         map.remove(key)
         addSwap(key, positive)
+    }
+}
+
+@Serializable
+@SerialName("StateMachineMeta2")
+data class StateMachineMeta2(
+    override val metaId: MetaId2 = autoMetaId2(),
+    val selected: List<String> = listOf(),
+    val map: MutableMap<String, List<StateMachineOperation2>> = mutableMapOf()
+) : Meta2() {
+
+    @Serializable
+    sealed class StateMachineOperation2 {
+        data class SwapOperation2(
+            val active: State2,
+            val inactive: State2,
+        ) : StateMachineOperation2()
+
+        data class PushOperation2(
+            val container: StateId2,
+            val stateId: StateId2,
+        ) : StateMachineOperation2()
+
+        data class NestedOperation2(
+            val map: MutableMap<String, List<StateMachineOperation2>> = mutableMapOf(),
+        ) : StateMachineOperation2()
+    }
+
+    fun addSwap(keys: List<String>, active: State2, inactive: State2, map: MutableMap<String, List<StateMachineOperation2>>): StateMachineOperation2 {
+        val key = keys.first()
+        return if (keys.size > 1) {
+            StateMachineOperation2.NestedOperation2().also {
+                val newKeys = keys.drop(1)
+                val newFirst = newKeys.first()
+                it.map[newFirst] = map.getOrElse(newFirst) { listOf() } + addSwap(newKeys, active, inactive, mutableMapOf())
+            }
+        } else {
+           StateMachineOperation2.SwapOperation2(active, inactive)
+        }.also {
+            map[key] = map.getOrElse(key) { listOf() } + it
+        }
+    }
+
+    fun addPush(keys: List<String>, container: StateId2, stateId: StateId2, map: MutableMap<String, List<StateMachineOperation2>>): StateMachineOperation2 {
+        val key = keys.first()
+        return if (keys.size > 1) {
+            StateMachineOperation2.NestedOperation2().also {
+                val newKeys = keys.drop(1)
+                val newFirst = newKeys.first()
+                it.map[newFirst] = map.getOrElse(newFirst) { listOf() } + addPush(newKeys, container, stateId, mutableMapOf())
+            }
+        } else {
+            StateMachineOperation2.PushOperation2(container, stateId)
+        }.also {
+            map[key] = map.getOrElse(key) { listOf() } + it
+        }
     }
 }

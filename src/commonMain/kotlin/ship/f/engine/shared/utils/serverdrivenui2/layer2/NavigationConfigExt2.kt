@@ -13,6 +13,14 @@ fun String.toPush() = listOf(
     )
 )
 
+fun StateId2.toPush() = listOf(
+    NavigationConfig2(
+        operation = Push2(
+            stateId = this
+        )
+    )
+)
+
 fun String.toPushAction() = Navigate2(
     NavigationConfig2(
         operation = Push2(

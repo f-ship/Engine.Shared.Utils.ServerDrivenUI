@@ -179,7 +179,12 @@ data class ColorScheme2(
             @Serializable
             @SerialName("GradientDirection")
             sealed class GradientDirection {
+
+                @Serializable
+                @SerialName("Horizontal")
                 data object Horizontal : GradientDirection()
+                @Serializable
+                @SerialName("Vertical")
                 data object Vertical : GradientDirection()
             }
 
@@ -188,7 +193,7 @@ data class ColorScheme2(
             data class AlphaColor2(
                 val color: Color2,
                 val alpha: Float,
-            )
+            ) : Color2()
         }
     }
     
