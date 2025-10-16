@@ -26,7 +26,9 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
 
-    jvm()
+    jvm(
+
+    )
 
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
