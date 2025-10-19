@@ -3,7 +3,6 @@ package ship.f.engine.shared.utils.serverdrivenui2.ext
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSideEffectMeta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2
 import ship.f.engine.shared.utils.serverdrivenui2.state.*
-
 fun PopulatedSideEffectMeta2.getText(id: Id2.StateId2) = when (val state = states.first { it.id == id }) {
     is ButtonState2 -> state.text
     is DropDownState2 -> state.selectedItem?.title

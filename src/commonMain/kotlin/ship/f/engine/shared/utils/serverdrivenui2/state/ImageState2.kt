@@ -9,9 +9,11 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorSchem
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ContentScale2.None2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.CornerBasedShape2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ColorModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.PaddingModifier2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ShapeModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.WeightModifier2.Weight2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnClickTrigger2
@@ -32,12 +34,14 @@ data class ImageState2(
     override val metas: List<Meta2> = listOf(),
     override val counter: Int = 0,
     val src: Source2,
+    override val shape: CornerBasedShape2 = Shapes2.DefaultShapes2.none,
     val contentDescription: String? = null,
     val contentScale: ContentScale2 = None2,
     override val draws: List<Draw2> = listOf(),
 ) : State2(),
     PaddingModifier2<ImageState2>,
     ColorModifier2<ImageState2>,
+    ShapeModifier2<ImageState2>,
     OnClickModifier2 {
     override fun cM(metas: List<Meta2>) = copy(metas = metas)
     override fun c(id: StateId2) = copy(id = id)
@@ -46,6 +50,7 @@ data class ImageState2(
     override fun c(size: Size2) = copy(size = size)
     override fun c(color: Color2) = copy(color = color)
     override fun c(weight: Weight2) = copy(weight = weight)
+    override fun c(shape: CornerBasedShape2) = copy(shape = shape)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
 }
