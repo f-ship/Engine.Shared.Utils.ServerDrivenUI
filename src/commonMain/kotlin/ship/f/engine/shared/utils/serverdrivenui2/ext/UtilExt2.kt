@@ -9,7 +9,8 @@ import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 /**
  * Used to dangerously get a non-nullable value from a map that should have the value
  */
-fun <K, V> Map<K, V>.g2(key: K): V = get(key) ?: error("Key $key not found in ${this.toString().let{ if (size < 100) it else it.substring(0, 100)}}...")
+//fun <K, V> Map<K, V>.g2(key: K): V = get(key) ?: error("Key $key not found in ${toString().let{ if (size < 100) it else it.substring(0, 100)}}...")
+fun <K, V> Map<K, V>.g2(key: K): V = get(key) ?: error("Key $key not found in Map with keys: $keys")
 
 /**
  * Used to measure the time it takes to execute a block of code
