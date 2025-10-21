@@ -221,6 +221,7 @@ data class StateMachineSelect2(
     ) {
         println("StateMachineSelect2: $selected")
         (client.get(targetMetaId) as? StateMachineMeta2)?.let { store ->
+            println("keys: ${store.map.keys}")
             // Update inactive operations
             val inactiveOperations = store.getOperations(store.selected)
             inactiveOperations.runOps(isActive = false, client = client)
