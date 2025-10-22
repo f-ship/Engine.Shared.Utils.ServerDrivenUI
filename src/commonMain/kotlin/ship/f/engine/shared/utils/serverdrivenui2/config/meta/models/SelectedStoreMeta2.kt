@@ -36,6 +36,25 @@ data class SelectedStoreMeta2(
 }
 
 @Serializable
+@SerialName("ToggleMachineMeta2")
+data class ToggleMachineMeta2(
+    override val metaId: MetaId2 = autoMetaId2(),
+    val selected: MutableList<StateId2> = mutableListOf(),
+    val map: MutableMap<StateId2, SwapOperation2> = mutableMapOf(),
+    val limit: Int = Int.MAX_VALUE,
+) : Meta2() {
+    @Serializable
+    data class SwapOperation2(
+        val active: State2,
+        val inactive: State2,
+    )
+
+    fun addSwap(active: State2, inactive: State2) {
+        map[active.id] = SwapOperation2(active, inactive)
+    }
+}
+
+@Serializable
 @SerialName("StateMachineMeta2")
 data class StateMachineMeta2(
     override val metaId: MetaId2 = autoMetaId2(),

@@ -210,6 +210,42 @@ data class Select2(
 }
 
 @Serializable
+@SerialName("ToggleMachineSelect2")
+data class ToggleMachineSelect2(
+    override val targetMetaId: MetaId2,
+    val selected: StateId2,
+) : Action2(), TargetableMetaModifier2 {
+    override fun execute(
+        state: State2,
+        client: Client2
+    ) {
+        (client.get(targetMetaId) as? ToggleMachineMeta2)?.let { store ->
+            if (store.selected.contains(selected)) {
+                store.selected.remove(selected)
+                client.navigate(
+                    NavigationConfig2(
+                        operation = NavigationConfig2.StateOperation2.Swap2(
+                            swap = store.map[selected]!!.inactive,
+                            stateId = selected,
+                        )
+                    )
+                )
+            } else if (store.selected.size < store.limit) {
+                store.selected.add(selected)
+                client.navigate(
+                    NavigationConfig2(
+                        operation = NavigationConfig2.StateOperation2.Swap2(
+                            swap = store.map[selected]!!.active,
+                            stateId = selected,
+                        )
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Serializable
 @SerialName("StateMachineSelect2")
 data class StateMachineSelect2(
     override val targetMetaId: MetaId2,
