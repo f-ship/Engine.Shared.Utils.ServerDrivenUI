@@ -40,6 +40,7 @@ data class RowState2(
     override val onClickTrigger: OnClickTrigger2 = OnClickTrigger2(),
     override val metas: List<Meta2> = listOf(),
     override val counter: Int = 0,
+    override val path: Path2 = Path2(),
     override val draws: List<Draw2> = listOf(),
 ) : State2(),
     ChildrenModifier2<RowState2>,
@@ -60,6 +61,7 @@ data class RowState2(
     override fun c(color: Color2) = copy(color = color)
     override fun c(shape: CornerBasedShape2) = copy(shape = shape)
     override fun c(weight: Weight2) = copy(weight = weight)
+    override fun c(path: Path2) = copy(path = path)
     override fun c(border: Border2) = copy(border = border)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)

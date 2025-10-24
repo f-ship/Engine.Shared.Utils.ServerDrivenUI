@@ -37,6 +37,7 @@ data class ImageState2(
     override val shape: CornerBasedShape2 = Shapes2.DefaultShapes2.none,
     val contentDescription: String? = null,
     val contentScale: ContentScale2 = None2,
+    override val path: Path2 = Path2(),
     override val draws: List<Draw2> = listOf(),
 ) : State2(),
     PaddingModifier2<ImageState2>,
@@ -51,6 +52,7 @@ data class ImageState2(
     override fun c(color: Color2) = copy(color = color)
     override fun c(weight: Weight2) = copy(weight = weight)
     override fun c(shape: CornerBasedShape2) = copy(shape = shape)
+    override fun c(path: Path2) = copy(path = path)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
 }

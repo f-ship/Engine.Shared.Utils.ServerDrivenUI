@@ -34,6 +34,7 @@ data class ScaffoldState2(
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
     override val metas: List<Meta2> = listOf(),
     override val counter: Int = 0,
+    override val path: Path2 = Path2(),
     override val draws: List<Draw2> = listOf(),
     override val color: ColorScheme2.Color2 = ColorScheme2.Color2.OnPrimary,
     val header: State2? = null,
@@ -57,6 +58,7 @@ data class ScaffoldState2(
     override fun c(weight: Weight2) = copy(weight = weight)
     override fun c(font: String) = copy(font = font)
     override fun c(alignment: Alignment2) = copy(alignment = alignment)
+    override fun c(path: Path2) = copy(path = path)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
     override fun c(

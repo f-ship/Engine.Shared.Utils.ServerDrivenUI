@@ -36,6 +36,7 @@ data class BoxState2(
     override val metas: List<Meta2> = listOf(),
     override val counter: Int = 0,
     override val draws: List<Draw2> = listOf(),
+    override val path: Path2 = Path2(),
 ) : State2(),
     ChildrenModifier2<BoxState2>,
     AlignmentModifier2<BoxState2>,
@@ -55,6 +56,7 @@ data class BoxState2(
     override fun c(border: Border2) = copy(border = border)
     override fun reset(counter: Int) = copy(counter = counter)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
+    override fun c(path: Path2) = copy(path = path)
     override fun c(
         padding: PaddingValues2,
         innerPadding: PaddingValues2,

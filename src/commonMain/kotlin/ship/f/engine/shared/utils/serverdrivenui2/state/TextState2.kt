@@ -34,6 +34,7 @@ data class TextState2(
     override val metas: List<Meta2> = listOf(),
     override val counter: Int = 0,
     override val draws: List<Draw2> = listOf(),
+    override val path: Path2 = Path2(),
     val textAlign: TextAlign2 = TextAlign2.Start2,
     val text: String,
 ) : State2(),
@@ -50,6 +51,7 @@ data class TextState2(
     override fun c(color: Color2) = copy(color = color)
     override fun c(value: FontWeight2) = copy(fontWeight = value)
     override fun c(weight: Weight2) = copy(weight = weight)
+    override fun c(path: Path2) = copy(path = path)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
 }

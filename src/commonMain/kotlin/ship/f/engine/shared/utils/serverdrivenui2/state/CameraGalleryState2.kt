@@ -36,6 +36,7 @@ data class CameraGalleryState2(
     val contentDescription: String? = null,
     val contentScale: ContentScale2 = None2,
     val encodedBytes: String? = null,
+    override val path: Path2 = Path2(),
     override val draws: List<Draw2> = listOf(),
     override val shape: Shapes2.CornerBasedShape2 = Shapes2.DefaultShapes2.none,
 ) : State2(),
@@ -51,6 +52,7 @@ data class CameraGalleryState2(
     override fun c(color: Color2) = copy(color = color)
     override fun c(weight: Weight2) = copy(weight = weight)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
+    override fun c(path: Path2) = copy(path = path)
     override fun reset(counter: Int) = copy(counter = counter)
     override fun c(shape: Shapes2.CornerBasedShape2) = copy(shape = shape)
 }

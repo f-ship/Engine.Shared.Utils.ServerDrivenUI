@@ -41,6 +41,7 @@ data class ButtonState2(
     override val draws: List<Draw2> = listOf(),
     val leadingIcon: ImageState2? = null,
     val text: String? = null,
+    override val path: Path2 = Path2(),
 ) : State2(),
     UITypeModifier2<ButtonState2>,
     PaddingModifier2<ButtonState2>,
@@ -62,6 +63,7 @@ data class ButtonState2(
     override fun c(value: FontWeight2) = copy(fontWeight = value)
     override fun c(weight: Weight2) = copy(weight = weight)
     override fun c(loading: Loading2) = copy(loading = loading)
+    override fun c(path: Path2) = copy(path = path)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
 }

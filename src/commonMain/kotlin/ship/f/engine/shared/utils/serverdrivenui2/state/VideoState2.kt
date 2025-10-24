@@ -33,6 +33,7 @@ data class VideoState2(
     val src: Source2,
     val contentDescription: String? = null,
     val contentScale: ContentScale2 = None2,
+    override val path: Path2 = Path2(),
     override val draws: List<Draw2> = listOf(),
 ) : State2(),
     PaddingModifier2<VideoState2>,
@@ -45,6 +46,7 @@ data class VideoState2(
     override fun c(size: Size2) = copy(size = size)
     override fun c(color: Color2) = copy(color = color)
     override fun c(weight: Weight2) = copy(weight = weight)
+    override fun c(path: Path2) = copy(path = path)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
 }

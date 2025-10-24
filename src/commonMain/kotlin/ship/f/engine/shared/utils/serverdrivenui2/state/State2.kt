@@ -11,6 +11,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.modifiers.OnIni
 @Serializable
 sealed class State2 :
     StateIdModifier2<State2>,
+    PathModifier2<State2>,
     VisibilityModifier2<State2>,
     SizeModifier2<State2>,
     WeightModifier2<State2>,

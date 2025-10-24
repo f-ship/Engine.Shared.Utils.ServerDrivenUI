@@ -60,6 +60,13 @@ data class NavigationConfig2(
             ) : InsertionOperation2() {
                 val offset = 1
             }
+
+            @Serializable
+            @SerialName("Remove2")
+            data class Remove2(
+                override val inside: StateId2,
+                override val stateId: StateId2,
+            ) : InsertionOperation2()
         }
 
         @Serializable
