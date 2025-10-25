@@ -7,6 +7,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.graphics.vector.ImageVector
 import org.jetbrains.compose.resources.Resource
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Path2
 import ship.f.engine.shared.utils.serverdrivenui2.ext.g2
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
@@ -14,6 +15,8 @@ import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 open class CommonClient2 protected constructor(override val projectName: String? = null) : Client2() {
 
     val reactiveStateMap: MutableMap<Id2, MutableState<State2>> = mutableMapOf()
+    val reactiveIdPathsMap: MutableMap<Path2, MutableState<State2>> = mutableMapOf()
+
     val reactiveBackStack: SnapshotStateList<BackStackEntry2> = mutableStateListOf()
 
     val resourceMap: MutableMap<String, Resource> = mutableMapOf()
@@ -26,17 +29,27 @@ open class CommonClient2 protected constructor(override val projectName: String?
     fun getImageVector(id: String) = imageVectorMap.g2(id)
 
     fun <T : State2> getReactiveState(id: Id2.StateId2) = reactiveStateMap.g2(id) as MutableState<T>
+    fun <T : State2> getReactivePathState(path: Path2, s: State2): MutableState<T> {
+        val ms = reactiveIdPathsMap[path] ?: error("Path not found: $path with state: $s \nwith keys ${reactiveIdPathsMap.keys}")
+        return ms as MutableState<T>
+    }
 
     override fun reactiveUpdate(state: State2) {
-        if (reactiveStateMap[state.id] == null) {
-            reactiveStateMap[state.id] = mutableStateOf(state)
+        if (reactiveIdPathsMap[state.path] == null) {
+            reactiveIdPathsMap[state.path] = mutableStateOf(state)
         }
-        getReactiveState<State2>(state.id).value = state
+//        if (state.id.name == "Bottom-Nav-Agenda") println("Debugging State $state")
+        getReactivePathState<State2>(state.path, state).value = state
+
+//        if (reactiveStateMap[state.id] == null) {
+//            reactiveStateMap[state.id] = mutableStateOf(state)
+//        }
+//        getReactiveState<State2>(state.id).value = state
     }
-    override fun reactivePush() {
+    override fun reactivePush() { // TODO do I need to change this as well? Unlikely
         reactiveBackStack.add(backstack.last())
     }
-    override fun reactivePop() {
+    override fun reactivePop() { // TODO do I need to change this as well? Unlikely
         reactiveBackStack.apply {
             clear()
             addAll(backstack)
