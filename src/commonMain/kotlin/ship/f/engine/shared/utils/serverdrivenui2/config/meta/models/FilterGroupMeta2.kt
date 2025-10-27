@@ -13,6 +13,6 @@ data class FilterGroupMeta2(
     val filters: List<FilterMeta2>,
 ) : Meta2() {
     fun filtersSatisfied(client: Client2) = filters.mapNotNull { filter ->
-        (client.get(filter.targetGroup) as? FilterStoreMeta2)?.metas?.run { contains(filter) || isEmpty() }
+        (client.get(filter.targetStore) as? FilterStoreMeta2)?.metas?.run { contains(filter) || isEmpty() }
     }.all { it }
 }

@@ -96,7 +96,7 @@ data class ToggleFilter2(
         state: State2,
         client: Client2,
     ) {
-        (client.get(filter.targetGroup) as? FilterStoreMeta2)?.let {
+        (client.get(filter.targetStore) as? FilterStoreMeta2)?.let {
             if (it.metas.contains(filter)) {
                 it.metas.remove(filter)
             } else {
