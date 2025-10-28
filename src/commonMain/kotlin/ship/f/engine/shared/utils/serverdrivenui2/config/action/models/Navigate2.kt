@@ -266,6 +266,17 @@ data class StateMachineSelect2(
             client.update(store.copy(selected = selected))
             val activeOperations = store.getOperations(selected)
             activeOperations.runOps(isActive = true, client = client)
+            println("-----------------------------")
+            println("StateMachineSelect2: $selected vs ${store.selected}")
+            println("inactiveOperations")
+            inactiveOperations.filterIsInstance<StateMachineOperation2.SwapOperation2>().forEach {
+                println(it)
+            }
+            println("activeOperations")
+            activeOperations.filterIsInstance<StateMachineOperation2.SwapOperation2>().forEach {
+                println(it)
+            }
+            println("-----------------------------")
         }
     }
 
@@ -279,7 +290,8 @@ data class StateMachineSelect2(
                             NavigationConfig2(
                                 operation = NavigationConfig2.StateOperation2.ReplaceChild2(
                                     container = operation.container,
-                                    stateId = operation.stateId
+                                    stateId = operation.stateId,
+                                    addToBackStack = operation.addToBackStack,
                                 )
                             )
                         )

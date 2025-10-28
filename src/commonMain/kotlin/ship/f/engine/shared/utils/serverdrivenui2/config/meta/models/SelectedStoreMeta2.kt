@@ -76,6 +76,7 @@ data class StateMachineMeta2(
         data class PushOperation2(
             val container: StateId2,
             val stateId: StateId2,
+            val addToBackStack: Boolean = false
         ) : StateMachineOperation2()
         @Serializable
         @SerialName("NestedOperation2")
@@ -99,16 +100,16 @@ data class StateMachineMeta2(
         }
     }
 
-    fun addPush(keys: List<String>, container: StateId2, stateId: StateId2, map: MutableMap<String, List<StateMachineOperation2>>): StateMachineOperation2 {
+    fun addPush(keys: List<String>, container: StateId2, stateId: StateId2, map: MutableMap<String, List<StateMachineOperation2>>, addToBackStack: Boolean = false): StateMachineOperation2 {
         val key = keys.first()
         return if (keys.size > 1) {
             StateMachineOperation2.NestedOperation2().also {
                 val newKeys = keys.drop(1)
                 val newFirst = newKeys.first()
-                it.map[newFirst] = map.getOrElse(newFirst) { listOf() } + addPush(newKeys, container, stateId, mutableMapOf())
+                it.map[newFirst] = map.getOrElse(newFirst) { listOf() } + addPush(newKeys, container, stateId, mutableMapOf(), addToBackStack)
             }
         } else {
-            StateMachineOperation2.PushOperation2(container, stateId)
+            StateMachineOperation2.PushOperation2(container, stateId, addToBackStack)
         }.also {
             map[key] = map.getOrElse(key) { listOf() } + it
         }

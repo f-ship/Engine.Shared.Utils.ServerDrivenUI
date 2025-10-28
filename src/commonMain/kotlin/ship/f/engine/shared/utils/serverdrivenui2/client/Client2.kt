@@ -37,6 +37,7 @@ abstract class Client2(open val projectName: String? = null) {
 
     val reverseIdMap: MutableMap<StateId2, StateId2> = mutableMapOf()
     val backstack: MutableList<BackStackEntry2> = mutableListOf()
+    val containerBackStack: MutableMap<StateId2, MutableList<BackStackEntry2>> = mutableMapOf()
 
     val tempStateList = mutableListOf<StateId2>()
 
@@ -44,7 +45,6 @@ abstract class Client2(open val projectName: String? = null) {
     fun addFired(action: Action2) {
         firedActionMap[action.id] = action
     }
-
     fun addDeferredAction(remoteAction: RemoteAction2<DeferredAction2<*>>) {
         if (deferredActionMap[remoteAction.action.deferKey] == null) {
             deferredActionMap[remoteAction.action.deferKey] = listOf()
@@ -69,6 +69,25 @@ abstract class Client2(open val projectName: String? = null) {
     fun clearDeferredActions(key: String?) = deferredActionMap.remove(key)
     fun getDeferredActions(key: String?) = deferredActionMap[key]
 
+    fun updateChildren(path: Path2, children: List<State2>, reason: String) {
+        println("--------------------------------------------------------")
+        println("updating children for path: $path, reason: $reason")
+        children.forEach {
+            println("child: ${it.id}, path: ${it.path}")
+        }
+        println("--------------------------------------------------------")
+        childrenMap[path] = children
+        childrenMap.entries
+            .filter { it.key.path.find { it.name == "PlannerContainer" } != null }
+            .forEach {
+                println("PlannerContainer Investigation for children:")
+                it.value.forEach { child ->
+                    println("child: ${child.id}, path: ${child.path}")
+                }
+            }
+        reactiveUpdateChildren(path)
+    }
+
 //    inline fun <reified T : State2> get(stateId2: StateId2): T = stateMap.g2(stateId2) as T
 
     inline fun <reified T : State2> get(stateId2: StateId2): T { // TODO temporarily used to return first instance, will be upgraded to return list
@@ -77,19 +96,20 @@ abstract class Client2(open val projectName: String? = null) {
         return pathStateMap[path] as? T ?: error("no state exists for path: $path")
     }
 
+    inline fun <reified T : State2> get(path: Path2): T = pathStateMap[path] as T
+    inline fun <reified T : State2> getOrNull(path: Path2): T? = pathStateMap[path] as? T
+
     fun get(metaId2: MetaId2): Meta2 = metaMap.g2(metaId2)
 
-    fun update(state: State2, renderChain: List<StateId2> = listOf(), insertIntoParent: Boolean = false) { //TODO probably need to find a better way of dynamic tree building incase a view isn't found as a fallback
+    fun update(
+        state: State2,
+        renderChain: List<StateId2> = listOf(),
+        insertIntoParent: Boolean = false
+    ): State2 { //TODO probably need to find a better way of dynamic tree building incase a view isn't found as a fallback
         var currentState = state
 
-        if (state.id.name == "AgendaScreen-0") {
-            println("Investigating ${state.id.name}")
-            println(state)
-            println(renderChain)
-        }
-
         //Use the presence of an empty path to know that this state needs to be setup
-        if (currentState.path.path.isEmpty()) {
+        if (currentState.path.path.isEmpty() || renderChain.isNotEmpty()) {
             currentState = buildPaths(currentState, renderChain)
             setPaths(currentState)
             setViewModels(currentState)
@@ -108,12 +128,22 @@ abstract class Client2(open val projectName: String? = null) {
         if (insertIntoParent) {
             val parentId = renderChain.last()
             val parent = get<State2>(parentId)
-            val updatedParent = (parent as ChildrenModifier2<*>).c(children = parent.children.map { if (it.id == state.id) currentState else it })
+            val updatedParent =
+                (parent as ChildrenModifier2<*>).c(children = parent.children.map { if (it.id == state.id) currentState else it })
             pathStateMap[updatedParent.path] = updatedParent
             val parentPaths = idPathsMap[updatedParent.id] ?: error("Seriously")
-            idPathsMap[updatedParent.id] = if (parentPaths.contains(updatedParent.path)) parentPaths else parentPaths + updatedParent.path
+            idPathsMap[updatedParent.id] =
+                if (parentPaths.contains(updatedParent.path)) parentPaths else parentPaths + updatedParent.path
             reactiveUpdate(updatedParent)
         }
+
+        if (state.id.name == "Bottom-Nav-Agenda") {
+            println("Bottom-Nav-Agenda-Investigation")
+            println(currentState.path)
+            println(renderChain)
+        }
+
+        return currentState
     }
 
     fun buildPaths(state: State2, renderChain: List<StateId2> = listOf()): State2 {
@@ -122,9 +152,9 @@ abstract class Client2(open val projectName: String? = null) {
         if (!state.id.isAutoGenerated) {
             currentState = currentState.c(path = Path2(currentPath))
         }
-        (currentState as? ChildrenModifier2<*>)?.let{
+        (currentState as? ChildrenModifier2<*>)?.let {
             currentState = currentState.c(
-                children = it.children.map { child -> buildPaths(child, currentPath)}
+                children = it.children.map { child -> buildPaths(child, currentPath) }
             )
         }
         return currentState
@@ -134,10 +164,13 @@ abstract class Client2(open val projectName: String? = null) {
         if (!state.id.isAutoGenerated) {
             pathStateMap[state.path] = state
             if (idPathsMap[state.id] == null) idPathsMap[state.id] = listOf()
-            idPathsMap[state.id] = idPathsMap[state.id]!! + Path2(state.path.path)
+            if (!idPathsMap[state.id]!!.contains(state.path)) idPathsMap[state.id] =
+                idPathsMap[state.id]!! + Path2(state.path.path)
         }
         (state as? ChildrenModifier2<*>)?.let {
-            it.children.map { child -> setPaths(child) }
+            // Add to the children map if not autogenerated
+            if (!state.id.isAutoGenerated) updateChildren(state.path, it.children, "Happening inside SetPaths")
+            it.children.forEach { child -> setPaths(child) }
         }
     }
 
@@ -156,7 +189,11 @@ abstract class Client2(open val projectName: String? = null) {
         }
     }
 
-    fun update2(state: State2, forceUpdate: Boolean = false, renderChain: List<StateId2> = listOf()): State2 { //TODO probably need to find a better way of dynamic tree building incase a view isn't found as a fallback
+    fun update2(
+        state: State2,
+        forceUpdate: Boolean = false,
+        renderChain: List<StateId2> = listOf()
+    ): State2 { //TODO probably need to find a better way of dynamic tree building incase a view isn't found as a fallback
         var currentState = state
 
         // TODO this is code is intended to stop generating a lot of repetitive states that are static
@@ -263,14 +300,53 @@ abstract class Client2(open val projectName: String? = null) {
 
     fun navigate(config: NavigationConfig2) {
         when (val op = config.operation) {
-            is NavigationConfig2.StateOperation2.InsertionOperation2 -> (get<State2>(op.inside) as? ChildrenModifier2<*>)?.let {
-                when (op) {
-                    is Start2 -> it.c(listOf(get<State2>(op.stateId)) + it.children).also { reverseIdMap[op.stateId] = op.inside }
-                    is End2 -> it.c(it.children + get<State2>(op.stateId)).also { reverseIdMap[op.stateId] = op.inside }
-                    is Before2 -> it.c(insert(it.children, get<State2>(op.stateId), op.before, op.offset)).also { reverseIdMap[op.stateId] = op.inside }
-                    is After2 -> it.c(insert(it.children, get<State2>(op.stateId), op.after, op.offset)).also { reverseIdMap[op.stateId] = op.inside }
-                    is Remove2 -> it.c(it.children.filter { child -> child.id != op.stateId })
+            is NavigationConfig2.StateOperation2.InsertionOperation2 -> {
+                val paths = idPathsMap[op.inside]
+                    ?: error("During insertion operation, no paths found in idPathsMap ${op.inside}")
+
+                println("Insertion operation: ${op.inside}")
+
+                paths.forEach { path ->
+                    val parent = get<State2>(path) as? ChildrenModifier2<*>
+                        ?: error("During insertion operation, parent was not of type ChildrenModifier2<*> ${op.inside}")
+
+                    println("Insertion operation paths: $path")
+
+                    val child = get<State2>(op.stateId)
+
+                    val u = when (op) {
+                        is Start2 -> parent.c(listOf(child) + parent.children)
+                        is End2 -> parent.c(parent.children + child)
+                        is Before2 -> parent.c(insert(parent.children, child, op.before, op.offset))
+                        is After2 -> parent.c(insert(parent.children, child, op.after, op.offset))
+                        is Remove2 -> parent.c(parent.children.filter { child -> child.id != op.stateId })
+                    }
+                    println("Parent path ${u.path}")
+                    update(u)
                 }
+                println("---------------------------------")
+                return
+//                val path = paths.firstOrNull()
+//                    ?: error("During insertion operation, paths were empty ${op.inside}")
+//
+//                val parentId = path.path.getOrNull(path.path.lastIndex)
+//                    ?: error("During insertion operation, last element in path was null ${op.inside}")
+//
+//                val parent = parentId.let { (get<State2>(it) as? ChildrenModifier2<*>) }
+//                    ?: error("During insertion operation, parent was not of type ChildrenModifier2<*> ${op.inside}")
+//
+//                val child = get<State2>(op.stateId)
+//
+//                val u = when (op) {
+//                    is Start2 -> parent.c(listOf(child) + parent.children)
+//                    is End2 -> parent.c(parent.children + child)
+//                    is Before2 -> parent.c(insert(parent.children, child, op.before, op.offset))
+//                    is After2 -> parent.c(insert(parent.children, child, op.after, op.offset))
+//                    is Remove2 -> parent.c(parent.children.filter { child -> child.id != op.stateId })
+//                }
+//
+//                update(u, u.path.path)
+//                return
             }
 
             is NavigationConfig2.StateOperation2.Replace2 -> (get<State2>(reverseIdMap.g2(op.replace)) as? ChildrenModifier2<*>)?.let {
@@ -278,23 +354,104 @@ abstract class Client2(open val projectName: String? = null) {
             }
 
             is NavigationConfig2.StateOperation2.ReplaceChild2 -> {
+                if (op.stateId.name == "PlannerScreen") {
+                    println("-------------------------------------------")
+                    println("PlannerScreen Investigation")
+                    println("-------------------------------------------")
+                    idPathsMap.entries.filter {
+                        it.key.name != "SpeakerDetail" && it.key.name != "SponsorDetail" && it.key.name != "PlannerItem-Action" && it.key.name != "PlannerItem-Add"
+                    }.forEach {
+                        println(it.key)
+                        it.value.forEach { path ->
+                            println(path)
+                        }
+                        println("-------------------------------------------")
+                    }
+                }
+
                 val paths = idPathsMap[op.container]
                     ?: error("During replaceChild operation, no paths found in idPathsMap ${op.container}")
 
-                val path = paths.firstOrNull()
-                    ?: error("During replaceChild operation, paths were empty ${op.container}")
+                paths.forEach { path ->
+//                    val parentId = path.path.getOrNull(path.path.lastIndex)
+//                        ?: error("During replaceChild operation, last element in path was null ${op.container}")
+//
+//                    val parent = parentId.let { (get<State2>(it) as? ChildrenModifier2<*>) }
+//                        ?: error("During replaceChild operation, parent was not of type ChildrenModifier2<*> ${op.container}")
 
-                val parentId = path.path.getOrNull(path.path.lastIndex)
-                    ?: error("During replaceChild operation, last element in path was null ${op.container}")
+                    val parent = get<State2>(path) as? ChildrenModifier2<*>
+                        ?: error("During replaceChild operation, parent was not of type ChildrenModifier2<*> ${op.container}")
 
-                val parent = parentId.let { (get<State2>(it) as? ChildrenModifier2<*>)}
-                    ?: error("During replaceChild operation, parent was not of type ChildrenModifier2<*> ${op.container}")
+                    val childFromPath = getOrNull<State2>(path.copy(path.path + listOf(op.stateId)))
 
-                val child = get<State2>(op.stateId)
+                    if (childFromPath != null) {
+                        val c = listOf(childFromPath)
+                        val u = parent.c(c)
+                        updateChildren(u.path, c, "Happening inside Shortcut")
+                        reactiveUpdate(u)
+                        return
+                    }
 
-                val u = parent.c(listOf(child))
-                update(u, u.path.path)
+//                    println("optimisticChild: ${childFromPath?.id} with path ${childFromPath?.path}")
+                    val child = childFromPath ?: get<State2>(op.stateId)
+                    val upChild = update(child, path.path) //TODO Hopefully this will get things hooked up properly
+
+                    val children = listOf(upChild)
+                    val u = parent.c(children)
+//                    println("attempting to update ${op.stateId}")
+//                    println("attempting to update parent ${u.id}")
+//                    println("${u.path}")
+//                    println("$path")
+//                    println("------------------------------------------")
+                    updateChildren(path, children, "Happening inside replaceChild")
+
+//                    childrenMap[path] = children
+                    update(u)
+                    // TODO solution works, but has potato performance
+//                    for (i in path.path.indices) {
+//                        val parentPath = path.copy(path.path.subList(0, path.path.size - i))
+//                        println("working on current path $parentPath on $path")
+//                        val parent = get<State2>(parentPath) as? ChildrenModifier2<*>
+//                            ?: error("During recursive up-chain operation, parent was not of type ChildrenModifier2<*> $parentPath")
+//                        val newParent = parent.c(
+//                            parent.children.map { child ->
+//                                if (child.id == newU.id) newU else child
+//                            }
+//                        )
+//                        newU = update(newParent, parentPath.path)
+//                    }
+                }
                 return
+
+//                val path = paths.firstOrNull()
+//                    ?: error("During replaceChild operation, paths were empty ${op.container}")
+//
+//                val parentId = path.path.getOrNull(path.path.lastIndex)
+//                    ?: error("During replaceChild operation, last element in path was null ${op.container}")
+//
+//                val parent = parentId.let { (get<State2>(it) as? ChildrenModifier2<*>) }
+//                    ?: error("During replaceChild operation, parent was not of type ChildrenModifier2<*> ${op.container}")
+//
+//                val child = get<State2>(op.stateId)
+//                println("Replacing child ${child.id}")
+//                println("With parent $parentId")
+//                println("Add to backstack? ${op.addToBackStack}")
+
+                // TODO this doesn't work and need an internal way to handle back navigation
+//                if (op.addToBackStack) {
+//                    if (containerBackStack[op.container] == null) containerBackStack[op.container] = mutableListOf()
+//                    containerBackStack[op.container]!!.add(
+//                        BackStackEntry2(
+//                            direction = BackStackEntry2.Direction2.Forward2,
+//                            state = child,
+//                        )
+//                    )
+//                    reactivePush(op.container)
+//                }
+
+//                val u = parent.c(listOf(child))
+//                update(u, u.path.path)
+//                return
             }
 
             is NavigationConfig2.StateOperation2.Push2 -> {
@@ -307,27 +464,74 @@ abstract class Client2(open val projectName: String? = null) {
                 val paths = idPathsMap[op.swap.id]
                     ?: error("During swap operation, no paths found in idPathsMap ${op.swap.id}")
 
-                val path = paths.firstOrNull()
-                    ?: error("During swap operation, paths were empty ${op.swap.id}")
+                paths.forEach { path ->
+                    if (path.path.last().name == "AgendaBar-DaySelector-0" || path.path.last().name == "AgendaBar-DaySelector-1") {
+                        println("-----------------")
+                        println("Swapping child id ${op.swap.id}")
+                        println("$path")
+                        println("-----------------")
+                    }
+                    val parentPath = path.copy(path.path.subList(0, path.path.lastIndex))
+                    val parent = get<State2>(parentPath) as? ChildrenModifier2<*>
+                        ?: error("During replaceChild operation, parent was not of type ChildrenModifier2<*> $parentPath")
 
-                val parentId = path.path.getOrNull(path.path.lastIndex - 1)
-                    ?: error("During swap operation, last element in path was null ${op.swap.id}")
+                    val u = parent.let {
+                        val renderChain = path.path.subList(0, path.path.lastIndex)
+                        val updatedChildren = it.children.map { child ->
+                            if (child.id == op.swap.id) op.swap.let { swap ->
+                                // TODO I'm an idiot I used also here instead of let...
+                                println("rendering parent ${(it as State2).path} with id ${it.id}")
+                                println("Swapping child id ${swap.id}")
+                                println("Render chain: $renderChain")
 
-                val parent = parentId.let { (get<State2>(it) as? ChildrenModifier2<*>)}
-                    ?: error("During swap operation, parent was not of type ChildrenModifier2<*> ${op.swap.id}")
-
-                parent.let {
-                    val renderChain = path.path.subList(0, path.path.lastIndex)
-                    it.c(
-                        it.children.map { child ->
-                            if (child.id == op.swap.id) op.swap.also { swap ->
-                                update(swap, renderChain) // TODO update is harder to call, need to provide the correct renderChain
+                                update(
+                                    swap,
+                                    renderChain
+                                ) // TODO update is harder to call, need to provide the correct renderChain
                             } else child
                         }
+                        // TODO I might have messed up here by using path instead of parentPath
+                        updateChildren(parentPath, updatedChildren, "Happening inside swap")
+                        it.c(updatedChildren)
+                    }
+
+                    update(
+                        u,
+                        renderChain = u.path.path
                     )
                 }
-                update(parent as State2, renderChain = parent.path.path) // Temp measure to investigate why insertIntoParent is needed
                 return
+
+//                val path = paths.firstOrNull()
+//                    ?: error("During swap operation, paths were empty ${op.swap.id}")
+//
+//                val parentId = path.path.getOrNull(path.path.lastIndex - 1)
+//                    ?: error("During swap operation, last element in path was null ${op.swap.id}")
+//
+//                val parent = parentId.let { (get<State2>(it) as? ChildrenModifier2<*>) }
+//                    ?: error("During swap operation, parent was not of type ChildrenModifier2<*> ${op.swap.id}")
+//
+//                val u = parent.let {
+//                    val renderChain = path.path.subList(0, path.path.lastIndex)
+//                    val updatedChildren = it.children.map { child ->
+//                        if (child.id == op.swap.id) op.swap.also { swap ->
+//                            update(
+//                                swap,
+//                                renderChain
+//                            ) // TODO update is harder to call, need to provide the correct renderChain
+//                        } else child
+//                    }
+//                    childrenMap[path] = updatedChildren
+//                    it.c(
+//                        updatedChildren
+//                    )
+//                }
+//                update(
+//                    u,
+//                    renderChain = u.path.path
+//                )
+//
+//                return
             }
         }?.let {
             update(it, renderChain = it.path.path, insertIntoParent = true) // TODO pretty hacky to be honest
@@ -348,11 +552,26 @@ abstract class Client2(open val projectName: String? = null) {
 
     fun canPop() = backstack.isNotEmpty() && backstack.subList(0, backstack.lastIndex).any { it.canPopBack }
 
+    fun pop(stateId: StateId2) = containerBackStack[stateId]!!.let {
+        it.removeLast()
+        it.dropLastWhile { item -> !item.canPopBack }
+        it[it.lastIndex] = it[it.lastIndex].copy(direction = Backward2)
+        reactivePop(stateId)
+    }
+
+    fun canPop(stateId: StateId2) = containerBackStack[stateId]!!.let {
+        it.isNotEmpty() && it.subList(0, it.lastIndex).any { item -> item.canPopBack }
+    }
+
     var emitSideEffect: (PopulatedSideEffectMeta2) -> Unit = { }
 
     abstract fun reactiveUpdate(state: State2)
     abstract fun reactivePush()
     abstract fun reactivePop()
+    abstract fun reactivePush(stateId: StateId2)
+    abstract fun reactivePop(stateId: StateId2)
+
+    abstract fun reactiveUpdateChildren(path: Path2)
 
     private fun insert(
         existing: List<State2>,

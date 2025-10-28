@@ -88,6 +88,7 @@ data class NavigationConfig2(
         data class ReplaceChild2(
             val container: StateId2,
             override val stateId: StateId2,
+            val addToBackStack: Boolean = false,
         ) : StateOperation2()
 
         @Serializable

@@ -34,7 +34,7 @@ sealed class State2 :
         }
     }
 
-    inline fun <reified S : State2> S.update(block: S.() -> S) {
+    inline fun <reified S : State2> S.update(block: S.() -> S): State2 {
         return get<Client2>().update(block())
     }
 }
