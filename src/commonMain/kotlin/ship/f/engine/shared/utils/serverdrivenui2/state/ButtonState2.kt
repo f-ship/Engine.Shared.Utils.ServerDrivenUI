@@ -16,6 +16,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.Loading
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ValidModifier2.Valid2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.WeightModifier2.Weight2
+import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnBuildCompleteTrigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnClickTrigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnInitialRenderTrigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.modifiers.OnClickModifier2
@@ -41,6 +42,7 @@ data class ButtonState2(
     override val draws: List<Draw2> = listOf(),
     val leadingIcon: ImageState2? = null,
     val text: String? = null,
+    override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val path: Path2 = Path2(),
 ) : State2(),
     UITypeModifier2<ButtonState2>,

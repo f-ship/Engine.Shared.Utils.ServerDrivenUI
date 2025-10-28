@@ -17,6 +17,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.Defa
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.WeightModifier2.Weight2
+import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnBuildCompleteTrigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnClickTrigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnInitialRenderTrigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.modifiers.OnClickModifier2
@@ -42,6 +43,7 @@ data class ColumnState2(
     override val counter: Int = 0,
     override val path: Path2 = Path2(),
     override val draws: List<Draw2> = listOf(),
+    override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
 ) : State2(),
     ChildrenModifier2<ColumnState2>,
     AlignmentModifier2<ColumnState2>,

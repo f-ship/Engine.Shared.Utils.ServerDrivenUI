@@ -12,6 +12,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.PaddingModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.WeightModifier2.Weight2
+import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnBuildCompleteTrigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnInitialRenderTrigger2
 
 @Serializable
@@ -29,6 +30,7 @@ data class DropDownState2(
     val selectedItem: DropDownItem2? = null,
     val isExpanded: Boolean = false,
     override val path: Path2 = Path2(),
+    override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val draws: List<Draw2> = listOf(),
 ) : State2(), PaddingModifier2<DropDownState2> {
     override fun c(id: StateId2) = copy(id = id)

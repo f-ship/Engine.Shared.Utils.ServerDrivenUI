@@ -13,6 +13,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.Wind
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.WeightModifier2.Weight2
+import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnBuildCompleteTrigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnInitialRenderTrigger2
 
 @Serializable
@@ -32,6 +33,7 @@ data class ScreenState2(
     override val font: String = "InterVariable",
     override val weight: Weight2? = null,
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
+    override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val metas: List<Meta2> = listOf(),
     override val counter: Int = 0,
     override val path: Path2 = Path2(),

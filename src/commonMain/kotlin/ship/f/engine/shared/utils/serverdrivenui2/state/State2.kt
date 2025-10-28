@@ -6,6 +6,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.client.ClientHolder2.get
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.DeferredAction2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.Trigger2
+import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.modifiers.OnBuildCompleteModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.modifiers.OnInitialRenderModifier2
 
 @Serializable
@@ -18,7 +19,8 @@ sealed class State2 :
     DrawModifier2<State2>,
     MetaModifier2<State2>,
     ResetModifier2<State2>,
-    OnInitialRenderModifier2 {
+    OnInitialRenderModifier2,
+    OnBuildCompleteModifier2 {
     val triggers: MutableList<Trigger2> = mutableListOf()
 
     fun Trigger2.trigger(cachedState: State2? = null) {

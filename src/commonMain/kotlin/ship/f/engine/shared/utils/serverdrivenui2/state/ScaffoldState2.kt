@@ -13,6 +13,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.Wind
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.WeightModifier2.Weight2
+import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnBuildCompleteTrigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnInitialRenderTrigger2
 
 @Serializable
@@ -36,6 +37,7 @@ data class ScaffoldState2(
     override val counter: Int = 0,
     override val path: Path2 = Path2(),
     override val draws: List<Draw2> = listOf(),
+    override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val color: ColorScheme2.Color2 = ColorScheme2.Color2.OnPrimary,
     val header: State2? = null,
     val bottom: State2? = null,

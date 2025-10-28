@@ -17,6 +17,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.Defa
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.WeightModifier2.Weight2
+import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnBuildCompleteTrigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnInitialRenderTrigger2
 
 @Serializable
@@ -38,6 +39,7 @@ data class FlowRowState2(
     override val metas: List<Meta2> = listOf(),
     override val counter: Int = 0,
     override val path: Path2 = Path2(),
+    override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val draws: List<Draw2> = listOf(),
 ) : State2(),
     ChildrenModifier2<FlowRowState2>,

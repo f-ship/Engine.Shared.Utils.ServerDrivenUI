@@ -127,6 +127,13 @@ abstract class Client2(open val projectName: String? = null) {
             reactiveUpdate(updatedParent)
         }
 
+        (currentState as? OnBuildCompleteModifier2)?.onBuildCompleteTrigger2?.actions?.forEach {
+            // TODO in the future I may need to be careful this only get's triggered once
+            // TODO this should be handled during the refactor when we introduce the concept of rooted states vs stranded states
+            println("Running onBuildCompleteTrigger2 action")
+            it.run(currentState, this)
+        }
+
         return currentState
     }
 

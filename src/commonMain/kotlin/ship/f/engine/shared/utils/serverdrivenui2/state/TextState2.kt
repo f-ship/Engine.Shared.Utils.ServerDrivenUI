@@ -17,6 +17,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.Padding
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.TextStyleModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.WeightModifier2.Weight2
+import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnBuildCompleteTrigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnInitialRenderTrigger2
 
 @Serializable
@@ -35,6 +36,7 @@ data class TextState2(
     override val counter: Int = 0,
     override val draws: List<Draw2> = listOf(),
     override val path: Path2 = Path2(),
+    override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     val textAlign: TextAlign2 = TextAlign2.Start2,
     val text: String,
 ) : State2(),
