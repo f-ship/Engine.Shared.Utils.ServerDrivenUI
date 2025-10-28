@@ -18,6 +18,8 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.Childre
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.Trigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.ext.g2
+import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
+import ship.f.engine.shared.utils.serverdrivenui2.state.ScreenState2
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
 abstract class Client2(open val projectName: String? = null) {
@@ -70,21 +72,9 @@ abstract class Client2(open val projectName: String? = null) {
     fun getDeferredActions(key: String?) = deferredActionMap[key]
 
     fun updateChildren(path: Path2, children: List<State2>, reason: String) {
-        println("--------------------------------------------------------")
         println("updating children for path: $path, reason: $reason")
-        children.forEach {
-            println("child: ${it.id}, path: ${it.path}")
-        }
         println("--------------------------------------------------------")
         childrenMap[path] = children
-        childrenMap.entries
-            .filter { it.key.path.find { it.name == "PlannerContainer" } != null }
-            .forEach {
-                println("PlannerContainer Investigation for children:")
-                it.value.forEach { child ->
-                    println("child: ${child.id}, path: ${child.path}")
-                }
-            }
         reactiveUpdateChildren(path)
     }
 
@@ -135,12 +125,6 @@ abstract class Client2(open val projectName: String? = null) {
             idPathsMap[updatedParent.id] =
                 if (parentPaths.contains(updatedParent.path)) parentPaths else parentPaths + updatedParent.path
             reactiveUpdate(updatedParent)
-        }
-
-        if (state.id.name == "Bottom-Nav-Agenda") {
-            println("Bottom-Nav-Agenda-Investigation")
-            println(currentState.path)
-            println(renderChain)
         }
 
         return currentState
@@ -306,25 +290,46 @@ abstract class Client2(open val projectName: String? = null) {
 
                 println("Insertion operation: ${op.inside}")
 
-                paths.forEach { path ->
+                val curatedPaths = paths.filter { path ->
+                    val rootId = path.path.firstOrNull()
+                    val possibleScreen = rootId?.let { getOrNull<State2>(path.copy(path = listOf(it))) }
+                    sduiLog(possibleScreen)
+                    (possibleScreen is ScreenState2)
+                }.run {
+                    sduiLog("Curated paths found for insertion operation: ${op.inside}")
+                    ifEmpty {
+                        sduiLog("No curated paths found for insertion operation: ${op.inside}", "Insertion Operation")
+                        paths
+                    }
+                }
+
+                curatedPaths.forEach { path ->
                     val parent = get<State2>(path) as? ChildrenModifier2<*>
                         ?: error("During insertion operation, parent was not of type ChildrenModifier2<*> ${op.inside}")
 
-                    println("Insertion operation paths: $path")
-
                     val child = get<State2>(op.stateId)
 
+                    val children = childrenMap[path] ?: parent.children
+
                     val u = when (op) {
-                        is Start2 -> parent.c(listOf(child) + parent.children)
-                        is End2 -> parent.c(parent.children + child)
-                        is Before2 -> parent.c(insert(parent.children, child, op.before, op.offset))
-                        is After2 -> parent.c(insert(parent.children, child, op.after, op.offset))
-                        is Remove2 -> parent.c(parent.children.filter { child -> child.id != op.stateId })
+                        is Start2 -> parent.c(listOf(child) + children)
+                        is End2 -> parent.c(children + child)
+                        is Before2 -> parent.c(insert(children, child, op.before, op.offset))
+                        is After2 -> parent.c(insert(children, child, op.after, op.offset))
+                        is Remove2 -> parent.c(children.filter { child -> child.id != op.stateId })
                     }
-                    println("Parent path ${u.path}")
-                    update(u)
+
+                    updateChildren(u.path, (u as ChildrenModifier2<*>).children, "Happening inside Insertion") // TODO added update children
+                    reactiveUpdate(u) // TODO replace with normal update
+
+                    sduiLog(
+                        "Insertion operation completed: $op",
+                        path,
+                        paths,
+                        header = "Insertion Start",
+                        footer = "Insertion End",
+                    )
                 }
-                println("---------------------------------")
                 return
 //                val path = paths.firstOrNull()
 //                    ?: error("During insertion operation, paths were empty ${op.inside}")
@@ -354,21 +359,6 @@ abstract class Client2(open val projectName: String? = null) {
             }
 
             is NavigationConfig2.StateOperation2.ReplaceChild2 -> {
-                if (op.stateId.name == "PlannerScreen") {
-                    println("-------------------------------------------")
-                    println("PlannerScreen Investigation")
-                    println("-------------------------------------------")
-                    idPathsMap.entries.filter {
-                        it.key.name != "SpeakerDetail" && it.key.name != "SponsorDetail" && it.key.name != "PlannerItem-Action" && it.key.name != "PlannerItem-Add"
-                    }.forEach {
-                        println(it.key)
-                        it.value.forEach { path ->
-                            println(path)
-                        }
-                        println("-------------------------------------------")
-                    }
-                }
-
                 val paths = idPathsMap[op.container]
                     ?: error("During replaceChild operation, no paths found in idPathsMap ${op.container}")
 
@@ -389,12 +379,12 @@ abstract class Client2(open val projectName: String? = null) {
                         val u = parent.c(c)
                         updateChildren(u.path, c, "Happening inside Shortcut")
                         reactiveUpdate(u)
-                        return
+                        return@forEach
                     }
 
 //                    println("optimisticChild: ${childFromPath?.id} with path ${childFromPath?.path}")
-                    val child = childFromPath ?: get<State2>(op.stateId)
-                    val upChild = update(child, path.path) //TODO Hopefully this will get things hooked up properly
+                    val child = get<State2>(op.stateId)
+                    val upChild = update(child, path.path) //TODO Hopefully this will get things hooked up properly, I think this foolishness caused the bug, because of the render chain
 
                     val children = listOf(upChild)
                     val u = parent.c(children)
@@ -465,12 +455,6 @@ abstract class Client2(open val projectName: String? = null) {
                     ?: error("During swap operation, no paths found in idPathsMap ${op.swap.id}")
 
                 paths.forEach { path ->
-                    if (path.path.last().name == "AgendaBar-DaySelector-0" || path.path.last().name == "AgendaBar-DaySelector-1") {
-                        println("-----------------")
-                        println("Swapping child id ${op.swap.id}")
-                        println("$path")
-                        println("-----------------")
-                    }
                     val parentPath = path.copy(path.path.subList(0, path.path.lastIndex))
                     val parent = get<State2>(parentPath) as? ChildrenModifier2<*>
                         ?: error("During replaceChild operation, parent was not of type ChildrenModifier2<*> $parentPath")
@@ -480,9 +464,6 @@ abstract class Client2(open val projectName: String? = null) {
                         val updatedChildren = it.children.map { child ->
                             if (child.id == op.swap.id) op.swap.let { swap ->
                                 // TODO I'm an idiot I used also here instead of let...
-                                println("rendering parent ${(it as State2).path} with id ${it.id}")
-                                println("Swapping child id ${swap.id}")
-                                println("Render chain: $renderChain")
 
                                 update(
                                     swap,
