@@ -36,6 +36,7 @@ data class TextFieldState2(
     override val path: Path2 = Path2(),
     override val draws: List<Draw2> = listOf(),
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
+    val imeType: IMEType2 = IMEType2.Default2,
     val leadingIcon: ImageState2? = null,
     val trailingIcon: ImageState2? = null,
     val initialValue: String = "",

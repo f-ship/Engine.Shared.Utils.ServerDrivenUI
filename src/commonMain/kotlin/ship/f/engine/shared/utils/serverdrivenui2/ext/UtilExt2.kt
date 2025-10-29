@@ -6,6 +6,20 @@ import kotlinx.serialization.json.*
 import ship.f.engine.shared.utils.serverdrivenui2.json.json2
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
+
+/**
+ *
+ */
+fun <V, T> List<V>.zipMap(other: T, transform: (V) -> T): List<T> {
+    val list = mutableListOf<T>()
+    for (i in indices){
+        list.add(transform(this[i]))
+        if (i < lastIndex) list.add(other)
+    }
+    return list
+}
+
+
 /**
  * Used to dangerously get a non-nullable value from a map that should have the value
  */

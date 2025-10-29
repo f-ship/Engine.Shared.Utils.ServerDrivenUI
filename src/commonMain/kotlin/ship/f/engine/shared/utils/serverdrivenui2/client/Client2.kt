@@ -81,6 +81,7 @@ abstract class Client2(open val projectName: String? = null) {
 //    inline fun <reified T : State2> get(stateId2: StateId2): T = stateMap.g2(stateId2) as T
 
     inline fun <reified T : State2> get(stateId2: StateId2): T { // TODO temporarily used to return first instance, will be upgraded to return list
+        if (stateId2.name == "CameraGallery") sduiLog("Found CameraGallery", idPathsMap[stateId2])
         val paths = idPathsMap[stateId2] ?: error("Paths has not been found for stateId: $stateId2")
         val path = paths.firstOrNull() ?: error("no paths exist for stateId: $stateId2")
         return pathStateMap[path] as? T ?: error("no state exists for path: $path")
