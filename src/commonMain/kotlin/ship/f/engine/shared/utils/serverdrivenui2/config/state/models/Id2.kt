@@ -19,6 +19,7 @@ sealed class Id2 {
         val ignoreReactive: Boolean = false,
         val alias: String = NONE,
     ) : Id2() {
+        val str= "$name $scope"
         companion object Companion {
             val seed = Clock.System.now()
             var count = 0
