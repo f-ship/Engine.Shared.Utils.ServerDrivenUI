@@ -10,6 +10,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.Co
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.PaddingModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ShapeModifier2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.TextModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ValidModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ValidModifier2.Valid2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
@@ -44,7 +45,7 @@ data class SearchState2(
     val initialValue: String = "",
     val placeholder: String = "",
     val label: String = "",
-    val text: String = "",
+    override val text: String = "",
     val fieldType: FieldType2 = FieldType2.Text,
     val validations: List<Validation2> = listOf(),
     val restrictions: List<Restriction2> = listOf(),
@@ -52,6 +53,7 @@ data class SearchState2(
     val hasLostFocus: Boolean = false,
     val isFocused: Boolean = false,
 ) : State2(),
+    TextModifier2<SearchState2>,
     PaddingModifier2<SearchState2>,
     ShapeModifier2<SearchState2>,
     ValidModifier2<SearchState2>,
@@ -68,6 +70,7 @@ data class SearchState2(
     override fun c(path: Path2) = copy(path = path)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
+    override fun text(text: String) = copy(text = text)
 
     fun isError(text: String): String? = validations.firstOrNull {
         val regexCheck = it.regex?.let { regex -> !Regex(regex).matches(text) } ?: false

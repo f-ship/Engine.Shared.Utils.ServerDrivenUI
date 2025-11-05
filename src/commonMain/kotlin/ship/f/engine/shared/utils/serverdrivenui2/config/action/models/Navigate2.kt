@@ -6,14 +6,13 @@ import kotlinx.serialization.encodeToString
 import ship.f.engine.shared.utils.serverdrivenui2.client.Client2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.*
+import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.StateMachineMeta2.StateMachineOperation2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ChildrenModifier2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.LoadingModifier2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ValidModifier2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
+import ship.f.engine.shared.utils.serverdrivenui2.ext.createTime
 import ship.f.engine.shared.utils.serverdrivenui2.json.json2
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
@@ -310,6 +309,92 @@ data class StateMachineSelect2(
                 }
             }
         }
+    }
+}
+
+@Serializable
+@SerialName("ConfirmSideEffect2")
+data class ConfirmSideEffect2(
+    val templateId: StateId2,
+    val sideEffectId: MetaId2,
+    val replacements: List<ReplacementOperation>,
+    val navigation: StateOperation2
+) : Action2() {
+    override fun execute(
+        state: State2,
+        client: Client2
+    ) {
+        var moddedState = client.get<State2>(templateId)
+        replacements.forEach { moddedState = mod(it.stateId, moddedState, it, client) }
+
+        val moddedNavigation = when(navigation){
+            is StateOperation2.InsertionOperation2.End2 -> navigation.copy(stateId = moddedState.id)
+            else -> navigation //TODO to handle other branches at a later point
+        }
+
+        client.navigate(NavigationConfig2(operation = moddedNavigation))
+
+        client.emitSideEffect(
+            PopulatedSideEffectMeta2(
+                metaId = sideEffectId,
+                states = listOf(moddedState)
+            )
+        )
+    }
+
+    // TODO Improve algorithm to do multiple modifications at the same time for performance
+    fun mod(id: StateId2, state: State2, mod: ReplacementOperation, client: Client2): State2 { // TODO improve autogenerate IDs to be deterministic to improve modification performance
+        return when {
+            id == state.id -> {
+                val replaceText = when(mod.type) {
+                    is ReplacementType.Random -> getRandomString()
+                    is ReplacementType.Time -> createTime()
+                    is ReplacementType.Copy -> (client.get<State2>(mod.type.id) as? TextModifier2<*>)?.text ?: error("Text not found")
+                }
+                val updatedState = when(mod.target){
+                    is ReplacementTarget.Scope -> state.c(id = state.id.copy(scope = replaceText))
+                    is ReplacementTarget.Text -> (state as? TextModifier2<*>)?.let { state.text(replaceText) } ?: state
+                }
+                updatedState
+            }
+            state is ChildrenModifier2<*> -> state.c(
+                children = state.children.map { mod(id, it, mod, client) }
+            )
+            else -> state
+        }
+    }
+
+    @Serializable
+    @SerialName("ReplacementOperation")
+    data class ReplacementOperation(
+        val type: ReplacementType,
+        val target: ReplacementTarget,
+        val stateId: StateId2,
+    )
+
+    @Serializable
+    @SerialName("ReplacementType")
+    sealed class ReplacementType { // TODO to create a much more extensive list of these
+        @Serializable
+        @SerialName("Random")
+        data object Random : ReplacementType()
+        @Serializable
+        @SerialName("Time")
+        data object Time : ReplacementType()
+        @Serializable
+        @SerialName("Copy")
+        data class Copy(val id: StateId2) : ReplacementType()
+    }
+
+    @Serializable
+    @SerialName("ReplacementTarget")
+    sealed class ReplacementTarget { // TODO to create a much more extensive list of these
+        @Serializable
+        @SerialName("Scope")
+        data object Scope : ReplacementTarget()
+        @Serializable
+        @SerialName("Text")
+        data object Text : ReplacementTarget()
     }
 }
 

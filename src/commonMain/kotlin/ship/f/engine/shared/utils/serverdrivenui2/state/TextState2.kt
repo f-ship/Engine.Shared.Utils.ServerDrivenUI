@@ -11,10 +11,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateI
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.TextStyle2.BodyMedium2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ColorModifier2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.FontWeightModifier2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.PaddingModifier2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.TextStyleModifier2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.WeightModifier2.Weight2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnBuildCompleteTrigger2
@@ -38,9 +35,10 @@ data class TextState2(
     override val path: Path2 = Path2(),
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     val textAlign: TextAlign2 = TextAlign2.Start2,
-    val text: String,
+    override val text: String,
 ) : State2(),
     TextStyleModifier2<TextState2>,
+    TextModifier2<TextState2>,
     ColorModifier2<TextState2>,
     PaddingModifier2<TextState2>,
     FontWeightModifier2<TextState2> {
@@ -56,4 +54,5 @@ data class TextState2(
     override fun c(path: Path2) = copy(path = path)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
+    override fun text(text: String) = copy(text = text)
 }
