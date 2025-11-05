@@ -1,10 +1,9 @@
 package ship.f.engine.shared.utils.serverdrivenui2.client
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.client.BackStackEntry2.Direction2.Backward2
-import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.Action2
-import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.DeferredAction2
-import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.FilterVisibility2
-import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.RemoteAction2
+import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.MetaPublisherActionModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.StatePublisherActionModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
@@ -19,6 +18,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.Trigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.ext.g2
 import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
+import ship.f.engine.shared.utils.serverdrivenui2.state.BoxState2
 import ship.f.engine.shared.utils.serverdrivenui2.state.ScreenState2
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
@@ -41,8 +41,15 @@ abstract class Client2(open val projectName: String? = null) {
     val backstack: MutableList<BackStackEntry2> = mutableListOf()
     val containerBackStack: MutableMap<StateId2, MutableList<BackStackEntry2>> = mutableMapOf()
 
-    val tempStateList = mutableListOf<StateId2>()
+    val cheapBackStack: MutableList<CheapBackStackEntry> = mutableListOf()
 
+    // TODO only currently in use for statemachine
+    @Serializable
+    @SerialName("CheapBackStackEntry")
+    data class CheapBackStackEntry(
+        val selected: List<String>,
+        val targetMetaId: MetaId2,
+    )
     fun hasFired(action: Action2) = firedActionMap[action.id] != null
     fun addFired(action: Action2) {
         firedActionMap[action.id] = action
@@ -544,19 +551,35 @@ abstract class Client2(open val projectName: String? = null) {
     }
 
     fun pop() {
-        backstack.removeLast()
-        backstack.dropLastWhile { !it.canPopBack }
-        backstack[backstack.lastIndex] = backstack[backstack.lastIndex].copy(direction = Backward2)
-        reactivePop()
+        if (cheapBackStack.isNotEmpty()) {
+            val entry = cheapBackStack.removeLast()
+            StateMachineSelect2(
+                selected = entry.selected,
+                targetMetaId = entry.targetMetaId,
+            ).run(BoxState2(), this) // TODO box state is not used.
+        } else {
+            backstack.removeLast()
+            backstack.dropLastWhile { !it.canPopBack }
+            backstack[backstack.lastIndex] = backstack[backstack.lastIndex].copy(direction = Backward2)
+            reactivePop()
+        }
     }
 
-    fun canPop() = backstack.isNotEmpty() && backstack.subList(0, backstack.lastIndex).any { it.canPopBack }
+    fun canPop() = (backstack.isNotEmpty() && backstack.subList(0, backstack.lastIndex).any { it.canPopBack }) || cheapBackStack.isNotEmpty()
 
     fun pop(stateId: StateId2) = containerBackStack[stateId]!!.let {
-        it.removeLast()
-        it.dropLastWhile { item -> !item.canPopBack }
-        it[it.lastIndex] = it[it.lastIndex].copy(direction = Backward2)
-        reactivePop(stateId)
+        if (cheapBackStack.isNotEmpty()) {
+            val entry = cheapBackStack.removeLast()
+            StateMachineSelect2(
+                selected = entry.selected,
+                targetMetaId = entry.targetMetaId
+            ).run(BoxState2(), this) // TODO box state is not used.
+        } else {
+            it.removeLast()
+            it.dropLastWhile { item -> !item.canPopBack }
+            it[it.lastIndex] = it[it.lastIndex].copy(direction = Backward2)
+            reactivePop(stateId)
+        }
     }
 
     fun canPop(stateId: StateId2) = containerBackStack[stateId]!!.let {

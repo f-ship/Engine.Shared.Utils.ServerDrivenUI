@@ -225,22 +225,38 @@ data class ToggleMachineSelect2(
                 store.selected.remove(selected)
                 client.navigate(
                     NavigationConfig2(
-                        operation = NavigationConfig2.StateOperation2.Swap2(
+                        operation = StateOperation2.Swap2(
                             swap = store.map[selected]!!.inactive,
                             stateId = selected,
                         )
                     )
                 )
+                store.stateListeners.forEach { id ->
+                    val s = client.get<State2>(id)
+                    (s as? ValidModifier2<*>)?.let {
+                        val update = it.c(valid = ValidModifier2.Valid2(false))
+                        client.update(update)
+                    }
+                }
             } else if (store.selected.size < store.limit) {
                 store.selected.add(selected)
                 client.navigate(
                     NavigationConfig2(
-                        operation = NavigationConfig2.StateOperation2.Swap2(
+                        operation = StateOperation2.Swap2(
                             swap = store.map[selected]!!.active,
                             stateId = selected,
                         )
                     )
                 )
+                if (store.selected.size == store.limit) {
+                    store.stateListeners.forEach { id ->
+                        val s = client.get<State2>(id)
+                        (s as? ValidModifier2<*>)?.let {
+                            val update = it.c(valid = ValidModifier2.Valid2(true))
+                            client.update(update)
+                        }
+                    }
+                }
             }
         }
     }
@@ -251,6 +267,8 @@ data class ToggleMachineSelect2(
 data class StateMachineSelect2(
     override val targetMetaId: MetaId2,
     val selected: List<String>,
+    val addCurrentToBackstack: Boolean = false,
+    val backStackable: List<List<String>> = listOf() // TODO need to make this smarter to include wildcards
 ) : Action2(), TargetableMetaModifier2 {
     override fun execute(
         state: State2,
@@ -258,6 +276,13 @@ data class StateMachineSelect2(
     ) {
         println("StateMachineSelect2: $selected")
         (client.get(targetMetaId) as? StateMachineMeta2)?.let { store ->
+            if (addCurrentToBackstack) {
+                if (backStackable.isEmpty() || backStackable.contains(store.selected)) {
+                    if (client.cheapBackStack.lastOrNull() != store.selected) {
+                        client.cheapBackStack.add(Client2.CheapBackStackEntry(store.selected, store.metaId))
+                    }
+                }
+            }
             println("keys: ${store.map.keys}")
             // Update inactive operations
             val inactiveOperations = store.getOperations(store.selected)

@@ -48,6 +48,7 @@ sealed class Draw2 {
     data class Border2(
         val width: Float = 1f,
         val color: ColorScheme2.Color2,
+        val fill: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
         val padding: PaddingValues2 = PaddingValues2(),
         val shape: Shapes2.CornerBasedShape2 = Shapes2.DefaultShapes2.small,
     ) : Draw2()

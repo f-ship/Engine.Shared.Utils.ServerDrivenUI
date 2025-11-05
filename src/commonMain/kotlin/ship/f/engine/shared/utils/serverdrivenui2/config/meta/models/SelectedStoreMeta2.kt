@@ -42,6 +42,7 @@ data class ToggleMachineMeta2(
     val selected: MutableList<StateId2> = mutableListOf(),
     val map: MutableMap<StateId2, SwapOperation2> = mutableMapOf(),
     val limit: Int = Int.MAX_VALUE,
+    val stateListeners: List<StateId2> = listOf() // TODO this is really janky and not okay at all, implement proper valid modifier
 ) : Meta2() {
     @Serializable
     data class SwapOperation2(
