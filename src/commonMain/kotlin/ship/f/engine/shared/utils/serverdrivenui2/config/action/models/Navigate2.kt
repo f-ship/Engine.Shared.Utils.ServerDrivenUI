@@ -10,9 +10,11 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationC
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.StateMachineMeta2.StateMachineOperation2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Path2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
 import ship.f.engine.shared.utils.serverdrivenui2.ext.createTime
+import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
 import ship.f.engine.shared.utils.serverdrivenui2.json.json2
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
@@ -317,8 +319,9 @@ data class StateMachineSelect2(
 data class ConfirmSideEffect2(
     val templateId: StateId2,
     val sideEffectId: MetaId2,
-    val replacements: List<ReplacementOperation>,
-    val navigation: StateOperation2
+    val replacements: List<ReplacementOperation5>,
+    val navigation: StateOperation2,
+    val metas: List<Meta2> = listOf(),
 ) : Action2() {
     override fun execute(
         state: State2,
@@ -326,64 +329,83 @@ data class ConfirmSideEffect2(
     ) {
         var moddedState = client.get<State2>(templateId)
         replacements.forEach { moddedState = mod(it.stateId, moddedState, it, client) }
+        moddedState = moddedState.c(path = Path2())
 
-        val moddedNavigation = when(navigation){
+        val moddedNavigation = when (navigation) {
             is StateOperation2.InsertionOperation2.End2 -> navigation.copy(stateId = moddedState.id)
             else -> navigation //TODO to handle other branches at a later point
         }
+
+        sduiLog("Looking at modded state", moddedState)
+        client.update(moddedState)
 
         client.navigate(NavigationConfig2(operation = moddedNavigation))
 
         client.emitSideEffect(
             PopulatedSideEffectMeta2(
                 metaId = sideEffectId,
-                states = listOf(moddedState)
+                states = listOf(moddedState),
+                metas = metas,
             )
         )
     }
 
     // TODO Improve algorithm to do multiple modifications at the same time for performance
-    fun mod(id: StateId2, state: State2, mod: ReplacementOperation, client: Client2): State2 { // TODO improve autogenerate IDs to be deterministic to improve modification performance
+    fun mod(
+        id: StateId2,
+        state: State2,
+        mod: ReplacementOperation5,
+        client: Client2
+    ): State2 { // TODO improve autogenerate IDs to be deterministic to improve modification performance
         return when {
             id == state.id -> {
-                val replaceText = when(mod.type) {
-                    is ReplacementType.Random -> getRandomString()
-                    is ReplacementType.Time -> createTime()
-                    is ReplacementType.Copy -> (client.get<State2>(mod.type.id) as? TextModifier2<*>)?.text ?: error("Text not found")
+                val replaceText = when (mod.replacementType) {
+                    is ReplacementType4.Random -> getRandomString()
+                    is ReplacementType4.Time -> createTime()
+                    is ReplacementType4.Copy -> (client.get<State2>(mod.replacementType.id) as? TextModifier2<*>)?.text
+                        ?: error("Text not found")
                 }
-                val updatedState = when(mod.target){
+
+                val updatedState = when (mod.target) {
                     is ReplacementTarget.Scope -> state.c(id = state.id.copy(scope = replaceText))
-                    is ReplacementTarget.Text -> (state as? TextModifier2<*>)?.let { state.text(replaceText) } ?: state
+                    is ReplacementTarget.Text -> (state as? TextModifier2<*>)?.let { state.text(replaceText) } ?: error(
+                        "Did not find text to copy"
+                    )
                 }
+                sduiLog(replaceText, updatedState, tag = "ConfirmSideEffect2 > execute > mod > id == state.id")
                 updatedState
             }
+
             state is ChildrenModifier2<*> -> state.c(
                 children = state.children.map { mod(id, it, mod, client) }
             )
+
             else -> state
         }
     }
 
     @Serializable
-    @SerialName("ReplacementOperation")
-    data class ReplacementOperation(
-        val type: ReplacementType,
+    @SerialName("ReplacementOperation5")
+    data class ReplacementOperation5(
+        val replacementType: ReplacementType4,
         val target: ReplacementTarget,
         val stateId: StateId2,
     )
 
     @Serializable
-    @SerialName("ReplacementType")
-    sealed class ReplacementType { // TODO to create a much more extensive list of these
+    @SerialName("ReplacementType4")
+    sealed class ReplacementType4 { // TODO to create a much more extensive list of these
         @Serializable
         @SerialName("Random")
-        data object Random : ReplacementType()
+        data object Random : ReplacementType4()
+
         @Serializable
         @SerialName("Time")
-        data object Time : ReplacementType()
+        data object Time : ReplacementType4()
+
         @Serializable
         @SerialName("Copy")
-        data class Copy(val id: StateId2) : ReplacementType()
+        data class Copy(val id: StateId2) : ReplacementType4()
     }
 
     @Serializable
@@ -392,6 +414,7 @@ data class ConfirmSideEffect2(
         @Serializable
         @SerialName("Scope")
         data object Scope : ReplacementTarget()
+
         @Serializable
         @SerialName("Text")
         data object Text : ReplacementTarget()

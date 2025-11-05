@@ -7,6 +7,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.Action2
+import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.ConfirmSideEffect2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.StateMachineSelect2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.ToggleFilter2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.StateMachineMeta2
@@ -33,12 +34,28 @@ val json2 = Json {
             // TODO add all actions
             subclass(ToggleFilter2::class)
             subclass(StateMachineSelect2::class)
+            subclass(ConfirmSideEffect2::class)
         }
 
         polymorphic(
             baseClass = StateMachineMeta2.StateMachineOperation2::class
         ) {
             subclass(StateMachineMeta2.StateMachineOperation2.SwapOperation2::class)
+        }
+
+        polymorphic(
+            baseClass = ConfirmSideEffect2.ReplacementType4::class
+        ) {
+            subclass(ConfirmSideEffect2.ReplacementType4.Random::class)
+            subclass(ConfirmSideEffect2.ReplacementType4.Time::class)
+            subclass(ConfirmSideEffect2.ReplacementType4.Copy::class)
+        }
+
+        polymorphic(
+            baseClass = ConfirmSideEffect2.ReplacementTarget::class
+        ) {
+            subclass(ConfirmSideEffect2.ReplacementTarget.Scope::class)
+            subclass(ConfirmSideEffect2.ReplacementTarget.Text::class)
         }
     }
 }

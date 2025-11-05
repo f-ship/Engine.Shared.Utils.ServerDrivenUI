@@ -1,7 +1,7 @@
 package ship.f.engine.shared.utils.serverdrivenui2.ext
 
-fun sduiLog(vararg message: Any?, tag: String? = null) {
-    if (SduiLogger.switch[tag] != false) {
+fun sduiLog(vararg message: Any?, tag: String? = null, condition: () -> Boolean = { true }) {
+    if (SduiLogger.switch[tag] != false && condition()) {
         message.forEach {
             println("$tag: $it")
         }
