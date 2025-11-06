@@ -200,7 +200,7 @@ data class ColorScheme2(
     companion object {
         val DefaultLightColorScheme2 = ColorScheme2(
 //            primary = 0xFFE64A19,
-            primary = 0xFFFF8F26,
+            primary = 0xFFea5a1c,
             onPrimary = 0xFFFFFFFF,
             secondary = 0xFF717680,
             onSecondary = 0xFFFFFFFF,
@@ -239,7 +239,7 @@ data class ColorScheme2(
         )
         
         val DefaultDarkColorScheme2 = ColorScheme2(
-            primary = 0xFFE64A19,
+            primary = 0xFFea5a1c,
             onPrimary = 0xFFFFFFFF,
             secondary = 0xFF717680,
             onSecondary = 0xFFFFFFFF,
