@@ -30,7 +30,7 @@ data class ScreenState2(
     override val lightColorScheme: ColorScheme2 = DefaultLightColorScheme2,
     override val darkColorScheme: ColorScheme2 = DefaultDarkColorScheme2,
     override val shapes: Shapes2 = DefaultShapes2,
-    override val font: String = "InterVariable",
+    override val font: String = "RotundaVariable",
     override val weight: Weight2? = null,
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
