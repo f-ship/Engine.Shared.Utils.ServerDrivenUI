@@ -40,6 +40,7 @@ data class DataMeta2(
     }
 
     fun getString(key: String) = (data[key] as DataMetaType2.StringData).value
+    fun getStringOrNull(key: String) = (data[key] as? DataMetaType2.StringData)?.value
 
     @Serializable
     sealed class DataMetaType2 {
