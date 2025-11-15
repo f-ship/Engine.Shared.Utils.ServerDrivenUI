@@ -29,8 +29,7 @@ data class FadeInState2(
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     val delay: Int = 0,
     val duration: Int = 0,
-) : State2(),
-    ChildrenModifier2<FadeInState2> {
+) : State2(), ChildrenModifier2<FadeInState2> {
     override fun cM(metas: List<Meta2>) = copy(metas = metas)
     override fun c(id: StateId2) = copy(id = id)
     override fun c(visible: Visible2) = copy(visible = visible)
