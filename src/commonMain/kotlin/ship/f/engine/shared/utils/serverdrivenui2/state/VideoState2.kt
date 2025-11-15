@@ -34,6 +34,7 @@ data class VideoState2(
     val src: Source2,
     val contentDescription: String? = null,
     val contentScale: ContentScale2 = None2,
+    val fadeInMillis: Int? = null,
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val path: Path2 = Path2(),
     override val draws: List<Draw2> = listOf(),
