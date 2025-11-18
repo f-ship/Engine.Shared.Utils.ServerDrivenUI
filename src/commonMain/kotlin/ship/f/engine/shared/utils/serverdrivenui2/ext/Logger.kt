@@ -8,7 +8,7 @@ fun sduiLog(vararg message: Any?, tag: String? = "Test", condition: () -> Boolea
     }
 }
 
-fun sduiLog(vararg message: Any?, header: String, footer: String, tag: String? = null) {
+fun sduiLog(vararg message: Any?, header: String, footer: String = header, tag: String? = null) {
     if (SduiLogger.switch[tag] != false) {
         if (message.size > 1) {
             println("---------$header $tag----------")
