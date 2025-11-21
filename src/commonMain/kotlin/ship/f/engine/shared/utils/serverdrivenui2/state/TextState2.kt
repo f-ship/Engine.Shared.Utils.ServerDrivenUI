@@ -36,6 +36,7 @@ data class TextState2(
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     val textAlign: TextAlign2 = TextAlign2.Start2,
     override val text: String,
+    override val liveText: LiveValue2.TextLiveValue2? = null,
 ) : State2(),
     TextStyleModifier2<TextState2>,
     TextModifier2<TextState2>,
@@ -55,4 +56,5 @@ data class TextState2(
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
     override fun text(text: String) = copy(text = text)
+    override fun liveText(liveText: LiveValue2.TextLiveValue2) = copy(liveText = liveText)
 }

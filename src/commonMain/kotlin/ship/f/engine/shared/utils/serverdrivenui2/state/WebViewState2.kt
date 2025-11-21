@@ -27,7 +27,6 @@ data class WebViewState2( // TODO may have a lot of redundant fields
     override val innerPadding: PaddingValues2 = PaddingValues2(),
     override val visible: Visible2 = Visible2(true),
     override val size: Size2 = DefaultSize2,
-    override val children: List<State2> = emptyList(),
     override val alignment: Alignment2 = Center2,
     override val border: Border2 = default,
     override val color: Color2 = Unspecified,
@@ -41,7 +40,6 @@ data class WebViewState2( // TODO may have a lot of redundant fields
     override val path: Path2 = Path2(),
     val config: UrlConfig2,
 ) : State2(),
-    ChildrenModifier2<WebViewState2>,
     AlignmentModifier2<WebViewState2>,
     ColorModifier2<WebViewState2>,
     ShapeModifier2<WebViewState2>,
@@ -51,7 +49,6 @@ data class WebViewState2( // TODO may have a lot of redundant fields
     override fun c(id: StateId2) = copy(id = id)
     override fun c(visible: Visible2) = copy(visible = visible)
     override fun c(size: Size2) = copy(size = size)
-    override fun c(children: List<State2>) = copy(children = children)
     override fun c(alignment: Alignment2) = copy(alignment = alignment)
     override fun c(color: Color2) = copy(color = color)
     override fun c(shape: CornerBasedShape2) = copy(shape = shape)

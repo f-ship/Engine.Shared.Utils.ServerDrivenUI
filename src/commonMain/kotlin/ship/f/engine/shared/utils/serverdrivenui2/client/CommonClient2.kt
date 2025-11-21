@@ -10,6 +10,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Path2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ChildrenModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.ext.g2
+import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
 @Suppress("UNCHECKED_CAST")
@@ -59,6 +60,8 @@ open class CommonClient2 protected constructor(override val projectName: String?
             println("${compareChildren.map { it.id }}")
             println("------------------------------------")
         }
+
+        sduiLog(state.path, tag = "filtered index > ReactiveUpdate")
 
         getReactivePathState<State2>(state.path, state).value = state
 

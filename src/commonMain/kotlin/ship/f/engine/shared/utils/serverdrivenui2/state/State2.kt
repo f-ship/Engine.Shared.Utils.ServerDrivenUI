@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.client.Client2
 import ship.f.engine.shared.utils.serverdrivenui2.client.ClientHolder2.get
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.DeferredAction2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalBranchLiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.Trigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.modifiers.OnBuildCompleteModifier2
@@ -21,6 +22,12 @@ sealed class State2 :
     ResetModifier2<State2>,
     OnInitialRenderModifier2,
     OnBuildCompleteModifier2 {
+    override val liveDraws: List<ConditionalBranchLiveValue2>?
+        get() = null
+    override fun liveDraws(liveDraws: List<ConditionalBranchLiveValue2>?): State2 {
+        return this
+    }
+
     val triggers: MutableList<Trigger2> = mutableListOf()
 
     fun Trigger2.trigger(cachedState: State2? = null) {

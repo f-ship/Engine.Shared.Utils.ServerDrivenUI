@@ -10,6 +10,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorSchem
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2.Unspecified
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalLiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.Companion.DefaultShapes2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.CornerBasedShape2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
@@ -39,6 +40,10 @@ data class BoxState2(
     override val draws: List<Draw2> = listOf(),
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val path: Path2 = Path2(),
+    override val filteredChildren: List<State2>? = null,
+    override val filter: List<ConditionalLiveValue2>? = null,
+    override val sort: LiveValue2? = null,
+    override val jumpTo: List<ConditionalLiveValue2>? = null,
 ) : State2(),
     ChildrenModifier2<BoxState2>,
     AlignmentModifier2<BoxState2>,
@@ -51,6 +56,11 @@ data class BoxState2(
     override fun c(visible: Visible2) = copy(visible = visible)
     override fun c(size: Size2) = copy(size = size)
     override fun c(children: List<State2>) = copy(children = children)
+    override fun filteredChildren(filteredChildren: List<State2>?) = copy(filteredChildren = filteredChildren)
+    override fun filter(filter: List<ConditionalLiveValue2>?) = copy(filter = filter)
+    override fun c(sort: LiveValue2?) = copy(sort = sort)
+    override fun jumpTo(jumpTo: List<ConditionalLiveValue2>?) = copy(jumpTo = jumpTo)
+
     override fun c(alignment: Alignment2) = copy(alignment = alignment)
     override fun c(color: Color2) = copy(color = color)
     override fun c(shape: CornerBasedShape2) = copy(shape = shape)

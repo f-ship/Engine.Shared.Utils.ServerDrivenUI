@@ -46,6 +46,7 @@ data class SearchState2(
     val placeholder: String = "",
     val label: String = "",
     override val text: String = "",
+    override val liveText: LiveValue2.TextLiveValue2? = null,
     val fieldType: FieldType2 = FieldType2.Text,
     val validations: List<Validation2> = listOf(),
     val restrictions: List<Restriction2> = listOf(),
@@ -71,6 +72,7 @@ data class SearchState2(
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
     override fun text(text: String) = copy(text = text)
+    override fun liveText(liveText: LiveValue2.TextLiveValue2) = copy(liveText = liveText)
 
     fun isError(text: String): String? = validations.firstOrNull {
         val regexCheck = it.regex?.let { regex -> !Regex(regex).matches(text) } ?: false

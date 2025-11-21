@@ -8,8 +8,11 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.StateMachineMeta2.StateMachineOperation2
+import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.ZoneViewModel2.Property.MultiProperty
+import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.ZoneViewModel2.Property.StringProperty
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Path2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
@@ -444,6 +447,56 @@ data class ConfirmSideEffect2(
         @SerialName("Text")
         data object Text : ReplacementTarget()
     }
+}
+
+@Serializable
+@SerialName("UpdateZoneModel")
+data class UpdateZoneModel(
+    override val targetMetaId: MetaId2,
+    val liveValue: LiveValue2,
+    val operation: Operation2,
+) : Action2(), TargetableMetaModifier2 {
+    override fun execute(
+        state: State2,
+        client: Client2
+    ) {
+        val vm = client.get(targetMetaId) as? ZoneViewModel2 ?: error("ZoneViewModel not found for $targetMetaId")
+        when(operation){
+            is Operation2.Toggle -> when(liveValue){
+                is LiveValue2.TextStaticValue2 -> {
+                    val multiProperty = vm.map[operation.property] as? MultiProperty ?: error("MultiProperty not for ${operation.property} in $targetMetaId")
+                    val toggleProperty = StringProperty(value = liveValue.value)
+                    if (multiProperty.value.contains(toggleProperty)) {
+                        vm.map[operation.property] = MultiProperty(multiProperty.value - toggleProperty)
+                    } else {
+                        vm.map[operation.property] = MultiProperty(multiProperty.value + toggleProperty)
+                    }
+                }
+                else -> Unit
+            }
+            else -> Unit
+        }
+        sduiLog(vm, targetMetaId, tag = "UpdateZoneModel > execute")
+        client.update(vm)
+    }
+
+    @Serializable
+    @SerialName("Operation2")
+    sealed class Operation2 {
+        @Serializable
+        @SerialName("Set")
+        data object Set : Operation2()
+        @Serializable
+        @SerialName("Add")
+        data object Add : Operation2()
+        @Serializable
+        @SerialName("Insert")
+        data class Insert(val property: String) : Operation2()
+        @Serializable
+        @SerialName("Toggle")
+        data class Toggle(val property: String) : Operation2()
+    }
+
 }
 
 @Serializable

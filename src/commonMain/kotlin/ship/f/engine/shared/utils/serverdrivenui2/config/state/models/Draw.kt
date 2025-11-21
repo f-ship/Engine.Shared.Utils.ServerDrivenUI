@@ -44,6 +44,10 @@ sealed class Draw2 {
     }
 
     @Serializable
+    @SerialName("Blank2")
+    data object Blank2 : Draw2()
+
+    @Serializable
     @SerialName("Border2")
     data class Border2(
         val width: Float = 1f,

@@ -8,6 +8,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorSchem
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Companion.DefaultLightColorScheme2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalLiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.Companion.DefaultShapes2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.Window2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
@@ -38,6 +39,10 @@ data class ScreenState2(
     override val counter: Int = 0,
     override val path: Path2 = Path2(),
     override val draws: List<Draw2> = listOf(),
+    override val filteredChildren: List<State2>? = null,
+    override val filter: List<ConditionalLiveValue2>? = null,
+    override val sort: LiveValue2? = null,
+    override val jumpTo: List<ConditionalLiveValue2>? = null,
 ) : State2(),
     ChildrenModifier2<ScreenState2>,
     ColorSchemeModifier2<ScreenState2>,
@@ -57,6 +62,10 @@ data class ScreenState2(
     override fun c(font: String) = copy(font = font)
     override fun c(alignment: Alignment2) = copy(alignment = alignment)
     override fun c(path: Path2) = copy(path = path)
+    override fun filteredChildren(filteredChildren: List<State2>?) = copy(filteredChildren = filteredChildren)
+    override fun filter(filter: List<ConditionalLiveValue2>?) = copy(filter = filter)
+    override fun c(sort: LiveValue2?) = copy(sort = sort)
+    override fun jumpTo(jumpTo: List<ConditionalLiveValue2>?) = copy(jumpTo = jumpTo)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
     override fun c(

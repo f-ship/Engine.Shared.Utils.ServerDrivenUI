@@ -5,6 +5,8 @@ import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Draw2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalLiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Path2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ChildrenModifier2
@@ -16,7 +18,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnInitia
 @Serializable
 @SerialName("FadeInState2")
 data class FadeInState2(
-    override val id: StateId2 = StateId2.Companion.autoStateId2(),
+    override val id: StateId2 = StateId2.autoStateId2(),
     override val visible: Visible2 = Visible2(true),
     override val size: Size2 = Size2.DefaultSize2,
     override val weight: Weight2? = null,
@@ -27,6 +29,10 @@ data class FadeInState2(
     override val path: Path2 = Path2(),
     override val children: List<State2> = listOf(),
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
+    override val filteredChildren: List<State2>? = null,
+    override val filter: List<ConditionalLiveValue2>? = null,
+    override val sort: LiveValue2? = null,
+    override val jumpTo: List<ConditionalLiveValue2>? = null,
     val delay: Int = 0,
     val duration: Int = 0,
 ) : State2(), ChildrenModifier2<FadeInState2> {
@@ -36,6 +42,10 @@ data class FadeInState2(
     override fun c(size: Size2) = copy(size = size)
     override fun c(children: List<State2>) = copy(children = children)
     override fun c(path: Path2) = copy(path = path)
+    override fun filteredChildren(filteredChildren: List<State2>?) = copy(filteredChildren = filteredChildren)
+    override fun filter(filter: List<ConditionalLiveValue2>?) = copy(filter = filter)
+    override fun c(sort: LiveValue2?) = copy(sort = sort)
+    override fun jumpTo(jumpTo: List<ConditionalLiveValue2>?) = copy(jumpTo = jumpTo)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun c(weight: Weight2) = copy(weight = weight)
     override fun reset(counter: Int) = copy(counter = counter)

@@ -10,8 +10,13 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2.InsertionOperation2.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSideEffectMeta2
+import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.ZoneViewModel2
+import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.ZoneViewModel2.Property.StringProperty
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.*
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalLiveValue2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.Ref2.VmRef2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Path2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ChildrenModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.Trigger2
@@ -21,6 +26,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
 import ship.f.engine.shared.utils.serverdrivenui2.state.BoxState2
 import ship.f.engine.shared.utils.serverdrivenui2.state.ScreenState2
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
+import ship.f.engine.shared.utils.serverdrivenui2.state.TextState2
 
 abstract class Client2(open val projectName: String? = null) {
     val stateMap: MutableMap<StateId2, State2> = mutableMapOf()
@@ -50,10 +56,115 @@ abstract class Client2(open val projectName: String? = null) {
         val selected: List<String>,
         val targetMetaId: MetaId2,
     )
+
+    fun computeLiveText(liveValue: LiveValue2.TextLiveValue2) = when (liveValue.ref) {
+        is LiveValue2.Ref2.StateRef2 -> {
+            val paths = idPathsMap[liveValue.ref.id] ?: error("No paths found for id: ${liveValue.ref.id}")
+            val path = paths.firstOrNull() ?: error("Paths were empty for id: ${liveValue.ref.id}")
+            val state = get<State2>(path)
+            (state as? TextState2)?.text ?: error("Not a text state ${liveValue.ref.id}")
+        }
+
+        is VmRef2 -> {
+            val vm = metaMap[liveValue.ref.vm] as? ZoneViewModel2 ?: error("No vm found for id: ${liveValue.ref.vm}")
+            (vm.map[liveValue.ref.property] as? StringProperty)?.value
+                ?: error("No value found for ref: ${liveValue.ref} in ${liveValue.ref.property}")
+        }
+        else -> TODO()
+    }
+
+    fun computeConditionalLive(liveValue2: ConditionalLiveValue2): Boolean {
+        return when(liveValue2.value1){
+            is LiveValue2.TextLiveValue2 -> when(liveValue2.value2){
+                is LiveValue2.MultiLiveValue2 -> {
+                    val vm = get(liveValue2.value2.ref.vm) as? ZoneViewModel2 ?: error("No vm found for id: ${liveValue2.value2.ref.vm}")
+                    val multiProperty = vm.map[liveValue2.value2.ref.property] as? ZoneViewModel2.Property.MultiProperty ?: error("No multi property found for ref: ${liveValue2.value2.ref} in ${liveValue2.value2.ref.vm}")
+                    val prop = when(liveValue2.value1.ref) {
+                        is LiveValue2.Ref2.ZoneRef2 -> StringProperty(
+                            value = (metaMap[liveValue2.value1.ref.vm] as? ZoneViewModel2)
+                                ?.let { it.map[liveValue2.value1.ref.property] as? StringProperty }
+                                ?.value ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm}"),
+                        )
+                        else -> TODO()
+                    }
+                    when(liveValue2.condition){
+                        is LiveValue2.Condition2.InOrEmpty -> multiProperty.value.isEmpty() || multiProperty.value.contains(prop)
+                        else -> TODO()
+                    }
+                }
+                else -> TODO()
+            }
+            else -> TODO()
+        }
+    }
+
+    inline fun <reified T: LiveValue2> computeConditionalBranchLive(liveValue2: LiveValue2.ConditionalBranchLiveValue2): T {
+        return when(liveValue2.value1){
+            is LiveValue2.IntLiveValue2 -> when(liveValue2.value2){
+                is LiveValue2.IntLiveValue2 -> {
+                    val prop1 = when(liveValue2.value1.ref) {
+                        is LiveValue2.Ref2.ZoneRef2 -> (metaMap[liveValue2.value1.ref.vm] as? ZoneViewModel2)?.let {
+                            it.map[liveValue2.value1.ref.property] ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm}")
+                        } ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm}")
+                        else -> TODO()
+                    }
+
+                    val prop2 = when(liveValue2.value2.ref) {
+                        is LiveValue2.Ref2.ZoneRef2 -> (metaMap[liveValue2.value2.ref.vm] as? ZoneViewModel2)?.let {
+                            it.map[liveValue2.value2.ref.property] ?: error("No value found for ref: ${liveValue2.value2.ref} in ${liveValue2.value2.ref.vm}")
+                        } ?: error("No value found for ref: ${liveValue2.value2.ref} in ${liveValue2.value2.ref.vm}")
+                        else -> TODO()
+                    }
+
+                    val bool = when(liveValue2.condition){
+                        LiveValue2.Condition2.Eq -> prop1 == prop2
+                        else -> TODO()
+                    }
+
+                    if (bool){
+                        liveValue2.trueBranch as T
+                    } else {
+                        liveValue2.falseBranch as T
+                    }
+                }
+                is LiveValue2.StaticIntLiveValue2 -> {
+                    val prop1 = when(liveValue2.value1.ref) {
+                        is LiveValue2.Ref2.ZoneRef2 -> (metaMap[liveValue2.value1.ref.vm] as? ZoneViewModel2)?.let {
+                            it.map[liveValue2.value1.ref.property] ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm}")
+                        } ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm}")
+                        else -> TODO()
+                    }
+
+                    val bool = when(liveValue2.condition){
+                        LiveValue2.Condition2.Eq -> when(prop1){
+                            is ZoneViewModel2.Property.IntProperty -> prop1.value == liveValue2.value2.value
+                            else -> false
+                        }
+
+                        LiveValue2.Condition2.Mod -> when(prop1){
+                            is ZoneViewModel2.Property.IntProperty -> (prop1.value % liveValue2.value2.value) == 0
+                            else -> false
+                        }
+                        else -> TODO()
+                    }
+
+                    if (bool){
+                        liveValue2.trueBranch as T
+                    } else {
+                        liveValue2.falseBranch as T
+                    }
+                }
+                else -> TODO()
+            }
+            else -> TODO()
+        }
+    }
+
     fun hasFired(action: Action2) = firedActionMap[action.id] != null
     fun addFired(action: Action2) {
         firedActionMap[action.id] = action
     }
+
     fun addDeferredAction(remoteAction: RemoteAction2<DeferredAction2<*>>) {
         if (deferredActionMap[remoteAction.action.deferKey] == null) {
             deferredActionMap[remoteAction.action.deferKey] = listOf()
@@ -90,7 +201,8 @@ abstract class Client2(open val projectName: String? = null) {
     inline fun <reified T : State2> get(stateId2: StateId2): T { // TODO temporarily used to return first instance, will be upgraded to return list
         if (stateId2.name == "CameraGallery") sduiLog("Found CameraGallery", idPathsMap[stateId2])
         val paths = idPathsMap[stateId2] ?: error("Paths has not been found for stateId: $stateId2")
-        val path = paths.maxByOrNull { it.path.size } ?: error("no paths exist for stateId: $stateId2") // TODO small modification to prefer returning rooted paths
+        val path = paths.maxByOrNull { it.path.size }
+            ?: error("no paths exist for stateId: $stateId2") // TODO small modification to prefer returning rooted paths
         return pathStateMap[path] as? T ?: error("no state exists for path: $path")
     }
 
@@ -105,13 +217,23 @@ abstract class Client2(open val projectName: String? = null) {
         insertIntoParent: Boolean = false
     ): State2 { //TODO probably need to find a better way of dynamic tree building in case a view isn't found as a fallback
         var currentState = state
-        sduiLog(state, idPathsMap[state.id], currentState.path.path.isEmpty(), currentState.path.path, tag = "update") { state.id.name == "ChatBox" }
+//        sduiLog(
+//            state,
+//            idPathsMap[state.id],
+//            currentState.path.path.isEmpty(),
+//            currentState.path.path,
+//            tag = "update"
+//        ) { state.id.name == "ChatBox" }
         //Use the presence of an empty path to know that this state needs to be setup
+
+        sduiLog(currentState.path, currentState, currentState.counter, tag = "filtered index > update") { currentState.id.name == "testZone" }
+
         if (currentState.path.path.isEmpty() || renderChain.isNotEmpty()) {
-            sduiLog(state, idPathsMap[state.id], tag = "update > init") { state.id.name == "ChatBox" }
+            sduiLog(state, idPathsMap[state.id], tag = "filtered index > update > init")
             currentState = buildPaths(currentState, renderChain)
             setPaths(currentState)
             setViewModels(currentState)
+            setFilters(currentState)
             setReactivity(currentState)
         }
 
@@ -173,6 +295,31 @@ abstract class Client2(open val projectName: String? = null) {
             // Add to the children map if not autogenerated
             if (!state.id.isAutoGenerated) updateChildren(state.path, it.children, "Happening inside SetPaths")
             it.children.forEach { child -> setPaths(child) }
+        }
+    }
+
+    fun setFilters(state: State2) {
+        (state as? ChildrenModifier2<*>)?.let {
+            state.filter?.let { filterConfig ->
+                val vmRefs = mutableListOf<VmRef2>()
+                filterConfig.forEach { filter ->
+                    if (filter.value1 is LiveValue2.MultiLiveValue2) vmRefs.add(filter.value1.ref)
+                    if (filter.value2 is LiveValue2.MultiLiveValue2) vmRefs.add(filter.value2.ref)
+                }
+                sduiLog(filterConfig, vmRefs, tag = "setFilters")
+
+                vmRefs.distinct().forEach { vmRef ->
+                    sduiLog(vmRef, tag = "setFilter")
+                    if (metaListeners2[vmRef.vm] == null) metaListeners2[vmRef.vm] = mutableListOf()
+                    metaListeners2[vmRef.vm]?.add(
+                        RemoteAction2(
+                            action = ResetState2(state.id),
+                            targetStateId = state.id,
+                        )
+                    )
+                }
+            }
+            it.children.forEach { child -> setFilters(child) }
         }
     }
 
@@ -292,6 +439,7 @@ abstract class Client2(open val projectName: String? = null) {
     }
 
     fun propagate(meta: Meta2) {
+        sduiLog(meta, metaListeners2, metaListeners2[meta.metaId], tag = "MetaListener")
         metaListeners2[meta.metaId]?.forEach { it ->
             it.action.run(
                 state = get(it.targetStateId),
@@ -338,7 +486,11 @@ abstract class Client2(open val projectName: String? = null) {
                         is Remove2 -> parent.c(children.filter { child -> child.id != op.stateId })
                     }
 
-                    updateChildren(u.path, (u as ChildrenModifier2<*>).children, "Happening inside Insertion") // TODO added update children
+                    updateChildren(
+                        u.path,
+                        (u as ChildrenModifier2<*>).children,
+                        "Happening inside Insertion"
+                    ) // TODO added update children
                     reactiveUpdate(u) // TODO replace with normal update
 
                     sduiLog(
@@ -403,7 +555,10 @@ abstract class Client2(open val projectName: String? = null) {
 
 //                    println("optimisticChild: ${childFromPath?.id} with path ${childFromPath?.path}")
                     val child = get<State2>(op.stateId)
-                    val upChild = update(child, path.path) //TODO Hopefully this will get things hooked up properly, I think this foolishness caused the bug, because of the render chain
+                    val upChild = update(
+                        child,
+                        path.path
+                    ) //TODO Hopefully this will get things hooked up properly, I think this foolishness caused the bug, because of the render chain
 
                     val children = listOf(upChild)
                     val u = parent.c(children)
@@ -475,7 +630,12 @@ abstract class Client2(open val projectName: String? = null) {
 
                 paths.forEach { path ->
 
-                    sduiLog(op.swap.id, op.stateId, path, tag = "Swap > paths.forEach") { op.stateId.name == "ChatMessage" }
+                    sduiLog(
+                        op.swap.id,
+                        op.stateId,
+                        path,
+                        tag = "Swap > paths.forEach"
+                    ) { op.stateId.name == "ChatMessage" }
                     if (path.path.size < 2) return@forEach
 
                     val parentPath = path.copy(path.path.subList(0, path.path.lastIndex))
@@ -486,11 +646,19 @@ abstract class Client2(open val projectName: String? = null) {
                         val renderChain = path.path.subList(0, path.path.lastIndex)
                         val remoteChildren = childrenMap[(parent as State2).path] ?: it.children
                         val updatedChildren = remoteChildren.map { child ->
-                            sduiLog(op.swap.id, remoteChildren.map{ l -> l.id }, tag = "Swap > paths.forEach > parent.let >") { op.stateId.name == "ChatMessage" }
+                            sduiLog(
+                                op.swap.id,
+                                remoteChildren.map { l -> l.id },
+                                tag = "Swap > paths.forEach > parent.let >"
+                            ) { op.stateId.name == "ChatMessage" }
                             if (child.id == op.swap.id) op.swap.let { swap ->
                                 // TODO I'm an idiot I used also here instead of let...
 
-                                sduiLog(op.swap.id, op.swap, tag = "Swap > paths.forEach > parent.let > children > let") { op.stateId.name == "ChatMessage"}
+                                sduiLog(
+                                    op.swap.id,
+                                    op.swap,
+                                    tag = "Swap > paths.forEach > parent.let > children > let"
+                                ) { op.stateId.name == "ChatMessage" }
                                 update(
                                     swap,
                                     renderChain
@@ -565,7 +733,8 @@ abstract class Client2(open val projectName: String? = null) {
         }
     }
 
-    fun canPop() = (backstack.isNotEmpty() && backstack.subList(0, backstack.lastIndex).any { it.canPopBack }) || cheapBackStack.isNotEmpty()
+    fun canPop() = (backstack.isNotEmpty() && backstack.subList(0, backstack.lastIndex)
+        .any { it.canPopBack }) || cheapBackStack.isNotEmpty()
 
     fun pop(stateId: StateId2) = containerBackStack[stateId]!!.let {
         if (cheapBackStack.isNotEmpty()) {

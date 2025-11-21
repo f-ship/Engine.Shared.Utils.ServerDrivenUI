@@ -11,6 +11,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorSchem
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2.Unspecified
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalLiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.Companion.DefaultShapes2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.CornerBasedShape2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
@@ -41,6 +42,10 @@ data class LazyColumnState2(
     override val path: Path2 = Path2(),
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val draws: List<Draw2> = listOf(),
+    override val filteredChildren: List<State2>? = null,
+    override val filter: List<ConditionalLiveValue2>? = null,
+    override val sort: LiveValue2? = null,
+    override val jumpTo: List<ConditionalLiveValue2>? = null,
 ) : State2(),
     ChildrenModifier2<LazyColumnState2>,
     AlignmentModifier2<LazyColumnState2>,
@@ -62,6 +67,10 @@ data class LazyColumnState2(
     override fun c(weight: Weight2) = copy(weight = weight)
     override fun c(path: Path2) = copy(path = path)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
+    override fun filteredChildren(filteredChildren: List<State2>?) = copy(filteredChildren = filteredChildren)
+    override fun filter(filter: List<ConditionalLiveValue2>?) = copy(filter = filter)
+    override fun c(sort: LiveValue2?) = copy(sort = sort)
+    override fun jumpTo(jumpTo: List<ConditionalLiveValue2>?) = copy(jumpTo = jumpTo)
     override fun reset(counter: Int) = copy(counter = counter)
     override fun c(
         padding: PaddingValues2,
