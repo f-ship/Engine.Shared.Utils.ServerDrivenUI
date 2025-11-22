@@ -125,11 +125,12 @@ abstract class Client2(open val projectName: String? = null) {
 
                     val value2 = Clock.System.now().epochSeconds
 
-                    when(liveValue2.condition){
+                    when(liveValue2.condition) {
                         is LiveValue2.Condition2.GreaterThan -> value1!! > value2
                         is LiveValue2.Condition2.LessThan -> value1!! < value2
                         else -> TODO()
-                    }.also { sduiLog(value1, liveValue2.condition, value2, it, tag = " filtered index > Items > Timer > Condition > Calculation", header = "start", footer = "end") }
+//                    }.also { sduiLog(value1, liveValue2.condition, value2, it, tag = " filtered index > Items > Timer > Condition > Calculation", header = "start", footer = "end") }
+                    }
                 }
                 else -> TODO()
             }
@@ -149,7 +150,7 @@ abstract class Client2(open val projectName: String? = null) {
                     }
 
                     val prop2 = when(liveValue2.value2.ref) {
-                        is LiveValue2.Ref2.ZoneRef2 -> (metaMap[liveValue2.value2.ref.vm] as? ZoneViewModel2)?.let {
+                        is ZoneRef2 -> (metaMap[liveValue2.value2.ref.vm] as? ZoneViewModel2)?.let {
                             it.map[liveValue2.value2.ref.property] ?: error("No value found for ref: ${liveValue2.value2.ref} in ${liveValue2.value2.ref.vm}")
                         } ?: error("No value found for ref: ${liveValue2.value2.ref} in ${liveValue2.value2.ref.vm}")
                         else -> TODO()

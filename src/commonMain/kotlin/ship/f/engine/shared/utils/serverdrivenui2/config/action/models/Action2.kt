@@ -18,7 +18,7 @@ sealed class Action2 : ActionIdModifier2 {
         state: State2,
         client: Client2,
     ) {
+        client.addFired(this) // TODO wrong order led to infinite depth recursion when not careful
         execute(state, client)
-        client.addFired(this)
     }
 }

@@ -13,6 +13,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.ZoneViewMod
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalLiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Path2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
@@ -497,6 +498,24 @@ data class UpdateZoneModel(
         data class Toggle(val property: String) : Operation2()
     }
 
+}
+
+@Serializable
+@SerialName("LiveAction2")
+data class LiveAction2(
+    override val action: Action2,
+    val liveValue: List<ConditionalLiveValue2>
+) : Action2(), HigherOrderModifier2 {
+    override fun execute(
+        state: State2,
+        client: Client2
+    ) {
+        if (liveValue.isNotEmpty() && liveValue.map { client.computeConditionalLive(it)} .all{ it }) {
+            sduiLog(client.firedActionMap, tag = "wtf")
+//            client.addFired(action)
+            action.run(state, client) // TODO the state will be incorrect because this is not a remote action
+        }
+    }
 }
 
 @Serializable
