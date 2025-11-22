@@ -59,6 +59,10 @@ sealed class LiveValue2 {
     }
 
     @Serializable
+    @SerialName("InstantNowLiveValue2")
+    data class InstantNowLiveValue2(val refreshSeconds: Int? = null): LiveValue2()
+
+    @Serializable
     @SerialName("StaticIntLiveValue2")
     data class StaticIntLiveValue2(val value: Int): LiveValue2()
 

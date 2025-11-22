@@ -1,5 +1,6 @@
 package ship.f.engine.shared.utils.serverdrivenui2.client
 
+import kotlinx.datetime.Clock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.client.BackStackEntry2.Direction2.Backward2
@@ -109,13 +110,26 @@ abstract class Client2(open val projectName: String? = null) {
                         else -> TODO()
                     }
 
-                    sduiLog(value1, value2, tag = "wtf")
-
                     when(liveValue2.condition){
                         is LiveValue2.Condition2.GreaterThan -> value1!! > value2!!
                         is LiveValue2.Condition2.LessThan -> value1!! < value2!!
                         else -> TODO()
                     }
+                }
+                is LiveValue2.InstantNowLiveValue2 -> {
+                    val value1 = when(val ref = liveValue2.value1.ref) {
+                        is ZoneRef2 -> ((get(ref.vm) as? ZoneViewModel2 ?: error("no vm ${ref.vm}"))
+                            .map[ref.property] as? ZoneViewModel2.Property.IntProperty)?.value
+                        else -> TODO()
+                    }
+
+                    val value2 = Clock.System.now().epochSeconds
+
+                    when(liveValue2.condition){
+                        is LiveValue2.Condition2.GreaterThan -> value1!! > value2
+                        is LiveValue2.Condition2.LessThan -> value1!! < value2
+                        else -> TODO()
+                    }.also { sduiLog(value1, liveValue2.condition, value2, it, tag = " filtered index > Items > Timer > Condition > Calculation", header = "start", footer = "end") }
                 }
                 else -> TODO()
             }
