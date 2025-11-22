@@ -17,6 +17,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalLiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.Ref2.VmRef2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.Ref2.ZoneRef2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Path2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ChildrenModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.Trigger2
@@ -80,7 +81,7 @@ abstract class Client2(open val projectName: String? = null) {
                     val vm = get(liveValue2.value2.ref.vm) as? ZoneViewModel2 ?: error("No vm found for id: ${liveValue2.value2.ref.vm}")
                     val multiProperty = vm.map[liveValue2.value2.ref.property] as? ZoneViewModel2.Property.MultiProperty ?: error("No multi property found for ref: ${liveValue2.value2.ref} in ${liveValue2.value2.ref.vm}")
                     val prop = when(liveValue2.value1.ref) {
-                        is LiveValue2.Ref2.ZoneRef2 -> StringProperty(
+                        is ZoneRef2 -> StringProperty(
                             value = (metaMap[liveValue2.value1.ref.vm] as? ZoneViewModel2)
                                 ?.let { it.map[liveValue2.value1.ref.property] as? StringProperty }
                                 ?.value ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm}"),
@@ -89,6 +90,30 @@ abstract class Client2(open val projectName: String? = null) {
                     }
                     when(liveValue2.condition){
                         is LiveValue2.Condition2.InOrEmpty -> multiProperty.value.isEmpty() || multiProperty.value.contains(prop)
+                        else -> TODO()
+                    }
+                }
+                else -> TODO("Only handling TextLiveValue2 > MultiLiveValue2 for now")
+            }
+            is LiveValue2.IntLiveValue2 -> when(liveValue2.value2){
+                is LiveValue2.IntLiveValue2 -> {
+                    val value1 = when(val ref = liveValue2.value1.ref) {
+                        is ZoneRef2 -> ((get(ref.vm) as? ZoneViewModel2 ?: error("no vm ${ref.vm}"))
+                            .map[ref.property] as? ZoneViewModel2.Property.IntProperty)?.value
+                        else -> TODO()
+                    }
+
+                    val value2 = when(val ref = liveValue2.value2.ref) {
+                        is ZoneRef2 -> ((get(ref.vm) as? ZoneViewModel2 ?: error("no vm ${ref.vm}"))
+                            .map[ref.property] as? ZoneViewModel2.Property.IntProperty)?.value.also { sduiLog(get(ref.vm), ref, tag = "wtf") }
+                        else -> TODO()
+                    }
+
+                    sduiLog(value1, value2, tag = "wtf")
+
+                    when(liveValue2.condition){
+                        is LiveValue2.Condition2.GreaterThan -> value1!! > value2!!
+                        is LiveValue2.Condition2.LessThan -> value1!! < value2!!
                         else -> TODO()
                     }
                 }
@@ -103,7 +128,7 @@ abstract class Client2(open val projectName: String? = null) {
             is LiveValue2.IntLiveValue2 -> when(liveValue2.value2){
                 is LiveValue2.IntLiveValue2 -> {
                     val prop1 = when(liveValue2.value1.ref) {
-                        is LiveValue2.Ref2.ZoneRef2 -> (metaMap[liveValue2.value1.ref.vm] as? ZoneViewModel2)?.let {
+                        is ZoneRef2 -> (metaMap[liveValue2.value1.ref.vm] as? ZoneViewModel2)?.let {
                             it.map[liveValue2.value1.ref.property] ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm}")
                         } ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm}")
                         else -> TODO()

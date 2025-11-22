@@ -53,8 +53,8 @@ sealed class LiveValue2 {
     @Serializable
     @SerialName("IntLiveValue2")
     data class IntLiveValue2(override val ref: Ref2): ReferenceableLiveValue2() {
-        override fun copyRef(ref: Ref2): TextLiveValue2 {
-            return TextLiveValue2(ref)
+        override fun copyRef(ref: Ref2): IntLiveValue2 {
+            return IntLiveValue2(ref)
         }
     }
 
