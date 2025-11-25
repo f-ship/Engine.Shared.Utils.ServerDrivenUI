@@ -76,6 +76,13 @@ data class NavigationConfig2(
         ) : StateOperation2()
 
         @Serializable
+        @SerialName("PushDialog2")
+        data class PushDialog2(
+            override val stateId: StateId2,
+            val targetId2: StateId2,
+        ) : StateOperation2()
+
+        @Serializable
         @SerialName("Replace2")
         data class Replace2(
             val replace: StateId2,

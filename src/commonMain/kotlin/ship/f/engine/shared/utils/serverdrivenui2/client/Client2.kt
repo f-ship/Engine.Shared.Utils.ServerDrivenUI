@@ -51,6 +51,7 @@ abstract class Client2(open val projectName: String? = null) {
 
     val cheapBackStack: MutableList<CheapBackStackEntry> = mutableListOf()
 
+    // TODO Planned
     // TODO only currently in use for statemachine
     @Serializable
     @SerialName("CheapBackStackEntry")
@@ -59,6 +60,7 @@ abstract class Client2(open val projectName: String? = null) {
         val targetMetaId: MetaId2,
     )
 
+    // TODO Planned
     fun computeLiveText(liveValue: LiveValue2.TextLiveValue2) = when (liveValue.ref) {
         is LiveValue2.Ref2.StateRef2 -> {
             val paths = idPathsMap[liveValue.ref.id] ?: error("No paths found for id: ${liveValue.ref.id}")
@@ -70,11 +72,12 @@ abstract class Client2(open val projectName: String? = null) {
         is VmRef2 -> {
             val vm = metaMap[liveValue.ref.vm] as? ZoneViewModel2 ?: error("No vm found for id: ${liveValue.ref.vm}")
             (vm.map[liveValue.ref.property] as? StringProperty)?.value
-                ?: error("No value found for ref: ${liveValue.ref} in ${liveValue.ref.property}")
+                ?: error("No value found for ref: ${liveValue.ref} in ${liveValue.ref.vm} for ${liveValue.ref.property}")
         }
         else -> TODO()
     }
 
+    // TODO Planned
     fun computeConditionalLive(liveValue2: ConditionalLiveValue2): Boolean {
         return when(liveValue2.value1){
             is LiveValue2.TextLiveValue2 -> when(liveValue2.value2){
@@ -85,7 +88,7 @@ abstract class Client2(open val projectName: String? = null) {
                         is ZoneRef2 -> StringProperty(
                             value = (metaMap[liveValue2.value1.ref.vm] as? ZoneViewModel2)
                                 ?.let { it.map[liveValue2.value1.ref.property] as? StringProperty }
-                                ?.value ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm}"),
+                                ?.value ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm} for ${liveValue2.value1.ref.property}"),
                         )
                         else -> TODO()
                     }
@@ -123,7 +126,7 @@ abstract class Client2(open val projectName: String? = null) {
                         else -> TODO()
                     }
 
-                    val value2 = Clock.System.now().epochSeconds
+                    val value2 = Clock.System.now().epochSeconds.toInt() // TODO not converting to Int causing issues? Not doesn't seem to be the issue
 
                     when(liveValue2.condition) {
                         is LiveValue2.Condition2.GreaterThan -> value1!! > value2
@@ -138,21 +141,22 @@ abstract class Client2(open val projectName: String? = null) {
         }
     }
 
+    // TODO Planned
     inline fun <reified T: LiveValue2> computeConditionalBranchLive(liveValue2: LiveValue2.ConditionalBranchLiveValue2): T {
         return when(liveValue2.value1){
             is LiveValue2.IntLiveValue2 -> when(liveValue2.value2){
                 is LiveValue2.IntLiveValue2 -> {
                     val prop1 = when(liveValue2.value1.ref) {
                         is ZoneRef2 -> (metaMap[liveValue2.value1.ref.vm] as? ZoneViewModel2)?.let {
-                            it.map[liveValue2.value1.ref.property] ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm}")
-                        } ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm}")
+                            it.map[liveValue2.value1.ref.property] ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm} for ${liveValue2.value1.ref.property}")
+                        } ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm} for ${liveValue2.value1.ref.property}")
                         else -> TODO()
                     }
 
                     val prop2 = when(liveValue2.value2.ref) {
                         is ZoneRef2 -> (metaMap[liveValue2.value2.ref.vm] as? ZoneViewModel2)?.let {
-                            it.map[liveValue2.value2.ref.property] ?: error("No value found for ref: ${liveValue2.value2.ref} in ${liveValue2.value2.ref.vm}")
-                        } ?: error("No value found for ref: ${liveValue2.value2.ref} in ${liveValue2.value2.ref.vm}")
+                            it.map[liveValue2.value2.ref.property] ?: error("No value found for ref: ${liveValue2.value2.ref} in ${liveValue2.value2.ref.vm} for1 ${liveValue2.value2.ref.property}")
+                        } ?: error("No value found for ref: ${liveValue2.value2.ref} in ${liveValue2.value2.ref.vm} for ${liveValue2.value2.ref.property}")
                         else -> TODO()
                     }
 
@@ -169,9 +173,9 @@ abstract class Client2(open val projectName: String? = null) {
                 }
                 is LiveValue2.StaticIntLiveValue2 -> {
                     val prop1 = when(liveValue2.value1.ref) {
-                        is LiveValue2.Ref2.ZoneRef2 -> (metaMap[liveValue2.value1.ref.vm] as? ZoneViewModel2)?.let {
-                            it.map[liveValue2.value1.ref.property] ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm}")
-                        } ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm}")
+                        is ZoneRef2 -> (metaMap[liveValue2.value1.ref.vm] as? ZoneViewModel2)?.let {
+                            it.map[liveValue2.value1.ref.property] ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm} for2 ${liveValue2.value1.ref.property}")
+                        } ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm} for3 ${liveValue2.value1.ref.property}")
                         else -> TODO()
                     }
 
@@ -200,11 +204,15 @@ abstract class Client2(open val projectName: String? = null) {
         }
     }
 
+    // TODO Deferred, working fine
     fun hasFired(action: Action2) = firedActionMap[action.id] != null
+
+    // TODO Deferred, working fine
     fun addFired(action: Action2) {
         firedActionMap[action.id] = action
     }
 
+    // TODO Deferred, working fine
     fun addDeferredAction(remoteAction: RemoteAction2<DeferredAction2<*>>) {
         if (deferredActionMap[remoteAction.action.deferKey] == null) {
             deferredActionMap[remoteAction.action.deferKey] = listOf()
@@ -213,6 +221,7 @@ abstract class Client2(open val projectName: String? = null) {
             deferredActionMap.g2(remoteAction.action.deferKey) + listOf(remoteAction)
     }
 
+    // TODO Deferred, working fine
     fun addRemoteAction(metaId: MetaId2, stateId: StateId2, action: Action2) {
         if (metaListeners2[metaId] == null) {
             metaListeners2[metaId] = mutableListOf()
@@ -226,9 +235,13 @@ abstract class Client2(open val projectName: String? = null) {
         )
     }
 
+    // TODO Deferred, working fine
     fun clearDeferredActions(key: String?) = deferredActionMap.remove(key)
+
+    // TODO Deferred, working fine
     fun getDeferredActions(key: String?) = deferredActionMap[key]
 
+    // TODO Planned, will be removed
     fun updateChildren(path: Path2, children: List<State2>, reason: String) {
         println("updating children for path: $path, reason: $reason")
         println("--------------------------------------------------------")
@@ -238,6 +251,7 @@ abstract class Client2(open val projectName: String? = null) {
 
 //    inline fun <reified T : State2> get(stateId2: StateId2): T = stateMap.g2(stateId2) as T
 
+    // TODO Planned
     inline fun <reified T : State2> get(stateId2: StateId2): T { // TODO temporarily used to return first instance, will be upgraded to return list
         if (stateId2.name == "CameraGallery") sduiLog("Found CameraGallery", idPathsMap[stateId2])
         val paths = idPathsMap[stateId2] ?: error("Paths has not been found for stateId: $stateId2")
@@ -246,11 +260,16 @@ abstract class Client2(open val projectName: String? = null) {
         return pathStateMap[path] as? T ?: error("no state exists for path: $path")
     }
 
+    // TODO Planned
     inline fun <reified T : State2> get(path: Path2): T = pathStateMap[path] as T
+
+    // TODO Planned
     inline fun <reified T : State2> getOrNull(path: Path2): T? = pathStateMap[path] as? T
 
+    // TODO Planned, improve to support casting
     fun get(metaId2: MetaId2): Meta2 = metaMap.g2(metaId2)
 
+    // TODO Planned
     fun update(
         state: State2,
         renderChain: List<StateId2> = listOf(),
@@ -309,6 +328,7 @@ abstract class Client2(open val projectName: String? = null) {
         return currentState
     }
 
+    // TODO Planned
     fun buildPaths(state: State2, renderChain: List<StateId2> = listOf()): State2 {
         var currentState = state
         val currentPath = if (state.id.isAutoGenerated) renderChain else renderChain + state.id
@@ -323,6 +343,7 @@ abstract class Client2(open val projectName: String? = null) {
         return currentState
     }
 
+    // TODO Planned
     fun setPaths(state: State2) {
         sduiLog(state, idPathsMap[state.id], tag = "ChatMessageLog") { state.id.name == "ChatMessage" }
         if (!state.id.isAutoGenerated) {
@@ -338,6 +359,7 @@ abstract class Client2(open val projectName: String? = null) {
         }
     }
 
+    // TODO Planned
     fun setFilters(state: State2) {
         (state as? ChildrenModifier2<*>)?.let {
             state.filter?.let { filterConfig ->
@@ -363,6 +385,7 @@ abstract class Client2(open val projectName: String? = null) {
         }
     }
 
+    // TODO Planned
     fun setViewModels(state: State2) {
         setTriggers(state)
         state.metas.forEach { meta -> metaMap[meta.metaId] = meta }
@@ -371,6 +394,7 @@ abstract class Client2(open val projectName: String? = null) {
         }
     }
 
+    // TODO Planned
     fun setReactivity(state: State2) {
         if (!state.id.isAutoGenerated) reactiveUpdate(state)
         (state as? ChildrenModifier2<*>)?.let {
@@ -378,6 +402,7 @@ abstract class Client2(open val projectName: String? = null) {
         }
     }
 
+    // TODO Planned, to be removed of course
     fun update2(
         state: State2,
         forceUpdate: Boolean = false,
@@ -464,11 +489,13 @@ abstract class Client2(open val projectName: String? = null) {
         return currentState
     }
 
+    // TODO Planned
     fun update(meta: Meta2) {
         metaMap[meta.metaId] = meta
         propagate(meta)
     }
 
+    // TODO Planned
     fun propagate(state: State2) {
         stateListeners2[state.id]?.forEach { listener ->
             listener.action.run(
@@ -478,6 +505,7 @@ abstract class Client2(open val projectName: String? = null) {
         }
     }
 
+    // TODO Planned
     fun propagate(meta: Meta2) {
         sduiLog(meta, metaListeners2, metaListeners2[meta.metaId], tag = "MetaListener")
         metaListeners2[meta.metaId]?.forEach { it ->
@@ -488,6 +516,7 @@ abstract class Client2(open val projectName: String? = null) {
         }
     }
 
+    // TODO Planned, to be extracted
     fun navigate(config: NavigationConfig2) {
         when (val op = config.operation) {
             is NavigationConfig2.StateOperation2.InsertionOperation2 -> {
@@ -748,16 +777,20 @@ abstract class Client2(open val projectName: String? = null) {
 //
 //                return
             }
+
+            is NavigationConfig2.StateOperation2.PushDialog2 -> TODO()
         }?.let {
             update(it, renderChain = it.path.path, insertIntoParent = true) // TODO pretty hacky to be honest
         }
     }
 
+    // TODO Planned
     fun push(state: State2) {
         backstack.add(BackStackEntry2(direction = BackStackEntry2.Direction2.Forward2, state = state))
         reactivePush()
     }
 
+    // TODO Planned
     fun pop() {
         if (cheapBackStack.isNotEmpty()) {
             val entry = cheapBackStack.removeLast()
@@ -773,9 +806,11 @@ abstract class Client2(open val projectName: String? = null) {
         }
     }
 
+    // TODO Planned
     fun canPop() = (backstack.isNotEmpty() && backstack.subList(0, backstack.lastIndex)
         .any { it.canPopBack }) || cheapBackStack.isNotEmpty()
 
+    // TODO Planned
     fun pop(stateId: StateId2) = containerBackStack[stateId]!!.let {
         if (cheapBackStack.isNotEmpty()) {
             val entry = cheapBackStack.removeLast()
@@ -791,20 +826,27 @@ abstract class Client2(open val projectName: String? = null) {
         }
     }
 
+    // TODO Planned
     fun canPop(stateId: StateId2) = containerBackStack[stateId]!!.let {
         it.isNotEmpty() && it.subList(0, it.lastIndex).any { item -> item.canPopBack }
     }
 
     var emitSideEffect: (PopulatedSideEffectMeta2) -> Unit = { }
 
+    // TODO Planned
     abstract fun reactiveUpdate(state: State2)
+    // TODO Planned
     abstract fun reactivePush()
+    // TODO Planned
     abstract fun reactivePop()
+    // TODO Planned
     abstract fun reactivePush(stateId: StateId2)
+    // TODO Planned
     abstract fun reactivePop(stateId: StateId2)
-
+    // TODO Planned
     abstract fun reactiveUpdateChildren(path: Path2)
 
+    // TODO Planned
     private fun insert(
         existing: List<State2>,
         addition: State2,
@@ -820,6 +862,7 @@ abstract class Client2(open val projectName: String? = null) {
             }
         }
 
+    // TODO Planned
     private fun setTriggers(state: State2) {
         val triggers = mutableListOf<Trigger2>()
         if (state is OnClickModifier2) {

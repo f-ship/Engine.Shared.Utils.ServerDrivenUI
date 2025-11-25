@@ -32,7 +32,8 @@ data class DropDownState2(
     override val path: Path2 = Path2(),
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val draws: List<Draw2> = listOf(),
-) : State2(), PaddingModifier2<DropDownState2> {
+) : State2(),
+    PaddingModifier2<DropDownState2> {
     override fun c(id: StateId2) = copy(id = id)
     override fun c(visible: Visible2) = copy(visible = visible)
     override fun c(size: Size2) = copy(size = size)
