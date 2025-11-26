@@ -8,6 +8,8 @@ import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2
+import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2.ReplaceChild2
+import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2.Swap2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.StateMachineMeta2.StateMachineOperation2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.ZoneViewModel2.Property.MultiProperty
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.ZoneViewModel2.Property.StringProperty
@@ -209,11 +211,16 @@ data class MatchValid2(
         }
     }
 
+    // TODO("Do not use")
     override fun execute3(
         state: State2,
         client: Client3,
     ) {
-        TODO("Do not use")
+        val valid = publishers.mapNotNull { client.get<State2>(it) as? ValidModifier2<*> }.all { it.valid.value }
+        (state as? ValidModifier2<*>)?.c(valid = ValidModifier2.Valid2(valid))?.let {
+            client.update(it)
+        }
+        client.commit()
     }
 }
 
@@ -330,7 +337,7 @@ data class ToggleMachineSelect2(
                 store.selected.remove(selected)
                 client.navigate(
                     NavigationConfig2(
-                        operation = StateOperation2.Swap2(
+                        operation = Swap2(
                             swap = store.map[selected]!!.inactive,
                             stateId = selected,
                         )
@@ -347,7 +354,7 @@ data class ToggleMachineSelect2(
                 store.selected.add(selected)
                 client.navigate(
                     NavigationConfig2(
-                        operation = StateOperation2.Swap2(
+                        operation = Swap2(
                             swap = store.map[selected]!!.active,
                             stateId = selected,
                         )
@@ -374,7 +381,7 @@ data class ToggleMachineSelect2(
             if (store.selected.contains(selected)) {
                 store.selected.remove(selected)
                 client.navigationEngine.navigate(
-                    operation = StateOperation2.Swap2(
+                    operation = Swap2(
                         swap = store.map[selected]!!.inactive,
                         stateId = selected,
                     )
@@ -389,7 +396,7 @@ data class ToggleMachineSelect2(
             } else if (store.selected.size < store.limit) {
                 store.selected.add(selected)
                 client.navigationEngine.navigate(
-                    operation = StateOperation2.Swap2(
+                    operation = Swap2(
                         swap = store.map[selected]!!.active,
                         stateId = selected,
                     )
@@ -461,7 +468,7 @@ data class StateMachineSelect2(
                     if (isActive) {
                         client.navigate(
                             NavigationConfig2(
-                                operation = NavigationConfig2.StateOperation2.ReplaceChild2(
+                                operation = ReplaceChild2(
                                     container = operation.container,
                                     stateId = operation.stateId,
                                     addToBackStack = operation.addToBackStack,
@@ -474,10 +481,38 @@ data class StateMachineSelect2(
                 is StateMachineOperation2.SwapOperation2 -> {
                     client.navigate(
                         NavigationConfig2(
-                            operation = NavigationConfig2.StateOperation2.Swap2(
+                            operation = Swap2(
                                 swap = if (isActive) operation.active else operation.inactive,
                                 stateId = if (isActive) operation.active.id else operation.inactive.id,
                             )
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    fun List<StateMachineOperation2>.runOps3(isActive: Boolean, client: Client3) {
+        forEach { operation ->
+            when (operation) {
+                is StateMachineOperation2.NestedOperation2 -> Unit
+                is StateMachineOperation2.PushOperation2 -> {
+                    if (isActive) {
+                        client.navigationEngine.navigate(
+                            operation = ReplaceChild2(
+                                container = operation.container,
+                                stateId = operation.stateId,
+                                addToBackStack = operation.addToBackStack,
+                            )
+                        )
+                    }
+                }
+
+                is StateMachineOperation2.SwapOperation2 -> {
+                    client.navigationEngine.navigate(
+                        operation = Swap2(
+                            swap = if (isActive) operation.active else operation.inactive,
+                            stateId = if (isActive) operation.active.id else operation.inactive.id,
                         )
                     )
                 }
@@ -489,7 +524,36 @@ data class StateMachineSelect2(
         state: State2,
         client: Client3,
     ) {
-        TODO("Will still need to use in the interim")
+        (client.get(targetMetaId) as? StateMachineMeta2)?.let { store ->
+// TODO code needs to be rewritten to use the new unified backstack approach
+//            if (addCurrentToBackstack) {
+//                if (backStackable.isEmpty() || backStackable.contains(store.selected)) {
+//                    if (client.navigationEngine.backstack.lastOrNull() != store.selected) {
+//                        client.cheapBackStack.add(Client2.CheapBackStackEntry(store.selected, store.metaId))
+//                    }
+//                }
+//            }
+            println("keys: ${store.map.keys}")
+            // Update inactive operations
+            val inactiveOperations = store.getOperations(store.selected)
+            inactiveOperations.runOps3(isActive = false, client = client)
+
+            // Update active operations
+            client.update(store.copy(selected = selected))
+            val activeOperations = store.getOperations(selected)
+            activeOperations.runOps3(isActive = true, client = client)
+            println("-----------------------------")
+            println("StateMachineSelect2: $selected vs ${store.selected}")
+            println("inactiveOperations")
+            inactiveOperations.filterIsInstance<StateMachineOperation2.SwapOperation2>().forEach {
+                println(it)
+            }
+            println("activeOperations")
+            activeOperations.filterIsInstance<StateMachineOperation2.SwapOperation2>().forEach {
+                println(it)
+            }
+            println("-----------------------------")
+        }
     }
 }
 
@@ -619,10 +683,11 @@ data class UpdateZoneModel(
         client: Client2
     ) {
         val vm = client.get(targetMetaId) as? ZoneViewModel2 ?: error("ZoneViewModel not found for $targetMetaId")
-        when(operation){
-            is Operation2.Toggle -> when(liveValue){
+        when (operation) {
+            is Operation2.Toggle -> when (liveValue) {
                 is LiveValue2.TextStaticValue2 -> {
-                    val multiProperty = vm.map[operation.property] as? MultiProperty ?: error("MultiProperty not for ${operation.property} in $targetMetaId")
+                    val multiProperty = vm.map[operation.property] as? MultiProperty
+                        ?: error("MultiProperty not for ${operation.property} in $targetMetaId")
                     val toggleProperty = StringProperty(value = liveValue.value)
                     if (multiProperty.value.contains(toggleProperty)) {
                         vm.map[operation.property] = MultiProperty(multiProperty.value - toggleProperty)
@@ -630,8 +695,10 @@ data class UpdateZoneModel(
                         vm.map[operation.property] = MultiProperty(multiProperty.value + toggleProperty)
                     }
                 }
+
                 else -> Unit
             }
+
             else -> Unit
         }
         sduiLog(vm, targetMetaId, tag = "UpdateZoneModel > execute")
@@ -644,12 +711,15 @@ data class UpdateZoneModel(
         @Serializable
         @SerialName("Set")
         data object Set : Operation2()
+
         @Serializable
         @SerialName("Add")
         data object Add : Operation2()
+
         @Serializable
         @SerialName("Insert")
         data class Insert(val property: String) : Operation2()
+
         @Serializable
         @SerialName("Toggle")
         data class Toggle(val property: String) : Operation2()
@@ -674,18 +744,22 @@ data class LiveAction2(
         state: State2,
         client: Client2
     ) {
-        if (liveValue.isNotEmpty() && liveValue.map { client.computeConditionalLive(it)} .all{ it }) {
+        if (liveValue.isNotEmpty() && liveValue.map { client.computeConditionalLive(it) }.all { it }) {
             sduiLog(client.firedActionMap, tag = "wtf")
 //            client.addFired(action)
             action.run(state, client) // TODO the state will be incorrect because this is not a remote action
         }
     }
 
+    // TODO will be upgraded shortly
     override fun execute3(
         state: State2,
         client: Client3,
     ) {
-        TODO("Will be depreciated shortly")
+        if (liveValue.isNotEmpty() && liveValue.map { client.computationEngine.computeConditionalLive(it) }
+                .all { it }) {
+            action.run3(state, client) // TODO the state will be incorrect because this is not a remote action
+        }
     }
 }
 

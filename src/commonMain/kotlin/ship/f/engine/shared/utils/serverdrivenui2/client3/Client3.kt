@@ -3,6 +3,11 @@ package ship.f.engine.shared.utils.serverdrivenui2.client3
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.vector.ImageVector
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.jetbrains.compose.resources.Resource
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.Action2
@@ -27,6 +32,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 @Suppress("UNCHECKED_CAST")
 open class Client3 {
     val viewModels: MutableMap<MetaId2, Meta2> = mutableMapOf()
+
     val idPaths: MutableMap<StateId2, List<Path3>> = mutableMapOf()
     val states: MutableMap<Path3, State2> = mutableMapOf()
     val reactiveStates: MutableMap<Path3, MutableState<State2>> = mutableMapOf()
@@ -46,7 +52,6 @@ open class Client3 {
 
     val computationEngine = ComputationEngine(this)
     val navigationEngine = NavigationEngine(this)
-
     fun hasFired(action: Action2) = firedActions[action.id] != null
     fun addFired(action: Action2) { firedActions[action.id] = action }
     fun addDeferredAction(remoteAction: RemoteAction2<DeferredAction2<out Action2>>) {
@@ -59,6 +64,8 @@ open class Client3 {
     fun getDeferredActions(key: String?) = deferredActions[key]
 
     var emitSideEffect: (PopulatedSideEffectMeta2) -> Unit = { }
+    val commitScope = CoroutineScope(Dispatchers.Main)
+    val queueMutex = Mutex()
     /**
      * By default, if a rootPath is not provided, the first path in the list will be returned.
      * If the rootPath is provided, the state that most local to the rootPath will be returned.
@@ -67,11 +74,11 @@ open class Client3 {
     inline fun <reified T : State2> get(stateId2: StateId2, rootPath: Path3? = null): T {
         val paths = idPaths[stateId2] ?: error("Paths has not been found for stateId: $stateId2")
         val path = paths.firstOrNull() ?: error("paths are empty for stateId: $stateId2")
-        return states[path] as? T ?: sduiLog(list = states.keys).let { null } ?: error("no state exists for path: $path")
+        return states[path] as? T ?: sduiLog(list = states.keys, tag = "get > states").let { null } ?: error("get with stateId > no state exists for path: $path")
     }
 
     inline fun <reified T : State2> getOrNull(path: Path3): T? = states[path] as? T
-    inline fun <reified T : State2> get(path: Path3): T = getOrNull(path) ?: error("no state exists for path: $path")
+    inline fun <reified T : State2> get(path: Path3): T = getOrNull(path) ?: error("get > no state exists for path: $path")
     inline fun <reified T : State2> getReactiveOrNull(path: Path3): MutableState<T>? = reactiveStates[path] as? MutableState<T>
     inline fun <reified T : State2> getReactive(path: Path3): MutableState<T> = getReactiveOrNull(path) ?: error("no reactive state exists for path: $path")
 
@@ -79,7 +86,9 @@ open class Client3 {
 
     fun update(state: State2) {
         states.defaultIfNull(state.path3, state) { state }
-        stateQueue.add(state)
+        commitScope.launch {
+            queueMutex.withLock { stateQueue.add(state) }
+        }
         propagate(state)
     }
 
@@ -91,7 +100,6 @@ open class Client3 {
 
     fun propagate(state: State2){
         listeners[state.id]?.forEach { listener ->
-            sduiLog("dispatching ${listener.action} to ${listener.targetStateId}")
             listener.action.run3(
                 state = get(listener.targetStateId),
                 client = this,
@@ -109,26 +117,52 @@ open class Client3 {
     }
 
     fun commit() {
-        stateQueue.distinct().forEach { state ->
-            reactiveStates.defaultIfNull(state.path3, mutableStateOf(state)) { it.also { it.value = state } }
+        commitScope.launch {
+            val distinct = queueMutex.withLock {
+                val distinct = stateQueue.distinct()
+                stateQueue.clear()
+                distinct
+            }
+
+            distinct.forEach { state ->
+                sduiLog("checking commit state: ${state.path3}", tag = "noSpaceDebug")
+                // This is done to ensure parents that are already rendered can accept children on the main thread
+                if (reactiveStates[state.path3] == null) {
+                    sduiLog("init commit state: ${state.path3}", tag = "noSpaceDebug")
+                    reactiveStates[state.path3] = mutableStateOf(state)
+                }
+            }
+            distinct.forEach { state ->
+                sduiLog("setting commit state: ${state.path3}", tag = "noSpaceDebug")
+                reactiveStates.defaultIfNull(state.path3, mutableStateOf(state)) { it.also { it.value = state } }
+            }
         }
-        stateQueue.clear()
     }
 
     fun initState(
         state: State2,
         renderChain: List<StateId2> = listOf(),
     ): State2 {
-        return if (state.path3 !is Init && renderChain.isEmpty()) return state
+        return if (state.path3 !is Init && renderChain.isEmpty()) state
         else if (renderChain.isNotEmpty()) {
             resetPaths(state).run {
-                buildPaths(this).also { setPaths(it) }
+                buildPaths(this, renderChain).also {
+                    setPaths(it)
+                    setStates(it)
+                }
             }
         } else buildPaths(state, renderChain).also {
             setPaths(it)
             setStates(it)
             setViewModels(it)
             setListeners(it)
+            buildTrigger(it)
+        }
+    }
+
+    private fun buildTrigger(state: State2){
+        (state as? OnBuildCompleteModifier2)?.onBuildCompleteTrigger2?.actions?.forEach {
+            it.run3(state = state, client = this)
         }
     }
 

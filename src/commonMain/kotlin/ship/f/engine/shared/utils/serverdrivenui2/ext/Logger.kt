@@ -37,5 +37,7 @@ fun <T>sduiLog(list: Collection<T>, header: String = "start", footer: String = "
 }
 
 object SduiLogger {
-    val switch: MutableMap<String, Boolean> = mutableMapOf()
+    val switch: MutableMap<String, Boolean> = mutableMapOf(
+        "noSpaceDebug" to false
+    )
 }

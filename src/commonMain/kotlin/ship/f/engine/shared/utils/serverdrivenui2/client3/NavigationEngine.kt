@@ -7,7 +7,6 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationC
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2.InsertionOperation2.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ChildrenModifier2
-import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
 class NavigationEngine(val client: Client3) {
@@ -38,19 +37,17 @@ class NavigationEngine(val client: Client3) {
                 val state = client.get<State2>(operation.stateId)
                 val entry = BackStackEntry3.ScreenEntry(state)
                 backstack.add(entry)
+                client.commit() // Need to commit before setting it to the current screen
                 currentScreen.value = entry
             }
 
             is NavigationConfig2.StateOperation2.ReplaceChild2 -> {
-                sduiLog(client.states.keys)
-                sduiLog(client.idPaths.keys)
                 val inside = client.get<State2>(operation.container)
                 val parent = inside as? ChildrenModifier2<*>
                     ?: error("During insertion operation, parent was not of type ChildrenModifier<*> ${operation.container}")
                 val child = client.get<State2>(operation.stateId)
-                client.initState(child, inside.path3.toRenderChain())
-
-                val updatedParent = parent.c(listOf(child))
+                val updatedChild = client.initState(child, inside.path3.toRenderChain())
+                val updatedParent = parent.c(listOf(updatedChild))
                 client.update(updatedParent)
             }
 
