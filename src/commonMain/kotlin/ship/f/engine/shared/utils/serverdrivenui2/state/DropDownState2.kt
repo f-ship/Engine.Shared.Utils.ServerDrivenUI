@@ -2,6 +2,7 @@ package ship.f.engine.shared.utils.serverdrivenui2.state
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Draw2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
@@ -29,6 +30,7 @@ data class DropDownState2(
     val items: List<DropDownItem2>,
     val selectedItem: DropDownItem2? = null,
     val isExpanded: Boolean = false,
+    override val path3: Path3 = Path3.Init,
     override val path: Path2 = Path2(),
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val draws: List<Draw2> = listOf(),
@@ -39,6 +41,7 @@ data class DropDownState2(
     override fun c(size: Size2) = copy(size = size)
     override fun c(weight: Weight2) = copy(weight = weight)
     override fun c(padding: PaddingValues2) = copy(padding = padding)
+    override fun c(path3: Path3) = copy(path3 = path3)
     override fun c(path: Path2) = copy(path = path)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)

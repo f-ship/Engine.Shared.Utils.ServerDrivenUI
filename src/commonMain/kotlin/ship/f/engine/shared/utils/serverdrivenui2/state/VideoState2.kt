@@ -2,6 +2,7 @@ package ship.f.engine.shared.utils.serverdrivenui2.state
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2
@@ -36,6 +37,7 @@ data class VideoState2(
     val contentScale: ContentScale2 = None2,
     val fadeInMillis: Int? = null,
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
+    override val path3: Path3 = Path3.Init,
     override val path: Path2 = Path2(),
     override val draws: List<Draw2> = listOf(),
 ) : State2(),
@@ -49,6 +51,7 @@ data class VideoState2(
     override fun c(size: Size2) = copy(size = size)
     override fun c(color: Color2) = copy(color = color)
     override fun c(weight: Weight2) = copy(weight = weight)
+    override fun c(path3: Path3) = copy(path3 = path3)
     override fun c(path: Path2) = copy(path = path)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)

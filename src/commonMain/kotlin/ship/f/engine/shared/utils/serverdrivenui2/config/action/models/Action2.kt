@@ -2,6 +2,7 @@ package ship.f.engine.shared.utils.serverdrivenui2.config.action.models
 
 import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.client.Client2
+import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.ActionIdModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.ActionId2.Companion.autoActionId2
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
@@ -14,11 +15,24 @@ sealed class Action2 : ActionIdModifier2 {
         client: Client2,
     )
 
+    protected abstract fun execute3(
+        state: State2,
+        client: Client3,
+    )
+
     fun run(
         state: State2,
         client: Client2,
     ) {
         client.addFired(this) // TODO wrong order led to infinite depth recursion when not careful
         execute(state, client)
+    }
+
+    fun run3(
+        state: State2,
+        client: Client3,
+    ) {
+        client.addFired(this)
+        execute3(state, client)
     }
 }

@@ -2,6 +2,7 @@ package ship.f.engine.shared.utils.serverdrivenui2.state
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Alignment2.VerticalAlignment2.Top2
@@ -42,6 +43,7 @@ data class RowState2(
     override val onClickTrigger: OnClickTrigger2 = OnClickTrigger2(),
     override val metas: List<Meta2> = listOf(),
     override val counter: Int = 0,
+    override val path3: Path3 = Path3.Init,
     override val path: Path2 = Path2(),
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val draws: List<Draw2> = listOf(),
@@ -68,6 +70,7 @@ data class RowState2(
     override fun c(color: Color2) = copy(color = color)
     override fun c(shape: CornerBasedShape2) = copy(shape = shape)
     override fun c(weight: Weight2) = copy(weight = weight)
+    override fun c(path3: Path3) = copy(path3 = path3)
     override fun c(path: Path2) = copy(path = path)
     override fun c(border: Border2) = copy(border = border)
     override fun filteredChildren(filteredChildren: List<State2>?) = copy(filteredChildren = filteredChildren)

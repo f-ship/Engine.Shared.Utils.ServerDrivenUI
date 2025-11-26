@@ -1,8 +1,7 @@
 package ship.f.engine.shared.utils.serverdrivenui2.state
 
 import kotlinx.serialization.Serializable
-import ship.f.engine.shared.utils.serverdrivenui2.client.Client2
-import ship.f.engine.shared.utils.serverdrivenui2.client.ClientHolder2.get
+import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3.Companion.client3
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.DeferredAction2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalBranchLiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
@@ -28,22 +27,32 @@ sealed class State2 :
         return this
     }
 
-    val triggers: MutableList<Trigger2> = mutableListOf()
-
     fun Trigger2.trigger(cachedState: State2? = null) {
-        val client = get<Client2>()
+//        val client = get<Client2>()
+//        actions.forEach {
+//            if (this is OnInitialRenderModifier2 && client.hasFired(it)) return@forEach
+//            (cachedState?.let { cacheState ->
+//                (it as? DeferredAction2<*>)?.copy(cachedState = cacheState)
+//            } ?: it).run(
+//                state = this@State2,
+//                client = client,
+//            )
+//        }
+
         actions.forEach {
-            if (this is OnInitialRenderModifier2 && client.hasFired(it)) return@forEach
+            if (this is OnInitialRenderModifier2 && client3.hasFired(it)) return@forEach
             (cachedState?.let { cacheState ->
                 (it as? DeferredAction2<*>)?.copy(cachedState = cacheState)
-            } ?: it).run(
+            } ?: it).run3(
                 state = this@State2,
-                client = client,
+                client = client3,
             )
         }
     }
 
     inline fun <reified S : State2> S.update(block: S.() -> S): State2 {
-        return get<Client2>().update(block())
+        val update = block()
+//        get<Client2>().update(update)
+        return update.also { client3.update(update) }
     }
 }

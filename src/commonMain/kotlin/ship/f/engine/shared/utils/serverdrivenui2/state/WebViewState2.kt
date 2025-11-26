@@ -2,6 +2,7 @@ package ship.f.engine.shared.utils.serverdrivenui2.state
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Alignment2.HorizontalAndVerticalAlignment2.Center2
@@ -37,6 +38,7 @@ data class WebViewState2( // TODO may have a lot of redundant fields
     override val counter: Int = 0,
     override val draws: List<Draw2> = listOf(),
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
+    override val path3: Path3 = Path3.Init,
     override val path: Path2 = Path2(),
     val config: UrlConfig2,
 ) : State2(),
@@ -56,6 +58,7 @@ data class WebViewState2( // TODO may have a lot of redundant fields
     override fun c(border: Border2) = copy(border = border)
     override fun reset(counter: Int) = copy(counter = counter)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
+    override fun c(path3: Path3) = copy(path3 = path3)
     override fun c(path: Path2) = copy(path = path)
     override fun c(
         padding: PaddingValues2,

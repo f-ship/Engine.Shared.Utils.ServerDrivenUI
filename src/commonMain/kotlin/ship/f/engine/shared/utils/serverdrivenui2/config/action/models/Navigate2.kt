@@ -4,6 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import ship.f.engine.shared.utils.serverdrivenui2.client.Client2
+import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2
@@ -33,6 +34,33 @@ data class Navigate2(
     ) {
         client.navigate(config)
     }
+
+    override fun execute3(
+        state: State2,
+        client: Client3,
+    ) {
+        client.navigationEngine.navigate(config.operation)
+    }
+}
+
+@Serializable
+@SerialName("Navigate3")
+data class Navigate3(
+    val operation: StateOperation2
+) : Action2() {
+    override fun execute(
+        state: State2,
+        client: Client2,
+    ) {
+        TODO("Do not use client 2")
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3,
+    ) {
+        client.navigationEngine.navigate(operation)
+    }
 }
 
 @Serializable
@@ -51,6 +79,13 @@ data class StateUpdateOnMetaUpdate2(
                 targetStateId = state.id
             )
         )
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3,
+    ) {
+        TODO("Do not use")
     }
 }
 
@@ -75,6 +110,13 @@ data class SideEffectOnMetaUpdate2(
             ),
         )
     }
+
+    override fun execute3(
+        state: State2,
+        client: Client3,
+    ) {
+        TODO("Do not use")
+    }
 }
 
 @Serializable
@@ -88,6 +130,16 @@ data class Loading2(
     ) {
         (state as? LoadingModifier2<*>)?.c(loading = LoadingModifier2.Loading2(value))?.let {
             client.update(it)
+        }
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3
+    ) {
+        (state as? LoadingModifier2<*>)?.c(loading = LoadingModifier2.Loading2(value))?.let {
+            client.update(it)
+            client.commit()
         }
     }
 }
@@ -110,6 +162,13 @@ data class ToggleFilter2(
             client.update(it)
         }
     }
+
+    override fun execute3(
+        state: State2,
+        client: Client3,
+    ) {
+        TODO("Do not use")
+    }
 }
 
 @Serializable
@@ -124,6 +183,13 @@ data class FilterVisibility2(
         (state as? VisibilityModifier2<*>)?.c(visible = Visible2(filterGroup.filtersSatisfied(client)))?.let {
             client.update(it)
         }
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3,
+    ) {
+        TODO("Do not use")
     }
 }
 
@@ -142,6 +208,13 @@ data class MatchValid2(
             client.update(it)
         }
     }
+
+    override fun execute3(
+        state: State2,
+        client: Client3,
+    ) {
+        TODO("Do not use")
+    }
 }
 
 @Serializable
@@ -152,6 +225,13 @@ data class EmitSideEffect2(
     override fun execute(
         state: State2,
         client: Client2,
+    ) {
+        client.emitSideEffect(sideEffect.toPopulated(client))
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3,
     ) {
         client.emitSideEffect(sideEffect.toPopulated(client))
     }
@@ -170,6 +250,13 @@ data class EmitPopulatedSideEffect2(
             sideEffect.copy(metas = sideEffect.metas.map { if (it is DataMeta2) it.toPopulatedDataMeta2(client) else it })
         client.emitSideEffect(enrichedSideEffect)
     }
+
+    override fun execute3(
+        state: State2,
+        client: Client3,
+    ) {
+        TODO("Do not use")
+    }
 }
 
 @Serializable
@@ -185,6 +272,13 @@ data class ToggleVisibility2(
         (targetState as? VisibilityModifier2<*>)?.c(visible = Visible2(!targetState.visible.value))?.let {
             client.update(it)
         }
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3,
+    ) {
+        TODO("Do not use")
     }
 }
 
@@ -211,6 +305,13 @@ data class Select2(
                 action.run(state, client)
             }
         }
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3,
+    ) {
+        TODO("Do not use")
     }
 }
 
@@ -263,6 +364,48 @@ data class ToggleMachineSelect2(
                 }
             }
         }
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3,
+    ) {
+        (client.get(targetMetaId) as? ToggleMachineMeta2)?.let { store ->
+            if (store.selected.contains(selected)) {
+                store.selected.remove(selected)
+                client.navigationEngine.navigate(
+                    operation = StateOperation2.Swap2(
+                        swap = store.map[selected]!!.inactive,
+                        stateId = selected,
+                    )
+                )
+                store.stateListeners.forEach { id ->
+                    val s = client.get<State2>(id)
+                    (s as? ValidModifier2<*>)?.let {
+                        val update = it.c(valid = ValidModifier2.Valid2(false))
+                        client.update(update)
+                    }
+                }
+            } else if (store.selected.size < store.limit) {
+                store.selected.add(selected)
+                client.navigationEngine.navigate(
+                    operation = StateOperation2.Swap2(
+                        swap = store.map[selected]!!.active,
+                        stateId = selected,
+                    )
+                )
+                if (store.selected.size == store.limit) {
+                    store.stateListeners.forEach { id ->
+                        val s = client.get<State2>(id)
+                        (s as? ValidModifier2<*>)?.let {
+                            val update = it.c(valid = ValidModifier2.Valid2(true))
+                            client.update(update)
+                        }
+                    }
+                }
+            }
+        }
+        client.commit()
     }
 }
 
@@ -341,6 +484,13 @@ data class StateMachineSelect2(
             }
         }
     }
+
+    override fun execute3(
+        state: State2,
+        client: Client3,
+    ) {
+        TODO("Will still need to use in the interim")
+    }
 }
 
 @Serializable
@@ -411,6 +561,13 @@ data class ConfirmSideEffect2(
 
             else -> state
         }
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3,
+    ) {
+        TODO("We should priortise removing this as it's not very good")
     }
 
     @Serializable
@@ -498,6 +655,13 @@ data class UpdateZoneModel(
         data class Toggle(val property: String) : Operation2()
     }
 
+    override fun execute3(
+        state: State2,
+        client: Client3,
+    ) {
+        TODO("Need to upgrade this method to be better")
+    }
+
 }
 
 @Serializable
@@ -516,6 +680,13 @@ data class LiveAction2(
             action.run(state, client) // TODO the state will be incorrect because this is not a remote action
         }
     }
+
+    override fun execute3(
+        state: State2,
+        client: Client3,
+    ) {
+        TODO("Will be depreciated shortly")
+    }
 }
 
 @Serializable
@@ -530,6 +701,21 @@ data class ExecuteDeferred2(
         client.getDeferredActions(deferKey)?.let { actions ->
             actions.forEach { remoteAction ->
                 remoteAction.action.action.run(
+                    state = client.get(remoteAction.targetStateId),
+                    client = client,
+                )
+            }
+        }
+        client.clearDeferredActions(deferKey)
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3,
+    ) {
+        client.getDeferredActions(deferKey)?.let { actions ->
+            actions.forEach { remoteAction ->
+                remoteAction.action.action.run3(
                     state = client.get(remoteAction.targetStateId),
                     client = client,
                 )
@@ -555,6 +741,19 @@ data class ClearDeferred2(
         }
         client.clearDeferredActions(deferKey)
     }
+
+    override fun execute3(
+        state: State2,
+        client: Client3
+    ) {
+        client.getDeferredActions(deferKey)?.let { actions ->
+            actions.forEach { action ->
+                action.action.cachedState?.let { client.update(it) }
+            }
+        }
+        client.clearDeferredActions(deferKey)
+        client.commit()
+    }
 }
 
 @Serializable
@@ -567,6 +766,18 @@ data class DeferredAction2<T : Action2>(
     override fun execute(
         state: State2,
         client: Client2,
+    ) {
+        client.addDeferredAction(
+            RemoteAction2(
+                targetStateId = state.id,
+                action = this,
+            )
+        )
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3
     ) {
         client.addDeferredAction(
             RemoteAction2(
@@ -592,6 +803,16 @@ data class RemoteAction2<T : Action2>(
             client = client,
         )
     }
+
+    override fun execute3(
+        state: State2,
+        client: Client3
+    ) {
+        action.run3(
+            state = client.get(targetStateId),
+            client = client,
+        )
+    }
 }
 
 @Serializable
@@ -613,6 +834,13 @@ data class ToJsonAction2(
             println(client.get(targetMetaId))
         }
     }
+
+    override fun execute3(
+        state: State2,
+        client: Client3
+    ) {
+        TODO("Do not user this action")
+    }
 }
 
 @Serializable
@@ -625,5 +853,13 @@ data class ResetState2(
         client: Client2
     ) {
         client.update(client.get<State2>(targetStateId).reset())
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3
+    ) {
+        client.update(client.get<State2>(targetStateId).reset())
+        client.commit()
     }
 }
