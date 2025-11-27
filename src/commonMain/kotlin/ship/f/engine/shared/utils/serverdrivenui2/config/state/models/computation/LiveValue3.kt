@@ -24,5 +24,5 @@ sealed class LiveValue3 {
 
     @Serializable
     @SerialName("InstantNowLiveValue3")
-    data class InstantNowLiveValue3(val refreshSeconds: Int? = null): LiveValue3()
+    data class InstantNowLiveValue3(val refreshMillis: Int? = null): LiveValue3()
 }

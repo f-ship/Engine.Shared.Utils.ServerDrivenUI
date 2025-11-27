@@ -43,15 +43,15 @@ class ComputationEngine(val client: Client3) {
         val viewModel: ZoneViewModel3,
     )
 
-    data class JobWrapper(val stateId: StateId2, val refreshSeconds: Int)
+    data class JobWrapper(val stateId: StateId2, val refreshMillis: Int)
 
     data class Timer(val client: Client3) {
         val map = mutableMapOf<JobWrapper, Job>()
-        fun add(state: State2, refreshSeconds: Int) {
-            val jobWrapper = JobWrapper(state.id, refreshSeconds)
+        fun add(state: State2, refreshMillis: Int) {
+            val jobWrapper = JobWrapper(state.id, refreshMillis)
             if (map.containsKey(jobWrapper)) return
             client.update(state)
-            map[jobWrapper] = createTimer(refreshSeconds) {
+            map[jobWrapper] = createTimer(refreshMillis) {
                 sduiLog("timer $jobWrapper", tag = "timer")
                 val updatedState = client.get<State2>(state.id)
                 (updatedState as? ChildrenModifier2<*>)?.children?.forEach { child ->
@@ -63,10 +63,10 @@ class ComputationEngine(val client: Client3) {
             }
         }
 
-        fun createTimer(intervalSeconds: Int, func: () -> Boolean): Job {
+        fun createTimer(intervalMillis: Int, func: () -> Boolean): Job {
             val job = CoroutineScope(Dispatchers.Default).launch {
                 while (true) {
-                    delay(1000L * intervalSeconds)
+                    delay(intervalMillis.toLong())
                     if (!func()) {
                         cancel()
                     }
@@ -75,6 +75,10 @@ class ComputationEngine(val client: Client3) {
             return job
         }
     }
+
+    val start = Clock.System.now().epochSeconds.toInt()
+    val debugSpeed = 10
+    fun getNow(): Int = (Clock.System.now().epochSeconds.toInt() - start) * debugSpeed + Clock.System.now().epochSeconds.toInt()
 
     val timer = Timer(client)
 
@@ -220,8 +224,7 @@ class ComputationEngine(val client: Client3) {
                         else -> TODO()
                     }
 
-                    val value2 =
-                        Clock.System.now().epochSeconds.toInt() // TODO not converting to Int causing issues? Not doesn't seem to be the issue
+                    val value2 = getNow() // TODO not converting to Int causing issues? Not doesn't seem to be the issue
 
                     when (liveValue2.condition) {
                         is LiveValue2.Condition2.GreaterThan -> value1!! > value2
@@ -311,8 +314,7 @@ class ComputationEngine(val client: Client3) {
     }
 
     fun focus(parent: ChildrenModifier2<*>) {
-        val children = parent.filteredChildren ?: parent.children
-        children.forEach { child ->
+        parent.children.forEach { child ->
             child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let {
                 parent.focus?.let { focus ->
                     sduiLog("focus > parent focus: $focus", tag = "timer")
@@ -365,9 +367,9 @@ class ComputationEngine(val client: Client3) {
                 }
             }
             // TODO Could make it it's own type in future
-            is LiveValue3.InstantNowLiveValue3 -> IntValue(Clock.System.now().epochSeconds.toInt()).also {
-                if (state2 != null && liveValue.refreshSeconds != null) {
-                    timer.add(state2, liveValue.refreshSeconds)
+            is LiveValue3.InstantNowLiveValue3 -> IntValue(getNow()).also {
+                if (state2 != null && liveValue.refreshMillis != null) {
+                    timer.add(state2, liveValue.refreshMillis / debugSpeed)
                 }
             }
             is LiveValue3.StaticLiveValue3 -> liveValue.value

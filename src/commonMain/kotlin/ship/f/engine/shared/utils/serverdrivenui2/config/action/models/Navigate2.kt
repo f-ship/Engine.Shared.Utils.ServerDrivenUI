@@ -828,7 +828,6 @@ data class LiveAction2(
     ) {
         if (liveValue.isNotEmpty() && liveValue.map { client.computeConditionalLive(it) }.all { it }) {
             sduiLog(client.firedActionMap, tag = "wtf")
-//            client.addFired(action)
             action.run(state, client) // TODO the state will be incorrect because this is not a remote action
         }
     }
@@ -838,9 +837,10 @@ data class LiveAction2(
         state: State2,
         client: Client3,
     ) {
-        if (liveValue.isNotEmpty() && liveValue.map { client.computationEngine.computeConditionalLive(it) }
-                .all { it }) {
+        val all = liveValue.map { client.computationEngine.computeConditionalLive(it) }.all { it }
+        if (liveValue.isNotEmpty() && all) {
             action.run3(state, client) // TODO the state will be incorrect because this is not a remote action
+            sduiLog(all, tag = "liveAction")
         }
     }
 }
