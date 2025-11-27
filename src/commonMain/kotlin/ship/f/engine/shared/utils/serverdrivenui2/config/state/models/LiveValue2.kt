@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.Ref2.VmRef2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Draw2
 
 @Serializable
 @SerialName("LiveValue2")
@@ -152,5 +153,17 @@ sealed class LiveValue2 {
         @Serializable
         @SerialName("Mod")
         data object Mod : Condition2()
+
+        @Serializable
+        @SerialName("Any")
+        data object Any : Condition2()
+
+        @Serializable
+        @SerialName("None")
+        data object None : Condition2()
+
+        @Serializable
+        @SerialName("All")
+        data object All : Condition2()
     }
 }

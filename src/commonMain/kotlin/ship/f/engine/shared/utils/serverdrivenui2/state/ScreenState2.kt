@@ -12,6 +12,10 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateI
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalLiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.Companion.DefaultShapes2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.Window2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.LiveValue3
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.ConditionalValue
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Draw2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.IntValue
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.WeightModifier2.Weight2
@@ -43,8 +47,12 @@ data class ScreenState2(
     override val draws: List<Draw2> = listOf(),
     override val filteredChildren: List<State2>? = null,
     override val filter: List<ConditionalLiveValue2>? = null,
+    override val filter3: ConditionalValue? = null,
     override val sort: LiveValue2? = null,
+    override val sort3: LiveValue3? = null,
+    override val focus: IntValue? = null,
     override val jumpTo: List<ConditionalLiveValue2>? = null,
+    override val jumpTo3: ConditionalValue? = null,
 ) : State2(),
     ChildrenModifier2<ScreenState2>,
     ColorSchemeModifier2<ScreenState2>,
@@ -65,10 +73,15 @@ data class ScreenState2(
     override fun c(alignment: Alignment2) = copy(alignment = alignment)
     override fun c(path3: Path3) = copy(path3 = path3)
     override fun c(path: Path2) = copy(path = path)
-    override fun filteredChildren(filteredChildren: List<State2>?) = copy(filteredChildren = filteredChildren)
+    override fun modifiedChildren(modifiedChildren: List<State2>?) = copy(filteredChildren = modifiedChildren)
     override fun filter(filter: List<ConditionalLiveValue2>?) = copy(filter = filter)
+    override fun filter3(filter3: ConditionalValue?) = copy(filter3 = filter3)
     override fun c(sort: LiveValue2?) = copy(sort = sort)
+    override fun c(sort3: LiveValue3?) = copy(sort3 = sort3)
     override fun jumpTo(jumpTo: List<ConditionalLiveValue2>?) = copy(jumpTo = jumpTo)
+    override fun jumpTo3(jumpTo3: ConditionalValue?) = copy(jumpTo3 = jumpTo3)
+    override fun focus(focus: IntValue?) = copy(focus = focus)
+
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
     override fun c(

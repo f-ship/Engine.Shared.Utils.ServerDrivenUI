@@ -1,11 +1,14 @@
-package ship.f.engine.shared.utils.serverdrivenui2.config.state.models
+package ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.PaddingValues2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2
 
 @Serializable
 @SerialName("Draw2")
-sealed class Draw2 {
+sealed class Draw2 : Value {
     @Serializable
     @SerialName("Behind2")
     sealed class Behind2 : Draw2() {
@@ -54,7 +57,7 @@ sealed class Draw2 {
         val color: ColorScheme2.Color2,
         val fill: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
         val padding: PaddingValues2 = PaddingValues2(),
-        val shape: Shapes2.CornerBasedShape2 = Shapes2.DefaultShapes2.small,
+        val shape: Shapes2.CornerBasedShape2 = Shapes2.Companion.DefaultShapes2.small,
     ) : Draw2()
 
     @Serializable

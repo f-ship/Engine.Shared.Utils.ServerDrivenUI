@@ -125,15 +125,15 @@ open class Client3 {
             }
 
             distinct.forEach { state ->
-                sduiLog("checking commit state: ${state.path3}", tag = "noSpaceDebug")
+                sduiLog("checking commit state: ${state.path3}", tag = "timer")
                 // This is done to ensure parents that are already rendered can accept children on the main thread
                 if (reactiveStates[state.path3] == null) {
-                    sduiLog("init commit state: ${state.path3}", tag = "noSpaceDebug")
+                    sduiLog("init commit state: ${state.path3}", tag = "timer")
                     reactiveStates[state.path3] = mutableStateOf(state)
                 }
             }
             distinct.forEach { state ->
-                sduiLog("setting commit state: ${state.path3}", tag = "noSpaceDebug")
+                sduiLog("setting commit state: ${state.path3}", tag = "timer > setting") { state.id.name == "testZone"}
                 reactiveStates.defaultIfNull(state.path3, mutableStateOf(state)) { it.also { it.value = state } }
             }
         }

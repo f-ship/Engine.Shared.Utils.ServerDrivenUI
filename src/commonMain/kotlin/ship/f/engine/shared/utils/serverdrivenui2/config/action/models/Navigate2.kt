@@ -18,6 +18,8 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateI
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalLiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Path2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.LiveValue3
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.ListValue
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
 import ship.f.engine.shared.utils.serverdrivenui2.ext.createTime
@@ -672,6 +674,67 @@ data class ConfirmSideEffect2(
 }
 
 @Serializable
+@SerialName("UpdateZoneModel3")
+data class UpdateZoneModel3(
+    override val targetMetaId: MetaId2,
+    val liveValue: LiveValue3,
+    val operation: Operation2,
+) : Action2(), TargetableMetaModifier2 {
+    override fun execute(
+        state: State2,
+        client: Client2
+    ) {
+        //TODO("Do not use")
+    }
+
+    @Serializable
+    @SerialName("Operation2")
+    sealed class Operation2 {
+        @Serializable
+        @SerialName("Set")
+        data object Set : Operation2()
+
+        @Serializable
+        @SerialName("Add")
+        data object Add : Operation2()
+
+        @Serializable
+        @SerialName("Insert")
+        data class Insert(val property: String) : Operation2()
+
+        @Serializable
+        @SerialName("Toggle")
+        data class Toggle(val property: String) : Operation2()
+    }
+
+    // TODO("Need to upgrade this method to be better")
+    override fun execute3(
+        state: State2,
+        client: Client3,
+    ) {
+        val vm = client.get(targetMetaId) as? ZoneViewModel3 ?: error("ZoneViewModel3 not found for $targetMetaId")
+        when (operation) {
+            is Operation2.Toggle -> when (liveValue) {
+                is LiveValue3.StaticLiveValue3 -> {
+                    val listValue = vm.map[operation.property] as? ListValue<*>
+                        ?: error("ListValue not for ${operation.property} in $targetMetaId")
+                    if (listValue.value.contains(liveValue.value)) {
+                        vm.map[operation.property] = ListValue(listValue.value - liveValue.value)
+                    } else {
+                        vm.map[operation.property] = ListValue(listValue.value + liveValue.value)
+                    }
+                    sduiLog(vm.map[operation.property], tag = "UpdateZoneModel3 > execute")
+                }
+                else -> error("Not supported yet $liveValue in $operation")
+            }
+            else -> error("Not supported yet $liveValue in $operation")
+        }
+        sduiLog(vm, targetMetaId, tag = "UpdateZoneModel > execute")
+        client.update(vm)
+    }
+}
+
+@Serializable
 @SerialName("UpdateZoneModel")
 data class UpdateZoneModel(
     override val targetMetaId: MetaId2,
@@ -725,13 +788,32 @@ data class UpdateZoneModel(
         data class Toggle(val property: String) : Operation2()
     }
 
+    // TODO("Need to upgrade this method to be better")
     override fun execute3(
         state: State2,
         client: Client3,
     ) {
-        TODO("Need to upgrade this method to be better")
-    }
+        val vm = client.get(targetMetaId) as? ZoneViewModel2 ?: error("ZoneViewModel not found for $targetMetaId")
+        when (operation) {
+            is Operation2.Toggle -> when (liveValue) {
+                is LiveValue2.TextStaticValue2 -> {
+                    val multiProperty = vm.map[operation.property] as? MultiProperty
+                        ?: error("MultiProperty not for ${operation.property} in $targetMetaId")
+                    val toggleProperty = StringProperty(value = liveValue.value)
+                    if (multiProperty.value.contains(toggleProperty)) {
+                        vm.map[operation.property] = MultiProperty(multiProperty.value - toggleProperty)
+                    } else {
+                        vm.map[operation.property] = MultiProperty(multiProperty.value + toggleProperty)
+                    }
+                }
+                else -> Unit
+            }
 
+            else -> Unit
+        }
+        sduiLog(vm, targetMetaId, tag = "UpdateZoneModel > execute")
+        client.update(vm)
+    }
 }
 
 @Serializable
