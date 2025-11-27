@@ -295,12 +295,6 @@ class ComputationEngine(val client: Client3) {
         }
 
         val updatedChildren = values.filter { it.filter.value }.map { it.state }
-//        parent.children.forEach { child ->
-//            client.update(
-//                client.get<State2>(child.id).reset()
-//            )
-//        }
-
         val updatedParent = parent.modifiedChildren(modifiedChildren = updatedChildren)
         client.update(updatedParent)
         return updatedParent as ChildrenModifier2<*>
@@ -312,19 +306,18 @@ class ComputationEngine(val client: Client3) {
             child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let {
                 if (it.map["!index"] == IntValue(index)) return@forEachIndexed
                 it.map["!index"] = IntValue(index)
-//                client.update(child.reset())
             }
         }
     }
 
     fun focus(parent: ChildrenModifier2<*>) {
-        parent.children.forEach { child ->
+        val children = parent.filteredChildren ?: parent.children
+        children.forEach { child ->
             child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let {
                 parent.focus?.let { focus ->
                     sduiLog("focus > parent focus: $focus", tag = "timer")
                     if (it.map["!focus"] == focus) return@forEach
                     it.map["!focus"] = focus
-//                    client.update(child.reset())
                 }
             }
         }
