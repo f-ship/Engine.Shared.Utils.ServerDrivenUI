@@ -77,7 +77,7 @@ class ComputationEngine(val client: Client3) {
     }
 
     val start = Clock.System.now().epochSeconds.toInt()
-    val debugSpeed = 10
+    val debugSpeed = 1
     fun getNow(): Int = (Clock.System.now().epochSeconds.toInt() - start) * debugSpeed + Clock.System.now().epochSeconds.toInt()
 
     val timer = Timer(client)
@@ -230,7 +230,6 @@ class ComputationEngine(val client: Client3) {
                         is LiveValue2.Condition2.GreaterThan -> value1!! > value2
                         is LiveValue2.Condition2.LessThan -> value1!! < value2
                         else -> TODO()
-//                    }.also { sduiLog(value1, liveValue2.condition, value2, it, tag = " filtered index > Items > Timer > Condition > Calculation", header = "start", footer = "end") }
                     }
                 }
 
