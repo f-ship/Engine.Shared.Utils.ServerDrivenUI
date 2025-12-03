@@ -31,7 +31,7 @@ fun <T>sduiLog(list: Collection<T>, header: String = "start", footer: String = "
             }
             println("---------$footer $tag----------")
         } else {
-            println("$tag: ${list.firstOrNull()}")
+            println("$tag: ${list.firstOrNull() ?: "empty list"}")
         }
     }
 }

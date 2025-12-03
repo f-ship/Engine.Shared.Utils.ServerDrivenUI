@@ -76,6 +76,13 @@ data class NavigationConfig2(
         ) : StateOperation2()
 
         @Serializable
+        @SerialName("Flow2")
+        data class Flow2(
+            override val stateId: StateId2,
+            val flow: List<StateId2>,
+        ) : StateOperation2()
+
+        @Serializable
         @SerialName("PushDialog2")
         data class PushDialog2(
             override val stateId: StateId2,
