@@ -77,6 +77,12 @@ open class Client3 {
         return states[path] as? T ?: sduiLog(list = states.keys, tag = "get > states").let { null } ?: error("get with stateId > no state exists for path: $path")
     }
 
+    inline fun <reified T : State2> getOrNull(stateId2: StateId2, rootPath: Path3? = null): T? {
+        val paths = idPaths[stateId2] ?: return null
+        val path = paths.firstOrNull() ?: return null
+        return states[path] as? T ?: sduiLog(list = states.keys, tag = "get > states").let { null }
+    }
+
     inline fun <reified T : State2> getOrNull(path: Path3): T? = states[path] as? T
     inline fun <reified T : State2> get(path: Path3): T = getOrNull(path) ?: error("get > no state exists for path: $path")
     inline fun <reified T : State2> getReactiveOrNull(path: Path3): MutableState<T>? = reactiveStates[path] as? MutableState<T>
@@ -157,6 +163,7 @@ open class Client3 {
             setViewModels(it)
             setListeners(it)
             buildTrigger(it)
+            navigationEngine.checkNavigation(state.id)
         }
     }
 

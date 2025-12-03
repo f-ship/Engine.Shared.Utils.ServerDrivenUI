@@ -78,8 +78,16 @@ data class NavigationConfig2(
         @Serializable
         @SerialName("Flow2")
         data class Flow2(
-            override val stateId: StateId2,
+            override val stateId: StateId2 = StateId2(),
             val flow: List<StateId2>,
+            val push: Boolean = true,
+        ) : StateOperation2()
+
+        @Serializable
+        @SerialName("Next2")
+        data class Next2(
+            override val stateId: StateId2 = StateId2(),
+            val idempotentKey: String? = null,
         ) : StateOperation2()
 
         @Serializable

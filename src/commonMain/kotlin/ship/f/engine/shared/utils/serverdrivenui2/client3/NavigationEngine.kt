@@ -3,15 +3,24 @@ package ship.f.engine.shared.utils.serverdrivenui2.client3
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import ship.f.engine.shared.utils.serverdrivenui2.client.BackStackEntry2.Direction2.Backward2
+import ship.f.engine.shared.utils.serverdrivenui2.client3.BackStackEntry3.ScreenEntry
+import ship.f.engine.shared.utils.serverdrivenui2.client3.BackStackEntry3.ViewEntry
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2.InsertionOperation2.*
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2
+import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2.Push2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ChildrenModifier2
+import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
 class NavigationEngine(val client: Client3) {
     val backstack: MutableList<BackStackEntry3> = mutableListOf()
     val currentScreen: MutableState<BackStackEntry3?> = mutableStateOf(null)
+
+    val currentQueue: MutableList<StateId2> = mutableListOf()
+    val currentQueueKeys: MutableList<String> = mutableListOf() // TODO Replace with a way to make sure actions can be fired only once
+
+    val safeNavigationQueue: MutableList<StateId2> = mutableListOf()
 
     fun navigate(operation: NavigationConfig2.StateOperation2) {
         when(operation) {
@@ -33,12 +42,46 @@ class NavigationEngine(val client: Client3) {
                 client.update(updatedParent)
             }
 
-            is NavigationConfig2.StateOperation2.Push2 -> {
-                val state = client.get<State2>(operation.stateId)
-                val entry = BackStackEntry3.ScreenEntry(state)
-                backstack.add(entry)
-                client.commit() // Need to commit before setting it to the current screen
-                currentScreen.value = entry
+            is Push2 -> {
+                val state = client.getOrNull<State2>(operation.stateId)
+                state?.let {
+                    val entry = ScreenEntry(state)
+                    backstack.add(entry)
+                    client.commit() // Need to commit before setting it to the current screen
+                    currentScreen.value = entry
+                } ?: safeNavigationQueue.add(operation.stateId)
+            }
+
+            is NavigationConfig2.StateOperation2.Flow2 -> {
+                currentQueue.addAll(operation.flow)
+                if (operation.push) {
+                    val item = currentQueue.removeFirst()
+                    val state = client.getOrNull<State2>(item)
+                    state?.let {
+                        val entry = ScreenEntry(state)
+                        backstack.add(entry)
+                        client.commit() // Need to commit before setting it to the current screen
+                        currentScreen.value = entry
+                    } ?: safeNavigationQueue.add(item)
+                }
+            }
+
+            is NavigationConfig2.StateOperation2.Next2 -> {
+                operation.idempotentKey?.let { key ->
+                    if (currentQueueKeys.contains(key)) return else currentQueueKeys.add(key)
+                }
+                sduiLog(currentQueue, tag = "NavigationEngine")
+                val newItem = currentQueue.removeFirstOrNull() ?: return
+                sduiLog("Navigating to $newItem", tag = "NavigationEngine")
+                val state = client.getOrNull<State2>(newItem)
+                sduiLog(client.idPaths.keys, tag = "NavigationEngine")
+                sduiLog(state, tag = "NavigationEngine")
+                state?.let {
+                    val entry = ScreenEntry(state)
+                    backstack.add(entry)
+                    client.commit()
+                    currentScreen.value = entry
+                } ?: safeNavigationQueue.add(newItem)
             }
 
             is NavigationConfig2.StateOperation2.ReplaceChild2 -> {
@@ -57,9 +100,17 @@ class NavigationEngine(val client: Client3) {
                 val updatedState = client.buildPaths(operation.swap, renderingChain).also { client.setPaths(it) }
                 client.update(updatedState)
             }
+
             else -> Unit
         }
         client.commit()
+    }
+
+    fun checkNavigation(stateId: StateId2) {
+        if (safeNavigationQueue.contains(stateId)) {
+            safeNavigationQueue.remove(stateId)
+            navigate(Push2(stateId))
+        }
     }
 
     fun canPop() = backstack.isNotEmpty() && backstack.subList(0, backstack.lastIndex).any { it.canPopBack }
@@ -67,8 +118,8 @@ class NavigationEngine(val client: Client3) {
         backstack.removeLast()
         backstack.dropLastWhile { !it.canPopBack }
         when(val entry = backstack.last()) {
-            is BackStackEntry3.ScreenEntry -> currentScreen.value = entry.copy(direction2 = Backward2) // TODO wrap in an self destructing animation
-            is BackStackEntry3.ViewEntry -> navigate(
+            is ScreenEntry -> currentScreen.value = entry.copy(direction2 = Backward2) // TODO wrap in an self destructing animation
+            is ViewEntry -> navigate(
                 NavigationConfig2.StateOperation2.ReplaceChild2(
                     stateId = entry.stateId,
                     container = entry.containerId
@@ -80,7 +131,7 @@ class NavigationEngine(val client: Client3) {
     private fun insert(
         existing: List<State2>,
         addition: State2,
-        insertion: Id2.StateId2,
+        insertion: StateId2,
         offset: Int = 0,
     ) = existing
         .indexOfFirst { it.id == insertion }
