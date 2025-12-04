@@ -44,6 +44,7 @@ class NavigationEngine(val client: Client3) {
 
             is Push2 -> {
                 val state = client.getOrNull<State2>(operation.stateId)
+                sduiLog(client.idPaths.keys, tag = "NavigationEngine > Push2")
                 state?.let {
                     val entry = ScreenEntry(state)
                     backstack.add(entry)
@@ -57,6 +58,8 @@ class NavigationEngine(val client: Client3) {
                 if (operation.push) {
                     val item = currentQueue.removeFirst()
                     val state = client.getOrNull<State2>(item)
+                    sduiLog(client.idPaths.keys, tag = "NavigationEngine > Flow2")
+                    sduiLog(state, tag = "NavigationEngine > Flow2")
                     state?.let {
                         val entry = ScreenEntry(state)
                         backstack.add(entry)
@@ -107,7 +110,9 @@ class NavigationEngine(val client: Client3) {
     }
 
     fun checkNavigation(stateId: StateId2) {
+        sduiLog(safeNavigationQueue, stateId, tag = "NavigationEngine > checkNavigation")
         if (safeNavigationQueue.contains(stateId)) {
+            sduiLog(stateId, tag = "NavigationEngine > checkNavigation > Inside")
             safeNavigationQueue.remove(stateId)
             navigate(Push2(stateId))
         }
