@@ -101,7 +101,7 @@ data class StateMachineMeta2(
         }
     }
 
-    fun addPush(keys: List<String>, container: StateId2, stateId: StateId2, map: MutableMap<String, List<StateMachineOperation2>>, addToBackStack: Boolean = false): StateMachineOperation2 {
+    fun addPush(keys: List<String>, container: StateId2, stateId: StateId2, map: MutableMap<String, List<StateMachineOperation2>> = this.map, addToBackStack: Boolean = false): StateMachineOperation2 {
         val key = keys.first()
         return if (keys.size > 1) {
             StateMachineOperation2.NestedOperation2().also {
