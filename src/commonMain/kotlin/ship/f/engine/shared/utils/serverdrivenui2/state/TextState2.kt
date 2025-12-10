@@ -7,7 +7,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2.Unspecified
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.FontWeight2.Normal2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.FontWeight2.Regular2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
@@ -28,7 +28,7 @@ data class TextState2(
     override val size: Size2 = DefaultSize2,
     override val textStyle: TextStyle2 = BodyMedium2,
     override val color: Color2 = Unspecified,
-    override val fontWeight: FontWeight2 = Normal2,
+    override val fontWeight: FontWeight2 = Regular2,
     override val weight: Weight2? = null,
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
     override val metas: List<Meta2> = listOf(),

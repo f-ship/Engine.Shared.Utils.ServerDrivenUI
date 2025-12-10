@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.*
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.FontWeight2.ExtraBold2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.FontWeight2.BlackBold2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.Companion.DefaultShapes2
@@ -35,7 +35,7 @@ data class ButtonState2(
     override val shape: CornerBasedShape2 = DefaultShapes2.small,
     override val valid: Valid2 = Valid2(true),
     override val textStyle: TextStyle2 = TextStyle2.BodyMedium2,
-    override val fontWeight: FontWeight2 = ExtraBold2,
+    override val fontWeight: FontWeight2 = BlackBold2,
     override val weight: Weight2? = null,
     override val onClickTrigger: OnClickTrigger2 = OnClickTrigger2(),
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),

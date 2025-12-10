@@ -171,15 +171,31 @@ data class ColorScheme2(
         data object Transparent : Color2()
 
         @Serializable
+        @SerialName("AlphaColor2")
+        data class AlphaColor2(
+            val color: Color2,
+            val alpha: Float,
+        ) : Color2()
+
+        @Serializable
+        @SerialName("CustomColor2")
+        data class CustomColor2(
+            val color: Long,
+            val alpha: Float,
+        ) : Color2()
+
+
+
+        @Serializable
         @SerialName("Gradient")
         data class Gradient(
             val direction: GradientDirection = GradientDirection.Vertical,
             val colors: List<AlphaColor2>,
         ): Color2() {
+
             @Serializable
             @SerialName("GradientDirection")
             sealed class GradientDirection {
-
                 @Serializable
                 @SerialName("Horizontal")
                 data object Horizontal : GradientDirection()
@@ -187,13 +203,6 @@ data class ColorScheme2(
                 @SerialName("Vertical")
                 data object Vertical : GradientDirection()
             }
-
-            @Serializable
-            @SerialName("AlphaColor2")
-            data class AlphaColor2(
-                val color: Color2,
-                val alpha: Float,
-            ) : Color2()
         }
     }
     

@@ -65,4 +65,12 @@ sealed class TextStyle2 {
     @Serializable
     @SerialName("LabelSmall2")
     data object LabelSmall2 : TextStyle2()
+
+    @Serializable
+    @SerialName("Custom2")
+    data class Custom2(
+        val size: Int,
+        val lineHeight: Int,
+        val weight: FontWeight2,
+    ) : TextStyle2()
 }
