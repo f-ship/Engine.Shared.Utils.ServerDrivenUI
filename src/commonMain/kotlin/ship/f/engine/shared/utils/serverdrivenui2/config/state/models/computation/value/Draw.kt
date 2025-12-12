@@ -44,6 +44,13 @@ sealed class Draw2 : Value {
                 val bottom: Float? = null, // Defaults to size.height
             )
         }
+
+        @Serializable
+        @SerialName("BottomBorder2")
+        data class BottomBorder2(
+            val strokeWidth: Float = 1f,
+            val color: ColorScheme2.Color2,
+        ) : Behind2()
     }
 
     @Serializable
@@ -57,7 +64,7 @@ sealed class Draw2 : Value {
         val color: ColorScheme2.Color2,
         val fill: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
         val padding: PaddingValues2 = PaddingValues2(),
-        val shape: Shapes2.CornerBasedShape2 = Shapes2.Companion.DefaultShapes2.small,
+        val shape: Shapes2.CornerBasedShape2 = Shapes2.DefaultShapes2.small,
     ) : Draw2()
 
     @Serializable

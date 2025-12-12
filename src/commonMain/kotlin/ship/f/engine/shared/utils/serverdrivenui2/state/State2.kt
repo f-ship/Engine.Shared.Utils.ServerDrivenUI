@@ -63,4 +63,8 @@ sealed class State2 :
 //        get<Client2>().update(update)
         return update.also { client3.update(update) }
     }
+
+    inline fun <reified S : State2> S.updateCommit(block: S.() -> S): State2 {
+        return update(block).also { client3.commit() }
+    }
 }

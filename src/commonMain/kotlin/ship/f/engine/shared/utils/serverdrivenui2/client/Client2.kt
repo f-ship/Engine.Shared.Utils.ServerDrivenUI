@@ -781,6 +781,7 @@ abstract class Client2(open val projectName: String? = null) {
             is NavigationConfig2.StateOperation2.PushDialog2 -> TODO()
             is NavigationConfig2.StateOperation2.Flow2 -> TODO()
             is NavigationConfig2.StateOperation2.Next2 -> TODO()
+            is NavigationConfig2.StateOperation2.PushState2 -> TODO()
         }?.let {
             update(it, renderChain = it.path.path, insertIntoParent = true) // TODO pretty hacky to be honest
         }

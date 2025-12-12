@@ -26,6 +26,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.ext.createTime
 import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
 import ship.f.engine.shared.utils.serverdrivenui2.json.json2
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
+import ship.f.engine.shared.utils.serverdrivenui2.state.VariantState2
 
 @Serializable
 @SerialName("Navigate2")
@@ -692,7 +693,7 @@ data class UpdateZoneModel3(
     sealed class Operation2 {
         @Serializable
         @SerialName("Set")
-        data object Set : Operation2()
+        data class Set(val property: String) : Operation2()
 
         @Serializable
         @SerialName("Add")
@@ -727,10 +728,15 @@ data class UpdateZoneModel3(
                 }
                 else -> error("Not supported yet $liveValue in $operation")
             }
+            is Operation2.Set -> when (liveValue) {
+                is LiveValue3.StaticLiveValue3 -> vm.map[operation.property] = liveValue.value
+                else -> error("Not supported yet $liveValue in $operation")
+            }
             else -> error("Not supported yet $liveValue in $operation")
         }
         sduiLog(vm, targetMetaId, tag = "UpdateZoneModel > execute")
         client.update(vm)
+        client.commit()
     }
 }
 
@@ -842,6 +848,27 @@ data class LiveAction2(
             action.run3(state, client) // TODO the state will be incorrect because this is not a remote action
             sduiLog(all, tag = "liveAction")
         }
+    }
+}
+
+data class UpdateVariant(
+    override val targetStateId: StateId2,
+    val liveValue: LiveValue2,
+) : Action2(), TargetableStateModifier2 {
+    override fun execute(
+        state: State2,
+        client: Client2
+    ) {
+        TODO("Not compatible for client2")
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3
+    ) {
+        val targetState = client.get(targetStateId) as? VariantState2 ?: error("VariantState2 not found for $targetStateId")
+        client.update(targetState)
+        client.commit()
     }
 }
 
@@ -1015,7 +1042,90 @@ data class ResetState2(
         state: State2,
         client: Client3
     ) {
+        sduiLog("Resetting state $targetStateId", tag = "ResetState2")
         client.update(client.get<State2>(targetStateId).reset())
         client.commit()
+    }
+}
+
+@Serializable
+@SerialName("ResetChildrenState2")
+data class ResetChildrenState2(
+    override val targetStateId: StateId2,
+) : Action2(), TargetableStateModifier2 {
+    override fun execute(
+        state: State2,
+        client: Client2
+    ) {
+        TODO("Not supported in v0.2")
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3
+    ) {
+        sduiLog("Resetting children state $targetStateId", tag = "ResetState2")
+
+        (client.get<State2>(targetStateId) as? ChildrenModifier2<*>)?.children?.forEach {
+            sduiLog("Resetting Child ${id.name} state $targetStateId", tag = "ResetState2 > ForEach")
+            client.update(client.getReactive<State2>(it.path3).value.reset())
+        }
+        client.update(client.get<State2>(targetStateId).reset())
+        client.commit()
+    }
+}
+
+@Serializable
+@SerialName("ResetDescendantState2")
+data class ResetDescendantState2(
+    override val targetStateId: StateId2,
+) : Action2(), TargetableStateModifier2 {
+    override fun execute(
+        state: State2,
+        client: Client2
+    ) {
+        TODO("Not supported in v0.2")
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3
+    ) {
+        sduiLog("Resetting descendants state $targetStateId", tag = "ResetState2")
+
+        (client.get<State2>(targetStateId) as? ChildrenModifier2<*>)?.children?.forEach {
+            client.getReactiveOrNull<State2>(it.path3)?.value?.let { child ->
+                sduiLog("Resetting descendant ${id.name} state $targetStateId", tag = "ResetState2 > ForEach")
+                client.update(child.reset())
+                ResetDescendantState2(targetStateId = child.id).run3(child, client)
+            }
+        }
+        client.update(client.get<State2>(targetStateId).reset())
+        client.commit()
+    }
+}
+
+@Serializable
+@SerialName("ClearState2")
+data class ClearState2(
+    override val targetStateId: StateId2,
+) : Action2(), TargetableStateModifier2 {
+    override fun execute(
+        state: State2,
+        client: Client2
+    ) {
+        client.update(client.get<State2>(targetStateId).reset())
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3
+    ) {
+        sduiLog("Resetting state $targetStateId", tag = "ClearState2")
+        (client.get<State2>(targetStateId) as? TextModifier2<*>)?.text(text = "")?.let{
+            sduiLog("Resetting state $targetStateId", tag = "ClearState2 > TextModifier2")
+            client.update(it)
+            client.commit()
+        }
     }
 }

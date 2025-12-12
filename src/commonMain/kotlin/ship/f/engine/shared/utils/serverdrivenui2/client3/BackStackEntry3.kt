@@ -18,6 +18,7 @@ sealed class BackStackEntry3 {
         val containerId: Id2.StateId2,
         val stateId: Id2.StateId2,
         val remoteActions: List<RemoteAction2<Action2>> = emptyList(), // TODO will be used to update ZoneModels etc
+        val groupKey: String? = null,
         override val canPopBack: Boolean = true,
     ) : BackStackEntry3()
 

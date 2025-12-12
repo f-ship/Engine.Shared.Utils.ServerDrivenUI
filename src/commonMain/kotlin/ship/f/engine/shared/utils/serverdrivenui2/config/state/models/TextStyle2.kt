@@ -71,6 +71,6 @@ sealed class TextStyle2 {
     data class Custom2(
         val size: Int,
         val lineHeight: Int,
-        val weight: FontWeight2,
+        val fontWeight: FontWeight2,
     ) : TextStyle2()
 }

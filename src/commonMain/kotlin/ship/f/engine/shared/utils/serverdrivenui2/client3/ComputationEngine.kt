@@ -82,6 +82,7 @@ class ComputationEngine(val client: Client3) {
 
     val timer = Timer(client)
 
+    @Deprecated("This was copied from client2")
     inline fun <reified T : LiveValue2> computeConditionalBranchLive(liveValue2: LiveValue2.ConditionalBranchLiveValue2): T {
         return when (liveValue2.value1) {
             is LiveValue2.IntLiveValue2 -> when (liveValue2.value2) {
@@ -157,6 +158,7 @@ class ComputationEngine(val client: Client3) {
         }
     }
 
+    @Deprecated("This was copied from client2")
     fun computeConditionalLive(liveValue2: LiveValue2.ConditionalLiveValue2): Boolean {
         return when (liveValue2.value1) {
             is LiveValue2.TextLiveValue2 -> when (liveValue2.value2) {
@@ -240,6 +242,7 @@ class ComputationEngine(val client: Client3) {
         }
     }
 
+    @Deprecated("This was copied from client2")
     fun computeLiveText(liveValue: LiveValue2.TextLiveValue2) = when (liveValue.ref) {
         is LiveValue2.Ref2.StateRef2 -> {
             val paths = client.idPaths[liveValue.ref.id] ?: error("No paths found for id: ${liveValue.ref.id}")

@@ -6,8 +6,8 @@ import ship.f.engine.shared.utils.serverdrivenui2.client.BackStackEntry2.Directi
 import ship.f.engine.shared.utils.serverdrivenui2.client3.BackStackEntry3.ScreenEntry
 import ship.f.engine.shared.utils.serverdrivenui2.client3.BackStackEntry3.ViewEntry
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2
+import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2.InsertionOperation2.*
-import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2.Push2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ChildrenModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
@@ -24,7 +24,7 @@ class NavigationEngine(val client: Client3) {
 
     fun navigate(operation: NavigationConfig2.StateOperation2) {
         when(operation) {
-            is NavigationConfig2.StateOperation2.InsertionOperation2 -> {
+            is InsertionOperation2 -> {
                 val inside = client.get<State2>(operation.inside)
                 val parent = inside as? ChildrenModifier2<*>
                     ?: error("During insertion operation, parent was not of type ChildrenModifier<*> ${operation.inside}")
@@ -53,7 +53,7 @@ class NavigationEngine(val client: Client3) {
                 } ?: safeNavigationQueue.add(operation.stateId)
             }
 
-            is NavigationConfig2.StateOperation2.Flow2 -> {
+            is Flow2 -> {
                 currentQueue.addAll(operation.flow)
                 if (operation.push) {
                     val item = currentQueue.removeFirst()
@@ -69,7 +69,7 @@ class NavigationEngine(val client: Client3) {
                 }
             }
 
-            is NavigationConfig2.StateOperation2.Next2 -> {
+            is Next2 -> {
                 operation.idempotentKey?.let { key ->
                     if (currentQueueKeys.contains(key)) return else currentQueueKeys.add(key)
                 }
@@ -87,7 +87,7 @@ class NavigationEngine(val client: Client3) {
                 } ?: safeNavigationQueue.add(newItem)
             }
 
-            is NavigationConfig2.StateOperation2.ReplaceChild2 -> {
+            is ReplaceChild2 -> {
                 val inside = client.get<State2>(operation.container)
                 val parent = inside as? ChildrenModifier2<*>
                     ?: error("During insertion operation, parent was not of type ChildrenModifier<*> ${operation.container}")
@@ -97,11 +97,35 @@ class NavigationEngine(val client: Client3) {
                 client.update(updatedParent)
             }
 
-            is NavigationConfig2.StateOperation2.Swap2 -> {
+            is Swap2 -> {
                 val originalState = client.get<State2>(operation.swap.id)
                 val renderingChain = originalState.path3.toRenderChain().run { subList(0, lastIndex) }
                 val updatedState = client.buildPaths(operation.swap, renderingChain).also { client.setPaths(it) }
                 client.update(updatedState)
+            }
+
+            is PushState2 -> {
+                client.getOrNull<State2>(operation.stateId)
+                    ?: safeNavigationQueue.add(operation.stateId).let { return }
+                (client.get<State2>(operation.container) as? ChildrenModifier2<*>)
+                    ?: safeNavigationQueue.add(operation.stateId).let { return }
+
+                val entry = ViewEntry(
+                    containerId = operation.container,
+                    stateId = operation.stateId,
+                    remoteActions = listOf(),
+                    canPopBack = true,
+                    groupKey = operation.groupKey,
+                )
+
+                when(val last = backstack.lastOrNull()) {
+                    is ViewEntry -> if (last.groupKey == operation.groupKey) backstack.removeLast()
+                    else -> Unit
+                }
+
+                backstack.add(entry)
+                navigate(ReplaceChild2(operation.container, operation.stateId))
+                client.commit() // Need to commit before setting it to the current screen
             }
 
             else -> Unit
@@ -125,7 +149,7 @@ class NavigationEngine(val client: Client3) {
         when(val entry = backstack.last()) {
             is ScreenEntry -> currentScreen.value = entry.copy(direction2 = Backward2) // TODO wrap in an self destructing animation
             is ViewEntry -> navigate(
-                NavigationConfig2.StateOperation2.ReplaceChild2(
+                ReplaceChild2(
                     stateId = entry.stateId,
                     container = entry.containerId
                 )

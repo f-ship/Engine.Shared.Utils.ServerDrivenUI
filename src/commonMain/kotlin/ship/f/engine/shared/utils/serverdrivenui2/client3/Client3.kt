@@ -99,7 +99,7 @@ open class Client3 {
     }
 
     fun update(viewModel: Meta2) {
-        if (viewModels[viewModel.metaId] != null) sduiLog("Tried to set ${viewModel.metaId} multiple times, ensure metaIds are unique")
+        if (viewModels[viewModel.metaId] != null) sduiLog("Tried to Update ${viewModel.metaId} multiple times, ensure metaIds are unique")
         viewModels[viewModel.metaId] = viewModel
         propagate(viewModel)
     }
