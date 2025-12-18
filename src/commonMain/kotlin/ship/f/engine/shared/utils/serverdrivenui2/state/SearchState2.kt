@@ -42,6 +42,7 @@ data class SearchState2(
     override val path: Path2 = Path2(),
     override val draws: List<Draw2> = listOf(),
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
+    val focusedTextColor: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
     val textColor: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
     val borderColor: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
     val containerColor: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,

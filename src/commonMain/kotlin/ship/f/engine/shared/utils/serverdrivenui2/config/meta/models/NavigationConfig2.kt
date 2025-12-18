@@ -99,6 +99,12 @@ data class NavigationConfig2(
         ) : StateOperation2()
 
         @Serializable
+        @SerialName("Back2")
+        data class Back2(
+            override val stateId: StateId2 = StateId2(),
+        ) : StateOperation2()
+
+        @Serializable
         @SerialName("PushDialog2")
         data class PushDialog2(
             override val stateId: StateId2,

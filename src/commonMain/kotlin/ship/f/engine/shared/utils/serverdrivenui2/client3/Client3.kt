@@ -27,6 +27,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.Trigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.ext.defaultIfNull
 import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
+import ship.f.engine.shared.utils.serverdrivenui2.state.RefState2
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
 @Suppress("UNCHECKED_CAST")
@@ -44,7 +45,9 @@ open class Client3 {
 
     val resources: MutableMap<String, Resource> = mutableMapOf()
     fun addResources(items: Map<String, Resource>) = resources.putAll(items)
-    inline fun <reified T : Resource> getResource(id: String) = resources[id] as? T ?: error("Resource with id: $id not found")
+    inline fun <reified T : Resource> getResource(id: String) =
+        resources[id] as? T ?: error("Resource with id: $id not found")
+
     val vectors: MutableMap<String, ImageVector> = mutableMapOf()
     fun addVectors(items: Map<String, ImageVector>) = vectors.putAll(items)
     fun getImageVector(id: String) = vectors[id] ?: error("ImageVector with id: $id not found")
@@ -53,19 +56,25 @@ open class Client3 {
     val computationEngine = ComputationEngine(this)
     val navigationEngine = NavigationEngine(this)
     fun hasFired(action: Action2) = firedActions[action.id] != null
-    fun addFired(action: Action2) { firedActions[action.id] = action }
+    fun addFired(action: Action2) {
+        firedActions[action.id] = action
+    }
+
     fun addDeferredAction(remoteAction: RemoteAction2<DeferredAction2<out Action2>>) {
         deferredActions.defaultIfNull(remoteAction.action.deferKey, listOf()) { it + remoteAction }
     }
+
     fun addRemoteAction(metaId: MetaId2, stateId: StateId2, action: Action2) {
         listeners.defaultIfNull(metaId, mutableListOf()) { it + RemoteAction2(action, stateId) }
     }
+
     fun clearDeferredActions(key: String?) = deferredActions.remove(key)
     fun getDeferredActions(key: String?) = deferredActions[key]
 
     var emitSideEffect: (PopulatedSideEffectMeta2) -> Unit = { }
     val commitScope = CoroutineScope(Dispatchers.Main)
     val queueMutex = Mutex()
+
     /**
      * By default, if a rootPath is not provided, the first path in the list will be returned.
      * If the rootPath is provided, the state that most local to the rootPath will be returned.
@@ -74,7 +83,8 @@ open class Client3 {
     inline fun <reified T : State2> get(stateId2: StateId2, rootPath: Path3? = null): T {
         val paths = idPaths[stateId2] ?: error("Paths has not been found for stateId: $stateId2")
         val path = paths.firstOrNull() ?: error("paths are empty for stateId: $stateId2")
-        return states[path] as? T ?: sduiLog(list = states.keys, tag = "get > states").let { null } ?: error("get with stateId > no state exists for path: $path")
+        return states[path] as? T ?: sduiLog(list = states.keys, tag = "get > states").let { null }
+        ?: error("get with stateId > no state exists for path: $path")
     }
 
     inline fun <reified T : State2> getOrNull(stateId2: StateId2, rootPath: Path3? = null): T? {
@@ -84,11 +94,17 @@ open class Client3 {
     }
 
     inline fun <reified T : State2> getOrNull(path: Path3): T? = states[path] as? T
-    inline fun <reified T : State2> get(path: Path3): T = getOrNull(path) ?: error("get > no state exists for path: $path")
-    inline fun <reified T : State2> getReactiveOrNull(path: Path3): MutableState<T>? = reactiveStates[path] as? MutableState<T>
-    inline fun <reified T : State2> getReactive(path: Path3): MutableState<T> = getReactiveOrNull(path) ?: error("no reactive state exists for path: $path")
+    inline fun <reified T : State2> get(path: Path3): T =
+        getOrNull(path) ?: error("get > no state exists for path: $path")
 
-    inline fun <reified T : Meta2> get(metaId2: MetaId2): T = viewModels[metaId2] as? T ?: error("no meta exists for metaId: $metaId2")
+    inline fun <reified T : State2> getReactiveOrNull(path: Path3): MutableState<T>? =
+        reactiveStates[path] as? MutableState<T>
+
+    inline fun <reified T : State2> getReactive(path: Path3): MutableState<T> =
+        getReactiveOrNull(path) ?: error("no reactive state exists for path: $path")
+
+    inline fun <reified T : Meta2> get(metaId2: MetaId2): T =
+        viewModels[metaId2] as? T ?: error("no meta exists for metaId: $metaId2")
 
     fun update(state: State2) {
         states.defaultIfNull(state.path3, state) { state }
@@ -104,7 +120,7 @@ open class Client3 {
         propagate(viewModel)
     }
 
-    fun propagate(state: State2){
+    fun propagate(state: State2) {
         listeners[state.id]?.forEach { listener ->
             listener.action.run3(
                 state = get(listener.targetStateId),
@@ -135,7 +151,11 @@ open class Client3 {
                 sduiLog(navigationEngine.safeNavigationQueue, tag = "NavigationEngine > PreReactiveStates")
                 if (reactiveStates[state.path3] == null) {
                     reactiveStates[state.path3] = mutableStateOf(state)
-                    sduiLog(state, state.id, tag = "NavigationEngine > ReactiveStates") { state.id.name == "LinkedinPreVerification" }
+                    sduiLog(
+                        state,
+                        state.id,
+                        tag = "NavigationEngine > ReactiveStates"
+                    ) { state.id.name == "LinkedinPreVerification" }
                     navigationEngine.checkNavigation(state.id)
                 }
             }
@@ -166,10 +186,11 @@ open class Client3 {
         }
     }
 
-    private fun buildTrigger(state: State2){
+    private fun buildTrigger(state: State2) {
         (state as? OnBuildCompleteModifier2)?.onBuildCompleteTrigger2?.actions?.forEach {
             it.run3(state = state, client = this)
         }
+        (state as? ChildrenModifier2<State2>)?.children?.forEach { buildTrigger(it) }
     }
 
     private fun resetPaths(state: State2): State2 {
@@ -188,7 +209,7 @@ open class Client3 {
      */
     fun buildPaths(state: State2, renderChain: List<StateId2> = listOf()): State2 {
         var updatedRenderChain = renderChain
-        val stateWithPath =  with(state) {
+        val stateWithPath = with(state) {
             if (id.isAutoGenerated) {
                 c(path3 = Anon)
             } else if (id.isGlobal) {
@@ -211,13 +232,17 @@ open class Client3 {
      * Global -> Ensure that global paths are unique by only setting the last state
      */
     fun setPaths(state: State2) {
-        when(state.path3) {
+        when (state.path3) {
             is Init -> error("This shouldn't have happened, trying to setPath on an $state which is Init")
             is Anon -> Unit
             is Local -> idPaths.defaultIfNull(state.id, listOf()) { it + state.path3 }
-            is Global -> idPaths.defaultIfNull(state.id, listOf()) { listOf(state.path3).also {
-                sduiLog("Tried to set ${state.path3} multiple times, consider using StateReference2 with autogenerated ID ")
-            }}
+            is Global -> if (state !is RefState2) {
+                idPaths.defaultIfNull(state.id, listOf()) {
+                    listOf(state.path3).also {
+                        sduiLog("Tried to set ${state.path3} multiple times, consider using StateReference2 with autogenerated ID ")
+                    }
+                }
+            }
         }
 
         (state as? ChildrenModifier2<State2>)?.run {
@@ -240,7 +265,7 @@ open class Client3 {
     // TODO consider using path instead of state to make functionality more explicit for system calls
     private fun setListeners(state: State2) {
         val triggers = mutableListOf<Trigger2>()
-        when(state){
+        when (state) {
             is OnClickModifier2 -> triggers.add(state.onClickTrigger)
             is OnFieldUpdateModifier2 -> triggers.add(state.onFieldUpdateTrigger)
             is OnMetaUpdateModifier2 -> triggers.add(state.onMetaUpdateTrigger)
@@ -252,14 +277,24 @@ open class Client3 {
         val publisherStateActions = triggers.flatMap { it.actions }.filterIsInstance<StatePublisherActionModifier2>()
         publisherStateActions.forEach { action ->
             action.publishers.forEach { publisher ->
-                listeners.defaultIfNull(publisher, listOf()) { it + RemoteAction2(action = action as Action2, targetStateId = state.id) }
+                listeners.defaultIfNull(publisher, listOf()) {
+                    it + RemoteAction2(
+                        action = action as Action2,
+                        targetStateId = state.id
+                    )
+                }
             }
         }
 
         val publisherMetaActions = triggers.flatMap { it.actions }.filterIsInstance<MetaPublisherActionModifier2>()
         publisherMetaActions.forEach { action ->
             action.publishers.forEach { publisher ->
-                listeners.defaultIfNull(publisher, listOf()) { it + RemoteAction2(action = action as Action2, targetStateId = state.id) }
+                listeners.defaultIfNull(publisher, listOf()) {
+                    it + RemoteAction2(
+                        action = action as Action2,
+                        targetStateId = state.id
+                    )
+                }
             }
         }
 
@@ -271,14 +306,19 @@ open class Client3 {
                     if (filter.value2 is LiveValue2.MultiLiveValue2) vmRefs.add(filter.value2.ref)
                 }
                 vmRefs.distinct().forEach { vmRef ->
-                    listeners.defaultIfNull(vmRef.vm, listOf()) { it + RemoteAction2(action = ResetState2(state.id), targetStateId = state.id) }
+                    listeners.defaultIfNull(vmRef.vm, listOf()) {
+                        it + RemoteAction2(
+                            action = ResetState2(state.id),
+                            targetStateId = state.id
+                        )
+                    }
                 }
             }
         }
     }
 
     private fun setStates(state: State2) {
-        when(state.path3) {
+        when (state.path3) {
             is Init -> error("Should not be calling this on a state that has not been initialised yet")
             is Anon -> Unit // No need to set here
             is Local, is Global -> update(state) // We are not committing yet to avoid screen jank

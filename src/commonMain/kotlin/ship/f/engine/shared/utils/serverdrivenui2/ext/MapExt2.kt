@@ -6,3 +6,7 @@ fun <K, V> MutableMap<K, V>.defaultIfNull(key: K, value: V, execute: MutableMap<
     }
     this[key] = execute(this[key]!!)
 }
+
+fun <K, V> MutableMap<K, V>.ifNull(key: K, execute: MutableMap<K, V>.() -> V) {
+    if (this[key] == null) this[key] = execute(this)
+}
