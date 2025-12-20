@@ -4,18 +4,21 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.*
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Alignment2.HorizontalAlignment2.CenterHorizontally2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Arrangement2.VerticalArrangement2.Top2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalLiveValue2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Path2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.LiveValue3
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.ConditionalValue
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Draw2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.IntValue
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.AlignmentModifier2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ArrangementModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ChildrenModifier2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.PaddingModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.WeightModifier2.Weight2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnBuildCompleteTrigger2
@@ -30,6 +33,8 @@ data class VariantState2(
     override val children: List<State2> = emptyList(),
     override val weight: Weight2? = null,
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
+    override val alignment: Alignment2 = CenterHorizontally2,
+    override val arrangement: Arrangement2 = Top2,
     override val metas: List<Meta2> = listOf(),
     override val counter: Int = 0,
     override val draws: List<Draw2> = listOf(),
@@ -46,13 +51,19 @@ data class VariantState2(
     override val jumpTo3: ConditionalValue? = null,
     val variant: LiveValue3,
     val defaultVariant: LiveValue3,
+    override val padding: PaddingValues2 = PaddingValues2(),
 ) : State2(),
-    ChildrenModifier2<VariantState2> {
+    ChildrenModifier2<VariantState2>,
+    AlignmentModifier2<VariantState2>,
+    ArrangementModifier2<VariantState2>,
+    PaddingModifier2<VariantState2> {
     override fun cM(metas: List<Meta2>) = copy(metas = metas)
     override fun c(id: StateId2) = copy(id = id)
     override fun c(visible: Visible2) = copy(visible = visible)
     override fun c(size: Size2) = copy(size = size)
     override fun c(children: List<State2>) = copy(children = children)
+    override fun c(alignment: Alignment2) = copy(alignment = alignment)
+    override fun c(arrangement: Arrangement2) = copy(arrangement = arrangement)
     override fun modifiedChildren(modifiedChildren: List<State2>?) = copy(filteredChildren = modifiedChildren)
     override fun filter(filter: List<ConditionalLiveValue2>?) = copy(filter = filter)
     override fun filter3(filter3: ConditionalValue?) = copy(filter3 = filter3)
@@ -66,4 +77,5 @@ data class VariantState2(
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun c(path3: Path3) = copy(path3 = path3)
     override fun c(path: Path2) = copy(path = path)
+    override fun c(padding: PaddingValues2) = copy(padding = padding)
 }
