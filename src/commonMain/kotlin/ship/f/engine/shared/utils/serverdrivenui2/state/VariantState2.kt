@@ -1,5 +1,7 @@
 package ship.f.engine.shared.utils.serverdrivenui2.state
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
@@ -19,6 +21,8 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.WeightM
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnBuildCompleteTrigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnInitialRenderTrigger2
 
+@Serializable
+@SerialName("VariantState2")
 data class VariantState2(
     override val id: StateId2 = autoStateId2(),
     override val visible: Visible2 = Visible2(true),

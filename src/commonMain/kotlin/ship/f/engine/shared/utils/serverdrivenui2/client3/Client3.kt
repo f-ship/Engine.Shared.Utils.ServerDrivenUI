@@ -107,11 +107,13 @@ open class Client3 {
         viewModels[metaId2] as? T ?: error("no meta exists for metaId: $metaId2")
 
     fun update(state: State2) {
-        states.defaultIfNull(state.path3, state) { state }
-        commitScope.launch {
-            queueMutex.withLock { stateQueue.add(state) }
+        if (state !is RefState2) {
+            states.defaultIfNull(state.path3, state) { state }
+            commitScope.launch {
+                queueMutex.withLock { stateQueue.add(state) }
+            }
+            propagate(state)
         }
-        propagate(state)
     }
 
     fun update(viewModel: Meta2) {

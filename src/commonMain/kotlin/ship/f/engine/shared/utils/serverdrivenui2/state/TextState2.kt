@@ -39,6 +39,7 @@ data class TextState2(
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     val textAlign: TextAlign2 = TextAlign2.Start2,
     val underline: Boolean = false,
+    val limit: Int? = null,
     override val text: String,
     override val liveText: LiveValue2.TextLiveValue2? = null,
 ) : State2(),
