@@ -4,13 +4,16 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Draw2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.PaddingValues2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Path2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.LiveValue3
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.LiveValue3.StaticLiveValue3
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.BooleanValue
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Draw2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.PaddingModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ValidModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ValidModifier2.Valid2
@@ -31,6 +34,7 @@ data class SwitchState2(
     override val size: Size2 = DefaultSize2,
     override val valid: Valid2 = Valid2(true),
     override val toggle: Toggle2 = Toggle2(false),
+    override val liveToggle: LiveValue3 = StaticLiveValue3(value = BooleanValue(false)),
     override val modified: Boolean = false,
     override val initialToggle: Boolean? = false,
     override val weight: Weight2? = null,

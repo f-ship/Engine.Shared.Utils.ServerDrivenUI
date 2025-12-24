@@ -8,6 +8,8 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.LiveValue3
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.BooleanValue
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Draw2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.PaddingModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ShapeModifier2
@@ -44,6 +46,7 @@ data class CheckboxState2(
     override val shape: Shapes2.CornerBasedShape2 = Shapes2.DefaultShapes2.none,
     val uncheckedBorderColor: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
     val uncheckedBoxColor: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
+    override val liveToggle: LiveValue3 = LiveValue3.StaticLiveValue3(BooleanValue(false)),
 ) : State2(),
     PaddingModifier2<CheckboxState2>,
     ValidModifier2<CheckboxState2>,

@@ -5,6 +5,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import ship.f.engine.shared.utils.serverdrivenui2.client.Client2
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3
+import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3.Companion.client3
+import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2
@@ -718,6 +720,7 @@ data class UpdateZoneModel3(
                 is LiveValue3.StaticLiveValue3 -> {
                     val listValue = vm.map[operation.property] as? ListValue<*>
                         ?: error("ListValue not for ${operation.property} in $targetMetaId")
+                    sduiLog(listValue.value, operation.property, liveValue, tag = "updateZoneModel > Toggle")
                     if (listValue.value.contains(liveValue.value)) {
                         vm.map[operation.property] = ListValue(listValue.value - liveValue.value)
                     } else {
@@ -1069,7 +1072,6 @@ data class ResetChildrenState2(
             client.update(client.getReactive<State2>(it.path3).value.reset())
         }
         client.update(client.get<State2>(targetStateId).reset())
-        client.commit()
     }
 }
 
@@ -1089,14 +1091,37 @@ data class ResetDescendantState2(
         state: State2,
         client: Client3
     ) {
-        sduiLog("ResetDescendantState2 $targetStateId", tag = "resetDescendantState")
+//        sduiLog("ResetDescendantState2 $targetStateId", tag = "resetDescendantState")
         (client.get<State2>(targetStateId) as? ChildrenModifier2<*>)?.children?.forEach {
+//            sduiLog("ResetDescendantState2 ${it.id}", tag = "resetDescendantState > forEach")
             client.getReactiveOrNull<State2>(it.path3)?.value?.let { child ->
                 client.update(child.reset())
                 ResetDescendantState2(targetStateId = child.id).run3(child, client)
             }
         }
         client.update(client.get<State2>(targetStateId).reset())
+    }
+}
+
+@Serializable
+@SerialName("CommitState2")
+data class CommitState2(
+    val stateId: StateId2 = StateId2()
+) : Action2() {
+    override fun execute(
+        state: State2,
+        client: Client2
+    ) {
+        TODO("Not supported in v0.2")
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3
+    ) {
+        sduiLog(client3.reactiveStates.keys.find {
+            (it as? Path3.Local)?.path?.first()?.name == "EventDetail" && it.path.size == 1
+        }, tag = "CommitState2")
         client.commit()
     }
 }

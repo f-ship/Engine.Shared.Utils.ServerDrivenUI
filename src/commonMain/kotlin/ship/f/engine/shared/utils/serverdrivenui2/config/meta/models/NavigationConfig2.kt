@@ -125,6 +125,14 @@ data class NavigationConfig2(
             val container: StateId2,
             override val stateId: StateId2,
             val addToBackStack: Boolean = false,
+            val clearState: Boolean = true,
+        ) : StateOperation2()
+
+        @Serializable
+        @SerialName("ReplaceChildSave2")
+        data class ReplaceChildSave2(
+            val container: StateId2,
+            override val stateId: StateId2,
         ) : StateOperation2()
 
         @Serializable

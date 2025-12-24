@@ -90,7 +90,7 @@ open class Client3 {
     inline fun <reified T : State2> getOrNull(stateId2: StateId2, rootPath: Path3? = null): T? {
         val paths = idPaths[stateId2] ?: return null
         val path = paths.firstOrNull() ?: return null
-        return states[path] as? T ?: sduiLog(list = states.keys, tag = "get > states").let { null }
+        return states[path] as? T
     }
 
     inline fun <reified T : State2> getOrNull(path: Path3): T? = states[path] as? T
@@ -164,10 +164,11 @@ open class Client3 {
     fun initState(
         state: State2,
         renderChain: List<StateId2> = listOf(),
+        clearState: Boolean = true,
     ): State2 {
         return if (state.path3 !is Init && renderChain.isEmpty()) state
         else if (renderChain.isNotEmpty()) {
-            resetPaths(state).run {
+            resetPaths(state, clearState).run {
                 buildPaths(this, renderChain).also {
                     setPaths(it)
                     setStates(it)
@@ -189,13 +190,18 @@ open class Client3 {
         (state as? ChildrenModifier2<State2>)?.children?.forEach { buildTrigger(it) }
     }
 
-    private fun resetPaths(state: State2): State2 {
+    private fun resetPaths(state: State2, clearState: Boolean): State2 {
+        if (!clearState) return state
         val paths = idPaths[state.id] ?: listOf()
         idPaths[state.id] = paths.filterNot { it == state.path3 }
         states.remove(state.path3)
         reactiveStates.remove(state.path3)
 
-        (state as? ChildrenModifier2<State2>)?.run { children.forEach { child -> resetPaths(child) } }
+        (state as? ChildrenModifier2<State2>)?.run {
+            children.forEach { child ->
+                resetPaths(child, clearState)
+            }
+        }
         return state.c(path3 = Init)
     }
 

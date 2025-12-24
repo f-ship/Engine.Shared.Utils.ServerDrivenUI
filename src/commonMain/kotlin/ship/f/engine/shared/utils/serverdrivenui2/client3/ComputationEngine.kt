@@ -280,7 +280,7 @@ class ComputationEngine(val client: Client3) {
         return updatedParent as ChildrenModifier2<*>
     }
 
-    fun filter(value: ConditionalValue, parent: ChildrenModifier2<*>): ChildrenModifier2<*> {
+    fun filter(value: SingleConditionalValue, parent: ChildrenModifier2<*>): ChildrenModifier2<*> {
         val zoneWrappers = parent.children.mapNotNull { child ->
             child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let { zvm -> ZoneWrapper(zvm, child) }
         }
@@ -288,6 +288,25 @@ class ComputationEngine(val client: Client3) {
         val values = zoneWrappers.map { zW ->
             val value = computeConditionalValue(value, zW.viewModel, parent as? State2)
             if (value !is BooleanValue) error("Expected boolean value but got $value")
+            FilterWrapper(value, zW.state)
+        }
+
+        val updatedChildren = values.filter { it.filter.value }.map { it.state }
+        val updatedParent = parent.modifiedChildren(modifiedChildren = updatedChildren)
+        client.update(updatedParent)
+        return updatedParent as ChildrenModifier2<*>
+    }
+
+    fun filterAll(allConditionValue: AllConditionalValue, parent: ChildrenModifier2<*>): ChildrenModifier2<*> {
+        val zoneWrappers = parent.children.mapNotNull { child ->
+            child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let { zvm -> ZoneWrapper(zvm, child) }
+        }
+
+        val values = zoneWrappers.map { zW ->
+            val bools = allConditionValue.values.map { single -> computeConditionalValue(single, zW.viewModel, parent as? State2) }
+            val onlyBools = bools.filterIsInstance<BooleanValue>()
+            if (bools.size != onlyBools.size) error("Expected only boolean values but got $bools")
+            val value = BooleanValue(onlyBools.all { it.value })
             FilterWrapper(value, zW.state)
         }
 
@@ -319,7 +338,7 @@ class ComputationEngine(val client: Client3) {
         }
     }
 
-    fun jumpTo(liveValue: ConditionalValue, parent: ChildrenModifier2<*>): ChildrenModifier2<*> {
+    fun jumpTo(liveValue: SingleConditionalValue, parent: ChildrenModifier2<*>): ChildrenModifier2<*> {
         val zoneWrappers = parent.children.mapNotNull { child ->
             child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let { zvm -> ZoneWrapper(zvm, child) }
         }
@@ -371,12 +390,12 @@ class ComputationEngine(val client: Client3) {
 
     fun reduceValue(value: Value, vm: ZoneViewModel3? = null, state2: State2? = null): Value {
         return when (value) {
-            is ConditionalValue -> computeConditionalValue(value, vm, state2)
+            is SingleConditionalValue -> computeConditionalValue(value, vm, state2)
             else -> value
         }
     }
 
-    fun computeConditionalValue(value: ConditionalValue, vm: ZoneViewModel3? = null, state2: State2? = null): Value {
+    fun computeConditionalValue(value: SingleConditionalValue, vm: ZoneViewModel3? = null, state2: State2? = null): Value {
         val value1 = getValue(value.value1, vm, state2).run { reduceValue(this, vm, state2) }
         val value2 = getValue(value.value2, vm, state2).run { reduceValue(this, vm, state2) }
 
@@ -438,11 +457,11 @@ class ComputationEngine(val client: Client3) {
         }
 
         return when(value) {
-            is ConditionalValue -> computeConditionalValue(value, vm, state2)
+            is SingleConditionalValue -> computeConditionalValue(value, vm, state2)
             else -> value
         }
     }
 
-    fun ConditionalValue.notCurrentlySupported(): Nothing =
+    fun SingleConditionalValue.notCurrentlySupported(): Nothing =
         error("Not currently supported > $value1 $condition $value2")
 }
