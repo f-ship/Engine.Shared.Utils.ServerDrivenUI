@@ -42,14 +42,11 @@ inline fun <reified T : State2> State2.find(id: String): T {
     var hasNext = iterator.hasNext()
     while (hasNext) {
         val item = iterator.next()
-        sduiLog( item.id.name, tag = "find > while")
         if (item.id.name == id) return item as T
         else if (item is ChildrenModifier2<*>) item.children.forEach {
-            sduiLog( it.id.name, tag = "find > while > children.forEach")
             iterator.add(it)
             iterator.previous()
         }
-        sduiLog( item.id.name, iterator.hasNext(), tag = "find > while > hasNext")
     }
     error("Did not find state in find for $id")
 }

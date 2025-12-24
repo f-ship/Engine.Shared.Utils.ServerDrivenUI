@@ -150,14 +150,8 @@ open class Client3 {
 
             distinct.forEach { state ->
                 // This is done to ensure parents that are already rendered can accept children on the main thread
-                sduiLog(navigationEngine.safeNavigationQueue, tag = "NavigationEngine > PreReactiveStates")
                 if (reactiveStates[state.path3] == null) {
                     reactiveStates[state.path3] = mutableStateOf(state)
-                    sduiLog(
-                        state,
-                        state.id,
-                        tag = "NavigationEngine > ReactiveStates"
-                    ) { state.id.name == "LinkedinPreVerification" }
                     navigationEngine.checkNavigation(state.id)
                 }
             }

@@ -44,7 +44,6 @@ class NavigationEngine(val client: Client3) {
 
             is Push2 -> {
                 val state = client.getOrNull<State2>(operation.stateId)
-                sduiLog(client.idPaths.keys, tag = "NavigationEngine > Push2")
                 state?.let {
                     val entry = ScreenEntry(state)
                     backstack.add(entry)
@@ -58,8 +57,6 @@ class NavigationEngine(val client: Client3) {
                 if (operation.push) {
                     val item = currentQueue.removeFirst()
                     val state = client.getOrNull<State2>(item)
-                    sduiLog(client.idPaths.keys, tag = "NavigationEngine > Flow2")
-                    sduiLog(state, tag = "NavigationEngine > Flow2")
                     state?.let {
                         val entry = ScreenEntry(state)
                         backstack.add(entry)
@@ -73,12 +70,8 @@ class NavigationEngine(val client: Client3) {
                 operation.idempotentKey?.let { key ->
                     if (currentQueueKeys.contains(key)) return else currentQueueKeys.add(key)
                 }
-                sduiLog(currentQueue, tag = "NavigationEngine")
                 val newItem = currentQueue.removeFirstOrNull() ?: return
-                sduiLog("Navigating to $newItem", tag = "NavigationEngine")
                 val state = client.getOrNull<State2>(newItem)
-                sduiLog(client.idPaths.keys, tag = "NavigationEngine")
-                sduiLog(state, tag = "NavigationEngine")
                 state?.let {
                     val entry = ScreenEntry(state)
                     backstack.add(entry)
@@ -88,6 +81,7 @@ class NavigationEngine(val client: Client3) {
             }
 
             is ReplaceChild2 -> {
+                sduiLog("Replacing child ${operation.stateId} inside ${operation.container}", tag = "NavigationEngine > navigate > ReplaceChild2")
                 val inside = client.get<State2>(operation.container)
                 val parent = inside as? ChildrenModifier2<*>
                     ?: error("During insertion operation, parent was not of type ChildrenModifier<*> ${operation.container}")
@@ -134,9 +128,7 @@ class NavigationEngine(val client: Client3) {
     }
 
     fun checkNavigation(stateId: StateId2) {
-        sduiLog(safeNavigationQueue, stateId, tag = "NavigationEngine > checkNavigation")
         if (safeNavigationQueue.contains(stateId)) {
-            sduiLog(stateId, tag = "NavigationEngine > checkNavigation > Inside")
             safeNavigationQueue.remove(stateId)
             navigate(Push2(stateId))
         }

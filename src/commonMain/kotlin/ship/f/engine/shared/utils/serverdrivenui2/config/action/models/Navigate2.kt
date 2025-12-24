@@ -582,7 +582,6 @@ data class ConfirmSideEffect2(
             else -> navigation //TODO to handle other branches at a later point
         }
 
-        sduiLog("Looking at modded state", moddedState)
         client.update(moddedState)
 
         client.navigate(NavigationConfig2(operation = moddedNavigation))
@@ -618,7 +617,6 @@ data class ConfirmSideEffect2(
                         "Did not find text to copy"
                     )
                 }
-                sduiLog(replaceText, updatedState, tag = "ConfirmSideEffect2 > execute > mod > id == state.id")
                 updatedState
             }
 
@@ -713,6 +711,7 @@ data class UpdateZoneModel3(
         state: State2,
         client: Client3,
     ) {
+        sduiLog("updating zone model $targetMetaId $liveValue $operation", tag = "updateZoneModel")
         val vm = client.get(targetMetaId) as? ZoneViewModel3 ?: error("ZoneViewModel3 not found for $targetMetaId")
         when (operation) {
             is Operation2.Toggle -> when (liveValue) {
@@ -724,7 +723,6 @@ data class UpdateZoneModel3(
                     } else {
                         vm.map[operation.property] = ListValue(listValue.value + liveValue.value)
                     }
-                    sduiLog(vm.map[operation.property], tag = "UpdateZoneModel3 > execute")
                 }
                 else -> error("Not supported yet $liveValue in $operation")
             }
@@ -732,9 +730,16 @@ data class UpdateZoneModel3(
                 is LiveValue3.StaticLiveValue3 -> vm.map[operation.property] = liveValue.value
                 else -> error("Not supported yet $liveValue in $operation")
             }
+            is Operation2.Insert -> when (liveValue) {
+                is LiveValue3.StaticLiveValue3 -> {
+                    val listValue = vm.map[operation.property] as? ListValue<*> ?: error("ListValue not for $targetMetaId")
+                    if (listValue.value.contains(liveValue.value)) return
+                    vm.map[operation.property] = ListValue(listValue.value + liveValue.value)
+                }
+                else -> error("Not supported yet $liveValue in $operation")
+            }
             else -> error("Not supported yet $liveValue in $operation")
         }
-        sduiLog(vm, targetMetaId, tag = "UpdateZoneModel > execute")
         client.update(vm)
         client.commit()
     }
@@ -770,7 +775,6 @@ data class UpdateZoneModel(
 
             else -> Unit
         }
-        sduiLog(vm, targetMetaId, tag = "UpdateZoneModel > execute")
         client.update(vm)
     }
 
@@ -817,7 +821,6 @@ data class UpdateZoneModel(
 
             else -> Unit
         }
-        sduiLog(vm, targetMetaId, tag = "UpdateZoneModel > execute")
         client.update(vm)
     }
 }
@@ -833,7 +836,6 @@ data class LiveAction2(
         client: Client2
     ) {
         if (liveValue.isNotEmpty() && liveValue.map { client.computeConditionalLive(it) }.all { it }) {
-            sduiLog(client.firedActionMap, tag = "wtf")
             action.run(state, client) // TODO the state will be incorrect because this is not a remote action
         }
     }
@@ -1042,7 +1044,6 @@ data class ResetState2(
         state: State2,
         client: Client3
     ) {
-        sduiLog("Resetting state $targetStateId", tag = "ResetState2")
         client.update(client.get<State2>(targetStateId).reset())
         client.commit()
     }
@@ -1064,10 +1065,7 @@ data class ResetChildrenState2(
         state: State2,
         client: Client3
     ) {
-        sduiLog("Resetting children state $targetStateId", tag = "ResetState2")
-
         (client.get<State2>(targetStateId) as? ChildrenModifier2<*>)?.children?.forEach {
-            sduiLog("Resetting Child ${id.name} state $targetStateId", tag = "ResetState2 > ForEach")
             client.update(client.getReactive<State2>(it.path3).value.reset())
         }
         client.update(client.get<State2>(targetStateId).reset())
@@ -1091,11 +1089,9 @@ data class ResetDescendantState2(
         state: State2,
         client: Client3
     ) {
-        sduiLog("Resetting descendants state $targetStateId", tag = "ResetState2")
-
+        sduiLog("ResetDescendantState2 $targetStateId", tag = "resetDescendantState")
         (client.get<State2>(targetStateId) as? ChildrenModifier2<*>)?.children?.forEach {
             client.getReactiveOrNull<State2>(it.path3)?.value?.let { child ->
-                sduiLog("Resetting descendant ${id.name} state $targetStateId", tag = "ResetState2 > ForEach")
                 client.update(child.reset())
                 ResetDescendantState2(targetStateId = child.id).run3(child, client)
             }
@@ -1121,9 +1117,7 @@ data class ClearState2(
         state: State2,
         client: Client3
     ) {
-        sduiLog("Resetting state $targetStateId", tag = "ClearState2")
         (client.get<State2>(targetStateId) as? TextModifier2<*>)?.text(text = "")?.let{
-            sduiLog("Resetting state $targetStateId", tag = "ClearState2 > TextModifier2")
             client.update(it)
             client.commit()
         }

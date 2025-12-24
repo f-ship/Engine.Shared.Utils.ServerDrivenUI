@@ -55,23 +55,6 @@ open class CommonClient2 protected constructor(override val projectName: String?
 //        if (state.id.name == "Bottom-Nav-Agenda") println("Debugging State $state")
 //        println("Attempting to trigger reactive update for ${state.id} with path ${state.path}")
 
-        if (state.id.name == "PlannerScreen"){
-            println("------------------------------------")
-            println("Debugging State $state")
-            val children = (state as? ChildrenModifier2<*>)!!.children
-            println("${children.size}")
-            println("${children.map { it.id }}")
-            println("----")
-            val compare = getReactivePathState<State2>(state.path, state)
-            val compareChildren = (compare.value as? ChildrenModifier2<*>)!!.children
-            println("${compare.value.id}")
-            println("${compareChildren.size}")
-            println("${compareChildren.map { it.id }}")
-            println("------------------------------------")
-        }
-
-        sduiLog(state.path, tag = "filtered index > ReactiveUpdate")
-
         getReactivePathState<State2>(state.path, state).value = state
 
 //        if (reactiveStateMap[state.id] == null) {
