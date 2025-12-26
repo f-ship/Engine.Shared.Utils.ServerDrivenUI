@@ -15,7 +15,8 @@ import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
 class NavigationEngine(val client: Client3) {
     val backstack: MutableList<BackStackEntry3> = mutableListOf()
-    val currentScreen: MutableState<BackStackEntry3?> = mutableStateOf(null)
+    val currentScreen: MutableState<ScreenEntry?> = mutableStateOf(null)
+    val canPopState: MutableState<Boolean> = mutableStateOf(false)
 
     val currentQueue: MutableList<StateId2> = mutableListOf()
     val currentQueueKeys: MutableList<String> = mutableListOf() // TODO Replace with a way to make sure actions can be fired only once
@@ -120,6 +121,8 @@ class NavigationEngine(val client: Client3) {
                     remoteActions = listOf(),
                     canPopBack = true,
                     groupKey = operation.groupKey,
+                    restoreContainer = operation.container,
+                    restoreState = (client.get<State2>(operation.container) as ChildrenModifier2<*>).children.first().id
                 )
 
                 when(val last = backstack.lastOrNull()) {
@@ -128,6 +131,7 @@ class NavigationEngine(val client: Client3) {
                 }
 
                 backstack.add(entry)
+                canPopState.value = canPop()
                 navigate(ReplaceChild2(operation.container, operation.stateId))
                 client.commit() // Need to commit before setting it to the current screen
             }
@@ -144,12 +148,25 @@ class NavigationEngine(val client: Client3) {
         }
     }
 
-    fun canPop() = backstack.isNotEmpty() && backstack.subList(0, backstack.lastIndex).any { it.canPopBack }
+    fun canPop() = backstack.isNotEmpty() && backstack.subList(0, backstack.lastIndex).any { it.canPopBack }.also { sduiLog("Can pop: $it", backstack, tag = "NavigationEngine > canPop") }
     fun pop() {
-        backstack.removeLast()
+        val old = backstack.removeLast()
+        sduiLog("Popping backstack", backstack, tag = "NavigationEngine > pop")
         backstack.dropLastWhile { !it.canPopBack }
         when(val entry = backstack.last()) {
-            is ScreenEntry -> currentScreen.value = entry.copy(direction2 = Backward2) // TODO wrap in an self destructing animation
+            is ScreenEntry -> {
+                when (old) {
+                    is ScreenEntry -> currentScreen.value = entry.copy(direction2 = Backward2) // TODO wrap in an self destructing animation
+                    is ViewEntry -> {
+                        navigate(
+                            ReplaceChild2(
+                                container = old.restoreContainer,
+                                stateId = old.restoreState,
+                            )
+                        )
+                    }
+                }
+            }
             is ViewEntry -> navigate(
                 ReplaceChild2(
                     stateId = entry.stateId,
@@ -157,6 +174,7 @@ class NavigationEngine(val client: Client3) {
                 )
             )
         }
+        canPopState.value = canPop()
     }
 
     private fun insert(

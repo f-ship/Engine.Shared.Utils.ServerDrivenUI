@@ -3,7 +3,7 @@ package ship.f.engine.shared.utils.serverdrivenui2.client3
 import ship.f.engine.shared.utils.serverdrivenui2.client.BackStackEntry2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.Action2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.RemoteAction2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
 sealed class BackStackEntry3 {
@@ -15,11 +15,13 @@ sealed class BackStackEntry3 {
     ): BackStackEntry3()
 
     data class ViewEntry(
-        val containerId: Id2.StateId2,
-        val stateId: Id2.StateId2,
+        val containerId: StateId2,
+        val stateId: StateId2,
         val remoteActions: List<RemoteAction2<Action2>> = emptyList(), // TODO will be used to update ZoneModels etc
         val groupKey: String? = null,
         override val canPopBack: Boolean = true,
+        val restoreContainer: StateId2,
+        val restoreState: StateId2,
     ) : BackStackEntry3()
 
 }

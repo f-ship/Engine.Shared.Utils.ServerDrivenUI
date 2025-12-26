@@ -7,6 +7,8 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.RemoteAct
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2.Companion.autoMetaId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.Ref3.VmRef3
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Value
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
 @Serializable
@@ -81,6 +83,8 @@ data class NavigationConfig2(
             override val stateId: StateId2,
             val container: StateId2,
             val groupKey: String? = null,
+            val savedZones: List<Pair<VmRef3, Value>> = emptyList(),
+            val refreshStates: List<StateId2> = emptyList(), // TODO while we don't have reactive zone models
         ) : StateOperation2()
 
         @Serializable
