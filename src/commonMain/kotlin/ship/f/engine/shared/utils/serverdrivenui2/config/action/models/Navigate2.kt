@@ -730,7 +730,7 @@ data class UpdateZoneModel3(
                 else -> error("Not supported yet $liveValue in $operation")
             }
             is Operation2.Set -> when (liveValue) {
-                is LiveValue3.StaticLiveValue3 -> vm.map[operation.property] = liveValue.value
+                is LiveValue3.StaticLiveValue3 -> vm.map[operation.property] = liveValue.value.also { sduiLog(vm.map[operation.property], operation.property, tag = "updateZoneModel > Set") }
                 else -> error("Not supported yet $liveValue in $operation")
             }
             is Operation2.Insert -> when (liveValue) {

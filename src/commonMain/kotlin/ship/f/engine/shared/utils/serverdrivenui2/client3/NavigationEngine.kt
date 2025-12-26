@@ -8,6 +8,8 @@ import ship.f.engine.shared.utils.serverdrivenui2.client3.BackStackEntry3.ViewEn
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2.InsertionOperation2.*
+import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2.PushState2.SavedZone
+import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.ZoneViewModel3
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ChildrenModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
@@ -122,11 +124,20 @@ class NavigationEngine(val client: Client3) {
                     canPopBack = true,
                     groupKey = operation.groupKey,
                     restoreContainer = operation.container,
-                    restoreState = (client.get<State2>(operation.container) as ChildrenModifier2<*>).children.first().id
+                    restoreState = (client.get<State2>(operation.container) as ChildrenModifier2<*>).children.first().id,
                 )
 
                 when(val last = backstack.lastOrNull()) {
-                    is ViewEntry -> if (last.groupKey == operation.groupKey) backstack.removeLast()
+                    is ViewEntry -> {
+                        if (last.groupKey == operation.groupKey) backstack.removeLast()
+                        backstack.removeLast()
+                        val updatedSavedZones = operation.savedZones.mapNotNull { (ref, value) ->
+                            (client.viewModels[ref.vm] as? ZoneViewModel3)?.map[ref.property]?.let {
+                                SavedZone(ref, it)
+                            }
+                        }
+                        backstack.add(last.copy(refreshStates = operation.refreshStates, savedZones = updatedSavedZones))
+                    }
                     else -> Unit
                 }
 
@@ -151,7 +162,6 @@ class NavigationEngine(val client: Client3) {
     fun canPop() = backstack.isNotEmpty() && backstack.subList(0, backstack.lastIndex).any { it.canPopBack }.also { sduiLog("Can pop: $it", backstack, tag = "NavigationEngine > canPop") }
     fun pop() {
         val old = backstack.removeLast()
-        sduiLog("Popping backstack", backstack, tag = "NavigationEngine > pop")
         backstack.dropLastWhile { !it.canPopBack }
         when(val entry = backstack.last()) {
             is ScreenEntry -> {
@@ -167,12 +177,27 @@ class NavigationEngine(val client: Client3) {
                     }
                 }
             }
-            is ViewEntry -> navigate(
-                ReplaceChild2(
-                    stateId = entry.stateId,
-                    container = entry.containerId
+            is ViewEntry -> {
+                sduiLog("Popping view entry", entry, tag = "NavigationEngine > pop")
+                navigate(
+                    ReplaceChild2(
+                        stateId = entry.stateId,
+                        container = entry.containerId
+                    )
                 )
-            )
+                entry.savedZones.forEach {
+                    sduiLog("Restored zone ${it.ref.property} to ${it.value}", tag = "NavigationEngine > savedZones > pop")
+                    (client.viewModels[it.ref.vm] as? ZoneViewModel3)?.let { zM ->
+                        zM.map[it.ref.property] = it.value
+                        client.update(zM)
+                        sduiLog("Restored zone ${it.ref.property} to ${it.value}", tag = "NavigationEngine > savedZones > pop > forEach")
+                    }
+                }
+                entry.refreshStates.forEach {
+                    client.get<State2>(it).let { state -> client.update(state.reset()) }
+                }
+                client.commit()
+            }
         }
         canPopState.value = canPop()
     }

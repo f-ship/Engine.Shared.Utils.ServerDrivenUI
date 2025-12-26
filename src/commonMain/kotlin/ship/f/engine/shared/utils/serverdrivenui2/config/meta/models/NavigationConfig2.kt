@@ -9,6 +9,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.Ref3.VmRef3
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Value
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.VoidValue
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
 @Serializable
@@ -83,9 +84,13 @@ data class NavigationConfig2(
             override val stateId: StateId2,
             val container: StateId2,
             val groupKey: String? = null,
-            val savedZones: List<Pair<VmRef3, Value>> = emptyList(),
+            val savedZones: List<SavedZone> = emptyList(),
             val refreshStates: List<StateId2> = emptyList(), // TODO while we don't have reactive zone models
-        ) : StateOperation2()
+        ) : StateOperation2() {
+            @Serializable
+            @SerialName("SavedZone")
+            data class SavedZone(val ref: VmRef3, val value: Value = VoidValue(true))
+        }
 
         @Serializable
         @SerialName("Flow2")
