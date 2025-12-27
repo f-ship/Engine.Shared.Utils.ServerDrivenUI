@@ -17,6 +17,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computatio
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ChildrenModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
+import ship.f.engine.shared.utils.serverdrivenui2.state.RefState2
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 import ship.f.engine.shared.utils.serverdrivenui2.state.TextState2
 
@@ -281,8 +282,14 @@ class ComputationEngine(val client: Client3) {
     }
 
     fun filter(value: SingleConditionalValue, parent: ChildrenModifier2<*>): ChildrenModifier2<*> {
+        // TODO will need to replicate similar logic to other methods below and even above
         val zoneWrappers = parent.children.mapNotNull { child ->
-            child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let { zvm -> ZoneWrapper(zvm, child) }
+            if (child is RefState2) {
+                val updatedChild = client.get<State2>(child.id)
+                updatedChild.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let { zvm -> ZoneWrapper(zvm, child) }
+            } else {
+                child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let { zvm -> ZoneWrapper(zvm, child) }
+            }
         }
 
         val values = zoneWrappers.map { zW ->
