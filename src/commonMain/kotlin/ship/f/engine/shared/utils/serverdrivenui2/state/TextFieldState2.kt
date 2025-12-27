@@ -9,9 +9,11 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateI
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.CornerBasedShape2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.LiveValue3
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Draw2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.PaddingModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ShapeModifier2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.TextModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ValidModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ValidModifier2.Valid2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
@@ -39,23 +41,35 @@ data class TextFieldState2(
     override val path: Path2 = Path2(),
     override val draws: List<Draw2> = listOf(),
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
+    val focusedTextColor: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
+    val textColor: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
+    val borderColor: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
+    val containerColor: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
+    val textStyle: TextStyle2 = TextStyle2.BodyMedium2,
+    val placeholderColor: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
+    val placeholderTextStyle: TextStyle2 = TextStyle2.BodyMedium2,
     val imeType: IMEType2 = IMEType2.Default2,
     val leadingIcon: ImageState2? = null,
     val trailingIcon: ImageState2? = null,
     val initialValue: String = "",
     val placeholder: String = "",
     val label: String = "",
-    val text: String = "",
+    val labelTextStyle: TextStyle2 = TextStyle2.BodyMedium2,
+    val labelColor: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
+    override val text: String = "",
     val fieldType: FieldType2 = FieldType2.Text,
-    val validations: List<Validation2> = listOf(),
+    val validations: List<Validation2> = listOf(), // TODO need to uplift this as it's not looking so good
     val restrictions: List<Restriction2> = listOf(),
     val error: String? = null,
     val hasLostFocus: Boolean = false,
     val isFocused: Boolean = false,
+    override val liveText: LiveValue2.TextLiveValue2? = null,
+    override val liveText3: LiveValue3? = null,
 ) : State2(),
     PaddingModifier2<TextFieldState2>,
     ShapeModifier2<TextFieldState2>,
     ValidModifier2<TextFieldState2>,
+    TextModifier2<TextFieldState2>,
     OnFieldUpdateModifier2 {
     override fun cM(metas: List<Meta2>) = copy(metas = metas)
     override fun c(id: StateId2) = copy(id = id)
@@ -69,7 +83,9 @@ data class TextFieldState2(
     override fun c(path: Path2) = copy(path = path)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
-
+    override fun text(text: String) = copy(text = text)
+    override fun liveText(liveText: LiveValue2.TextLiveValue2) = copy(liveText = liveText)
+    override fun liveText3(liveText3: LiveValue3) = copy(liveText3 = liveText3)
     fun isError(text: String): String? = validations.firstOrNull {
         val regexCheck = it.regex?.let { regex -> !Regex(regex).matches(text) } ?: false
         val isRequiredCheck = it.isRequired && text.isEmpty()
@@ -79,4 +95,6 @@ data class TextFieldState2(
     fun isRestriction(text: String): Boolean = restrictions.any {
         Regex(it.regex).matches(text)
     }
+
+
 }
