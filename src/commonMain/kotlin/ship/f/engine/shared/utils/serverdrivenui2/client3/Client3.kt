@@ -148,8 +148,7 @@ open class Client3 {
                 distinct
             }
 
-            val agendaInfoDistinct = distinct.filter { it.id.name == "AgendaItemInfo" }
-            sduiLog(agendaInfoDistinct.map { it.id }, tag = "CommitState3")
+            sduiLog(distinct.map { it.id }, tag = "CommitState3")
 
             distinct.forEach { state ->
                 // This is done to ensure parents that are already rendered can accept children on the main thread
@@ -159,10 +158,9 @@ open class Client3 {
                 }
             }
             distinct.forEach { state ->
+                sduiLog(state.id, state.counter, reactiveStates[state.path3]!!.value.counter, tag = "CommitState3")
                 reactiveStates.defaultIfNull(state.path3, mutableStateOf(state)) { it.also { it.value = state } }
             }
-
-            sduiLog(list = reactiveStates.keys.filterIsInstance<Global>(), tag = "CommitState3") { agendaInfoDistinct.isNotEmpty() }
         }
     }
 

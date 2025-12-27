@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import ship.f.engine.shared.utils.serverdrivenui2.client.BackStackEntry2.Direction2.Backward2
 import ship.f.engine.shared.utils.serverdrivenui2.client3.BackStackEntry3.ScreenEntry
 import ship.f.engine.shared.utils.serverdrivenui2.client3.BackStackEntry3.ViewEntry
+import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.ResetDescendantState2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2.InsertionOperation2.*
@@ -117,7 +118,7 @@ class NavigationEngine(val client: Client3) {
                 (client.get<State2>(operation.container) as? ChildrenModifier2<*>)
                     ?: safeNavigationQueue.add(operation.stateId).let { return }
 
-                val entry = ViewEntry(
+                var entry = ViewEntry(
                     containerId = operation.container,
                     stateId = operation.stateId,
                     remoteActions = listOf(),
@@ -129,7 +130,21 @@ class NavigationEngine(val client: Client3) {
 
                 when(val last = backstack.lastOrNull()) {
                     is ViewEntry -> {
-                        if (last.groupKey == operation.groupKey) backstack.removeLast()
+                        if (last.groupKey == operation.groupKey) {
+                            val old = backstack.removeLast() as ViewEntry
+                            entry = entry.copy(restoreContainer = old.restoreContainer, restoreState = old.restoreState)
+                        }
+                        else {
+                            backstack.removeLast()
+                            val updatedSavedZones = operation.savedZones.mapNotNull { (ref, value) ->
+                                (client.viewModels[ref.vm] as? ZoneViewModel3)?.map[ref.property]?.let {
+                                    SavedZone(ref, it)
+                                }
+                            }
+                            backstack.add(last.copy(refreshStates = operation.refreshStates, savedZones = updatedSavedZones))
+                        }
+                    }
+                    is ScreenEntry -> {
                         backstack.removeLast()
                         val updatedSavedZones = operation.savedZones.mapNotNull { (ref, value) ->
                             (client.viewModels[ref.vm] as? ZoneViewModel3)?.map[ref.property]?.let {
@@ -138,6 +153,7 @@ class NavigationEngine(val client: Client3) {
                         }
                         backstack.add(last.copy(refreshStates = operation.refreshStates, savedZones = updatedSavedZones))
                     }
+
                     else -> Unit
                 }
 
@@ -159,7 +175,7 @@ class NavigationEngine(val client: Client3) {
         }
     }
 
-    fun canPop() = backstack.isNotEmpty() && backstack.subList(0, backstack.lastIndex).any { it.canPopBack }.also { sduiLog("Can pop: $it", backstack, tag = "NavigationEngine > canPop") }
+    fun canPop() = backstack.isNotEmpty() && backstack.subList(0, backstack.lastIndex).any { it.canPopBack }
     fun pop() {
         val old = backstack.removeLast()
         backstack.dropLastWhile { !it.canPopBack }
@@ -174,27 +190,36 @@ class NavigationEngine(val client: Client3) {
                                 stateId = old.restoreState,
                             )
                         )
+                        sduiLog(entry.savedZones, tag = "NavigationEngine > pop > ScreenEntry > ViewEntry")
+                        entry.savedZones.forEach {
+                            (client.viewModels[it.ref.vm] as? ZoneViewModel3)?.let { zM ->
+                                zM.map[it.ref.property] = it.value
+                                client.update(zM)
+                            }
+                        }
+                        entry.refreshStates.forEach {
+                            ResetDescendantState2(it).run3(state = client.get<State2>(it), client = client)
+                        }
+                        client.commit()
                     }
                 }
             }
             is ViewEntry -> {
-                sduiLog("Popping view entry", entry, tag = "NavigationEngine > pop")
                 navigate(
                     ReplaceChild2(
                         stateId = entry.stateId,
                         container = entry.containerId
                     )
                 )
+                sduiLog(entry.savedZones, tag = "NavigationEngine > pop > ViewEntry > ViewEntry")
                 entry.savedZones.forEach {
-                    sduiLog("Restored zone ${it.ref.property} to ${it.value}", tag = "NavigationEngine > savedZones > pop")
                     (client.viewModels[it.ref.vm] as? ZoneViewModel3)?.let { zM ->
                         zM.map[it.ref.property] = it.value
                         client.update(zM)
-                        sduiLog("Restored zone ${it.ref.property} to ${it.value}", tag = "NavigationEngine > savedZones > pop > forEach")
                     }
                 }
                 entry.refreshStates.forEach {
-                    client.get<State2>(it).let { state -> client.update(state.reset()) }
+                    ResetDescendantState2(it).run3(state = client.get<State2>(it), client = client)
                 }
                 client.commit()
             }

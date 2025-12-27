@@ -12,6 +12,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateI
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.TextStyle2.BodyMedium2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.LiveValue3
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Draw2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
@@ -42,6 +43,7 @@ data class TextState2(
     val limit: Int? = null,
     override val text: String,
     override val liveText: LiveValue2.TextLiveValue2? = null,
+    override val liveText3: LiveValue3? = null,
 ) : State2(),
     TextStyleModifier2<TextState2>,
     TextModifier2<TextState2>,
@@ -63,4 +65,5 @@ data class TextState2(
     override fun reset(counter: Int) = copy(counter = counter)
     override fun text(text: String) = copy(text = text)
     override fun liveText(liveText: LiveValue2.TextLiveValue2) = copy(liveText = liveText)
+    override fun liveText3(liveText3: LiveValue3) = copy(liveText3 = liveText3)
 }

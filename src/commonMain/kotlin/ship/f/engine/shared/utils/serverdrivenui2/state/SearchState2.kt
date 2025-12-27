@@ -9,6 +9,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateI
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.CornerBasedShape2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.LiveValue3
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Draw2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.PaddingModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ShapeModifier2
@@ -58,6 +59,7 @@ data class SearchState2(
     val label: String = "",
     override val text: String = "",
     override val liveText: LiveValue2.TextLiveValue2? = null,
+    override val liveText3: LiveValue3? = null,
     val fieldType: FieldType2 = FieldType2.Text,
     val validations: List<Validation2> = listOf(),
     val restrictions: List<Restriction2> = listOf(),
@@ -85,6 +87,7 @@ data class SearchState2(
     override fun reset(counter: Int) = copy(counter = counter)
     override fun text(text: String) = copy(text = text)
     override fun liveText(liveText: LiveValue2.TextLiveValue2) = copy(liveText = liveText)
+    override fun liveText3(liveText3: LiveValue3) = copy(liveText3 = liveText3)
 
     fun isError(text: String): String? = validations.firstOrNull {
         val regexCheck = it.regex?.let { regex -> !Regex(regex).matches(text) } ?: false
