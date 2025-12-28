@@ -164,6 +164,23 @@ class NavigationEngine(val client: Client3) {
             }
 
             is Back2 -> pop()
+            is InsertionStateOperation2.End2 -> {
+                if (operation.state == null) {
+                    sduiLog("No state was passed for insertion state operation, nothing was done", tag = "NavigationEngine > navigate > InsertionStateOperation2.End2")
+                    return
+                }
+                val inside = client.get<State2>(operation.stateId)
+                val parent = inside as? ChildrenModifier2<*>
+                    ?: error("During insertion operation, parent was not of type ChildrenModifier<*> ${operation.stateId}")
+
+                sduiLog(operation.state.metas, tag = "NavigationEngine > navigate > InsertionStateOperation2.End2")
+
+                val updatedState = client.initState(operation.state, inside.path3.toRenderChain())
+                client.setViewModels(updatedState) // TODO because initState prevents this from happening due to renderChain
+                val updatedParent = parent.c(parent.children + updatedState)
+
+                client.update(updatedParent)
+            }
 
             else -> Unit
         }

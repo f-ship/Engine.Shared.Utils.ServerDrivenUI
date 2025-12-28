@@ -41,6 +41,7 @@ data class TextState2(
     val textAlign: TextAlign2 = TextAlign2.Start2,
     val underline: Boolean = false,
     val limit: Int? = null,
+    val overrideScope: Boolean = false,
     override val text: String,
     override val liveText: LiveValue2.TextLiveValue2? = null,
     override val liveText3: LiveValue3? = null,

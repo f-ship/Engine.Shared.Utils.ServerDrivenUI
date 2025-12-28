@@ -1,5 +1,11 @@
 package ship.f.engine.shared.utils.serverdrivenui2.config.action.models
 
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format.MonthNames.Companion.ENGLISH_FULL
+import kotlinx.datetime.format.char
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -15,13 +21,18 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationC
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.StateMachineMeta2.StateMachineOperation2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.ZoneViewModel2.Property.MultiProperty
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.ZoneViewModel2.Property.StringProperty
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.Companion.NONE
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalLiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Path2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.LiveValue3
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.Ref3
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.ListValue
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.RandomStringValue
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.StringValue
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.VoidValue
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
 import ship.f.engine.shared.utils.serverdrivenui2.ext.createTime
@@ -29,6 +40,8 @@ import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
 import ship.f.engine.shared.utils.serverdrivenui2.json.json2
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 import ship.f.engine.shared.utils.serverdrivenui2.state.VariantState2
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 @Serializable
 @SerialName("Navigate2")
@@ -66,6 +79,7 @@ data class Navigate3(
         state: State2,
         client: Client3,
     ) {
+        val operation = if (operation is StateOperation2.InsertionStateOperation2.End2) operation.copy(state = state) else operation
         client.navigationEngine.navigate(operation)
     }
 }
@@ -675,6 +689,69 @@ data class ConfirmSideEffect2(
 }
 
 @Serializable
+@SerialName("Create3")
+data class Create3(
+    override val targetMetaId: MetaId2,
+    val copyMap: Map<String, String>,
+    val newState: State2,
+    val scope: LiveValue3,
+    val stateActions: List<Action2>,
+    val actions: List<Action2>,
+) : Action2(), TargetableMetaModifier2 {
+    override fun execute(
+        state: State2,
+        client: Client2
+    ) {
+        TODO("use execute3 instead")
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3
+    ) {
+        //1) Update the scope of the state and descendants using the LiveValue3 (Will need to create RandomStringValue)
+        val scopeValue = client3.computationEngine.getValue(scope)
+        val scopeString = when(scopeValue) {
+            is RandomStringValue -> getRandomString()
+            is StringValue -> scopeValue.value
+            is VoidValue -> NONE
+            else -> error("Not supported yet $scopeValue")
+        }
+        val updatedState = replaceScope(newState, scopeString)
+        //2) Get New Meta by searching state
+        val meta = updatedState.metas.filterIsInstance<ZoneViewModel3>().firstOrNull() ?: error("ZoneViewModel3 not found in $state")
+        sduiLog("meta: $meta", tag = "create3")
+        //3) Get Base Meta
+        val baseMeta = client3.get(targetMetaId) as? ZoneViewModel3 ?: error("ZoneViewModel3 not found for ${meta.metaId}")
+        //4) Copy the values over
+        copyMap.forEach { (key, value) ->
+            meta.map[value] = baseMeta.map[key] ?: error("Value not found for $value")
+        }
+        sduiLog("meta: $meta", tag = "create3 > copyMap")
+        //5) Perform actions on current state
+        stateActions.forEach {
+            it.run3(updatedState, client)
+        }
+        //6) Perform actions in general
+        actions.forEach {
+            it.run3(state, client)
+        }
+    }
+
+    fun replaceScope(state: State2, scope: String): State2 {
+        var moddedState = state
+        if (!moddedState.id.isAutoGenerated) {
+            moddedState = moddedState.c(id = moddedState.id.copy(scope = scope))
+        }
+        moddedState = moddedState.cM(moddedState.metas.filterIsInstance<ZoneViewModel3>().map {
+            meta -> meta.copy(metaId = MetaId2(meta.metaId.name, scope))
+        })
+        moddedState = (moddedState as? ChildrenModifier2<*>)?.c(children = moddedState.children.map { replaceScope(it, scope) }) ?: moddedState
+        return moddedState
+    }
+}
+
+@Serializable
 @SerialName("UpdateZoneModel3")
 data class UpdateZoneModel3(
     override val targetMetaId: MetaId2,
@@ -709,6 +786,7 @@ data class UpdateZoneModel3(
     }
 
     // TODO("Need to upgrade this method to be better")
+    @OptIn(ExperimentalTime::class)
     override fun execute3(
         state: State2,
         client: Client3,
@@ -731,7 +809,16 @@ data class UpdateZoneModel3(
             }
             is Operation2.Set -> when (liveValue) {
                 is LiveValue3.StaticLiveValue3 -> vm.map[operation.property] = liveValue.value.also { sduiLog(vm.map[operation.property], operation.property, tag = "updateZoneModel > Set") }
-                else -> error("Not supported yet $liveValue in $operation")
+                is LiveValue3.ReferenceableLiveValue3 -> when(liveValue.ref) {
+                    is Ref3.StateRef3 -> (client.get<State2>(liveValue.ref.id) as? TextModifier2<*> ?: error("Text not found for $liveValue")).let {
+                        vm.map[operation.property] = StringValue(it.text)
+                    }
+                    is Ref3.VmRef3 -> error("Not supported yet $liveValue in $operation")
+                }
+                // TODO a very naive implementation for now, will need to create a more robust implementaiton with it's own type
+                is LiveValue3.InstantNowLiveValue3 -> vm.map[operation.property] = StringValue(
+                    formatDateEpoch(Clock.System.now().epochSeconds, TimeZone.currentSystemDefault())
+                )
             }
             is Operation2.Insert -> when (liveValue) {
                 is LiveValue3.StaticLiveValue3 -> {
@@ -745,6 +832,20 @@ data class UpdateZoneModel3(
         }
         client.update(vm)
         client.commit()
+    }
+
+    fun formatDateEpoch(date: Long, timeZone: TimeZone): String { // TODO use a complex really smart date formatter
+        val dateInstant = Instant.fromEpochSeconds(date)
+        val dateFormat = LocalDateTime.Format {
+            dayOfMonth()
+            char(' ')
+            monthName(ENGLISH_FULL)
+            char(' ')
+            hour()
+            char(':')
+            minute()
+        }
+        return dateFormat.format(dateInstant.toLocalDateTime(timeZone))
     }
 }
 

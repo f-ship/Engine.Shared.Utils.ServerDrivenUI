@@ -253,7 +253,7 @@ open class Client3 {
         }
     }
 
-    private fun setViewModels(state: State2) {
+    fun setViewModels(state: State2) {
         setListeners(state)
         state.metas.forEach { meta ->
             if (viewModels[meta.metaId] != null) sduiLog("Tried to set ${meta.metaId} multiple times, ensure metaIds are unique")
