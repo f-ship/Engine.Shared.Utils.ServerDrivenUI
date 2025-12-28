@@ -163,6 +163,8 @@ class NavigationEngine(val client: Client3) {
                 client.commit() // Need to commit before setting it to the current screen
             }
 
+            is Back2 -> pop()
+
             else -> Unit
         }
         client.commit()
