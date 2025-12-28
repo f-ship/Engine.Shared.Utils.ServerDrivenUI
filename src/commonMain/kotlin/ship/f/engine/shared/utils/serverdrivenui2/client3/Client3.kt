@@ -148,8 +148,6 @@ open class Client3 {
                 distinct
             }
 
-            sduiLog(distinct.map { it.id }, tag = "CommitState3")
-
             distinct.forEach { state ->
                 // This is done to ensure parents that are already rendered can accept children on the main thread
                 if (reactiveStates[state.path3] == null) {
@@ -158,7 +156,6 @@ open class Client3 {
                 }
             }
             distinct.forEach { state ->
-                sduiLog(state.id, state.counter, reactiveStates[state.path3]!!.value.counter, tag = "CommitState3")
                 reactiveStates.defaultIfNull(state.path3, mutableStateOf(state)) { it.also { it.value = state } }
             }
         }

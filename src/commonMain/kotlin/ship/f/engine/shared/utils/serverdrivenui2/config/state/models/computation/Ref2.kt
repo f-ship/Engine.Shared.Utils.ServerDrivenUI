@@ -16,8 +16,3 @@ sealed class Ref3 {
     @SerialName("VmRef2")
     data class VmRef3(val vm: MetaId2, val property: String) : Ref3()
 }
-
-sealed class ReferenceableLiveValue2 : LiveValue3() {
-    abstract val ref: Ref3
-    abstract fun copyRef(ref: Ref3): ReferenceableLiveValue2
-}

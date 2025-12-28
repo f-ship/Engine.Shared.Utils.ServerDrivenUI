@@ -9,7 +9,6 @@ interface LoadingModifier2<T : State2> : StateModifier2 {
     fun c(loading: Loading2): T
 
     @Serializable
-    @JvmInline
-    value class Loading2(val value: Boolean)
+    data class Loading2(val value: Boolean)
 }
 

@@ -9,6 +9,5 @@ interface VisibilityModifier2<S : State2> : StateModifier2 {
     fun c(visible: Visible2): S
 
     @Serializable
-    @JvmInline
-    value class Visible2(val value: Boolean)
+    data class Visible2(val value: Boolean)
 }

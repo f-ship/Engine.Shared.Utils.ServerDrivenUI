@@ -16,6 +16,5 @@ interface OnToggleModifier2<S : State2> : TriggerModifier2 {
     fun update(toggle: Toggle2, modified: Boolean, initialValue: Boolean): S
 
     @Serializable
-    @JvmInline
-    value class Toggle2(val value: Boolean)
+    data class Toggle2(val value: Boolean)
 }

@@ -1,5 +1,6 @@
 package ship.f.engine.shared.utils.serverdrivenui2.config.meta.models
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.client.Client2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.Navigate2
@@ -8,6 +9,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
 @Serializable
+@SerialName("DataMeta2")
 data class DataMeta2(
     override val metaId: Id2.MetaId2 = autoMetaId2(),
     val data: Map<String, DataMetaType2>,
@@ -61,6 +63,7 @@ data class DataMeta2(
 }
 
 @Serializable
+@SerialName("PopulatedDataMeta2")
 data class PopulatedDataMeta2(
     override val metaId: Id2.MetaId2 = autoMetaId2(),
     val data: Map<String, String>,

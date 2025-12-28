@@ -79,7 +79,7 @@ data class Navigate3(
         state: State2,
         client: Client3,
     ) {
-        val operation = if (operation is StateOperation2.InsertionStateOperation2.End2) operation.copy(state = state) else operation
+        val operation = if (operation is StateOperation2.InsertionStateOperation2.StateEnd2) operation.copy(state = state) else operation
         client.navigationEngine.navigate(operation)
     }
 }

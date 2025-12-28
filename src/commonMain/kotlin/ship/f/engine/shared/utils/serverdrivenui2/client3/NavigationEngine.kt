@@ -164,7 +164,7 @@ class NavigationEngine(val client: Client3) {
             }
 
             is Back2 -> pop()
-            is InsertionStateOperation2.End2 -> {
+            is InsertionStateOperation2.StateEnd2 -> {
                 if (operation.state == null) {
                     sduiLog("No state was passed for insertion state operation, nothing was done", tag = "NavigationEngine > navigate > InsertionStateOperation2.End2")
                     return

@@ -45,6 +45,7 @@ data class ToggleMachineMeta2(
     val stateListeners: List<StateId2> = listOf() // TODO this is really janky and not okay at all, implement proper valid modifier
 ) : Meta2() {
     @Serializable
+    @SerialName("SwapOperation2")
     data class SwapOperation2(
         val active: State2,
         val inactive: State2,

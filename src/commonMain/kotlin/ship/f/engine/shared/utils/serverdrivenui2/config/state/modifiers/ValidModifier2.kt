@@ -9,6 +9,5 @@ interface ValidModifier2<T : State2> : StateModifier2 {
     fun c(valid: Valid2): T
 
     @Serializable
-    @JvmInline
-    value class Valid2(val value: Boolean)
+    data class Valid2(val value: Boolean)
 }

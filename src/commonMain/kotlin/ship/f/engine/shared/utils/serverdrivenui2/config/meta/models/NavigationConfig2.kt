@@ -75,7 +75,9 @@ data class NavigationConfig2(
         @Serializable
         @SerialName("InsertionStateOperation2")
         sealed class InsertionStateOperation2 : StateOperation2() {
-            data class End2(
+            @Serializable
+            @SerialName("StateEnd2")
+            data class StateEnd2(
                 override val stateId: StateId2,
                 val state: State2? = null, // To be set by Navigate2
             ) : InsertionStateOperation2()
