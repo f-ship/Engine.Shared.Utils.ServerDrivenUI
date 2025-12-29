@@ -4,7 +4,7 @@ fun <K, V> MutableMap<K, V>.defaultIfNull(key: K, value: V, execute: MutableMap<
     if (this[key] == null) {
         this[key] = value
     }
-    this[key] = execute(this[key]!!)
+    this[key] = execute(this[key] ?: error("Somehow value for $key is null?"))
 }
 
 fun <K, V> MutableMap<K, V>.ifNull(key: K, execute: MutableMap<K, V>.() -> V) {

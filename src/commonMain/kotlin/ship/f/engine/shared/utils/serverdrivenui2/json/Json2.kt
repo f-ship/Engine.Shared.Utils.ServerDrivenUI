@@ -11,6 +11,8 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.ConfirmSi
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.StateMachineSelect2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.ToggleFilter2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.StateMachineMeta2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.StringValue
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Value
 
 @OptIn(InternalSerializationApi::class)
 val json2 = Json {
@@ -27,6 +29,11 @@ val json2 = Json {
 //            subclass(ScreenState2::class)
 //            defaultDeserializer { ScreenState2.serializer() }
 //        }
+        polymorphic(
+            baseClass = Value::class,
+        ) {
+            subclass(StringValue::class)
+        }
 
         polymorphic(
             baseClass = Action2::class,

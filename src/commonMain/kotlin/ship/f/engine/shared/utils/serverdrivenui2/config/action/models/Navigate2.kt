@@ -264,6 +264,29 @@ data class EmitSideEffect2(
 }
 
 @Serializable
+@SerialName("EmitStateAsSideEffect2")
+data class EmitStateAsSideEffect(
+    val sideEffect: SideEffectMeta2,
+) : Action2() {
+    override fun execute(
+        state: State2,
+        client: Client2
+    ) {
+        TODO("Use run3 instead")
+    }
+
+    override fun execute3(
+        state: State2,
+        client: Client3
+    ) {
+        val populatedSideEffect = sideEffect.toPopulated(client)
+        val appendedSideEffect = populatedSideEffect.copy(states = populatedSideEffect.states + state)
+        client.emitSideEffect(appendedSideEffect)
+    }
+
+}
+
+@Serializable
 @SerialName("EmitPopulatedSideEffect2")
 data class EmitPopulatedSideEffect2(
     val sideEffect: PopulatedSideEffectMeta2,
@@ -773,8 +796,8 @@ data class UpdateZoneModel3(
         data class Set(val property: String) : Operation2()
 
         @Serializable
-        @SerialName("Add")
-        data object Add : Operation2()
+        @SerialName("Remove")
+        data class Remove(val property: String) : Operation2()
 
         @Serializable
         @SerialName("Insert")
@@ -828,7 +851,14 @@ data class UpdateZoneModel3(
                 }
                 else -> error("Not supported yet $liveValue in $operation")
             }
-            else -> error("Not supported yet $liveValue in $operation")
+            is Operation2.Remove -> when (liveValue) {
+                is LiveValue3.StaticLiveValue3 -> {
+                    val listValue = vm.map[operation.property] as? ListValue<*> ?: error("ListValue not for $targetMetaId")
+                    if (!listValue.value.contains(liveValue.value)) return
+                    vm.map[operation.property] = ListValue(listValue.value - liveValue.value)
+                }
+                else -> error("Not supported yet $liveValue in $operation")
+            }
         }
         client.update(vm)
         client.commit()

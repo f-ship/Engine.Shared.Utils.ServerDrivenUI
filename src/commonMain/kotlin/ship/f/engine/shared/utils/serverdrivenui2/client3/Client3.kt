@@ -81,7 +81,7 @@ open class Client3 {
      * TODO to implement locality implementation
      */
     inline fun <reified T : State2> get(stateId2: StateId2, rootPath: Path3? = null): T {
-        val paths = idPaths[stateId2] ?: error("Paths has not been found for stateId: $stateId2")
+        val paths = idPaths[stateId2] ?: sduiLog(idPaths.keys).let { null } ?: error("Paths has not been found for stateId: $stateId2")
         val path = paths.firstOrNull() ?: error("paths are empty for stateId: $stateId2")
         return states[path] as? T ?: sduiLog(list = states.keys, tag = "get > states").let { null }
         ?: error("get with stateId > no state exists for path: $path")
@@ -104,7 +104,7 @@ open class Client3 {
         getReactiveOrNull(path) ?: error("no reactive state exists for path: $path")
 
     inline fun <reified T : Meta2> get(metaId2: MetaId2): T =
-        viewModels[metaId2] as? T ?: error("no meta exists for metaId: $metaId2")
+        viewModels[metaId2] as? T ?: sduiLog(viewModels.keys, tag = "ContentZoneModel").let{ null } ?: error("no meta exists for metaId: $metaId2")
 
     fun update(state: State2) {
         if (state !is RefState2) {
