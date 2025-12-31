@@ -2,14 +2,10 @@ package ship.f.engine.shared.utils.serverdrivenui2.client3
 
 import kotlinx.coroutines.*
 import kotlinx.datetime.Clock
-import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.ZoneViewModel2
-import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.ZoneViewModel2.Property.StringProperty
+import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSideEffectMeta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.ZoneViewModel3
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.Ref2.VmRef2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.Ref2.ZoneRef2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.Condition3
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.LiveValue3
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.Ref3
@@ -82,390 +78,305 @@ class ComputationEngine(val client: Client3) {
 
     val timer = Timer(client)
 
-    @Deprecated("This was copied from client2")
-    inline fun <reified T : LiveValue2> computeConditionalBranchLive(liveValue2: LiveValue2.ConditionalBranchLiveValue2): T {
-        return when (liveValue2.value1) {
-            is LiveValue2.IntLiveValue2 -> when (liveValue2.value2) {
-                is LiveValue2.IntLiveValue2 -> {
-                    val prop1 = when (liveValue2.value1.ref) {
-                        is ZoneRef2 -> (client.viewModels[liveValue2.value1.ref.vm] as? ZoneViewModel2)?.let {
-                            it.map[liveValue2.value1.ref.property]
-                                ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm} for ${liveValue2.value1.ref.property}")
-                        }
-                            ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm} for ${liveValue2.value1.ref.property}")
-
-                        else -> TODO()
-                    }
-
-                    val prop2 = when (liveValue2.value2.ref) {
-                        is ZoneRef2 -> (client.viewModels[liveValue2.value2.ref.vm] as? ZoneViewModel2)?.let {
-                            it.map[liveValue2.value2.ref.property]
-                                ?: error("No value found for ref: ${liveValue2.value2.ref} in ${liveValue2.value2.ref.vm} for1 ${liveValue2.value2.ref.property}")
-                        }
-                            ?: error("No value found for ref: ${liveValue2.value2.ref} in ${liveValue2.value2.ref.vm} for ${liveValue2.value2.ref.property}")
-
-                        else -> TODO()
-                    }
-
-                    val bool = when (liveValue2.condition) {
-                        LiveValue2.Condition2.Eq -> prop1 == prop2
-                        else -> TODO()
-                    }
-
-                    if (bool) {
-                        liveValue2.trueBranch as T
-                    } else {
-                        liveValue2.falseBranch as T
-                    }
-                }
-
-                is LiveValue2.StaticIntLiveValue2 -> {
-                    val prop1 = when (liveValue2.value1.ref) {
-                        is ZoneRef2 -> (client.viewModels[liveValue2.value1.ref.vm] as? ZoneViewModel2)?.let {
-                            it.map[liveValue2.value1.ref.property]
-                                ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm} for2 ${liveValue2.value1.ref.property}")
-                        }
-                            ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm} for3 ${liveValue2.value1.ref.property}")
-
-                        else -> TODO()
-                    }
-
-                    val bool = when (liveValue2.condition) {
-                        LiveValue2.Condition2.Eq -> when (prop1) {
-                            is ZoneViewModel2.Property.IntProperty -> prop1.value == liveValue2.value2.value
-                            else -> false
-                        }
-
-                        LiveValue2.Condition2.Mod -> when (prop1) {
-                            is ZoneViewModel2.Property.IntProperty -> (prop1.value % liveValue2.value2.value) == 0
-                            else -> false
-                        }
-
-                        else -> TODO()
-                    }
-
-                    if (bool) {
-                        liveValue2.trueBranch as T
-                    } else {
-                        liveValue2.falseBranch as T
-                    }
-                }
-
-                else -> TODO()
-            }
-
-            else -> TODO()
-        }
-    }
-
-    @Deprecated("This was copied from client2")
-    fun computeConditionalLive(liveValue2: LiveValue2.ConditionalLiveValue2): Boolean {
-        return when (liveValue2.value1) {
-            is LiveValue2.TextLiveValue2 -> when (liveValue2.value2) {
-                is LiveValue2.MultiLiveValue2 -> {
-                    val vm = client.get(liveValue2.value2.ref.vm) as? ZoneViewModel2
-                        ?: error("No vm found for id: ${liveValue2.value2.ref.vm}")
-                    val multiProperty = vm.map[liveValue2.value2.ref.property] as? ZoneViewModel2.Property.MultiProperty
-                        ?: error("No multi property found for ref: ${liveValue2.value2.ref} in ${liveValue2.value2.ref.vm}")
-                    val prop = when (liveValue2.value1.ref) {
-                        is ZoneRef2 -> StringProperty(
-                            value = (client.viewModels[liveValue2.value1.ref.vm] as? ZoneViewModel2)
-                                ?.let { it.map[liveValue2.value1.ref.property] as? StringProperty }
-                                ?.value
-                                ?: error("No value found for ref: ${liveValue2.value1.ref} in ${liveValue2.value1.ref.vm} for ${liveValue2.value1.ref.property}"),
-                        )
-
-                        else -> TODO()
-                    }
-                    when (liveValue2.condition) {
-                        is LiveValue2.Condition2.InOrEmpty -> multiProperty.value.isEmpty() || multiProperty.value.contains(
-                            prop
-                        )
-
-                        else -> TODO()
-                    }
-                }
-
-                else -> TODO("Only handling TextLiveValue2 > MultiLiveValue2 for now")
-            }
-
-            is LiveValue2.IntLiveValue2 -> when (liveValue2.value2) {
-                is LiveValue2.IntLiveValue2 -> {
-                    val value1 = when (val ref = liveValue2.value1.ref) {
-                        is ZoneRef2 -> ((client.get(ref.vm) as? ZoneViewModel2 ?: error("no vm ${ref.vm}"))
-                            .map[ref.property] as? ZoneViewModel2.Property.IntProperty)?.value
-
-                        else -> TODO()
-                    }
-
-                    val value2 = when (val ref = liveValue2.value2.ref) {
-                        is ZoneRef2 -> ((client.get(ref.vm) as? ZoneViewModel2 ?: error("no vm ${ref.vm}"))
-                            .map[ref.property] as? ZoneViewModel2.Property.IntProperty)?.value
-                        else -> TODO()
-                    }
-
-                    when (liveValue2.condition) {
-                        is LiveValue2.Condition2.GreaterThan -> value1!! > value2!!
-                        is LiveValue2.Condition2.LessThan -> value1!! < value2!!
-                        else -> TODO()
-                    }
-                }
-
-                is LiveValue2.InstantNowLiveValue2 -> {
-                    val value1 = when (val ref = liveValue2.value1.ref) {
-                        is ZoneRef2 -> ((client.get(ref.vm) as? ZoneViewModel2 ?: error("no vm ${ref.vm}"))
-                            .map[ref.property] as? ZoneViewModel2.Property.IntProperty)?.value
-
-                        else -> TODO()
-                    }
-
-                    val value2 = getNow() // TODO not converting to Int causing issues? Not doesn't seem to be the issue
-
-                    when (liveValue2.condition) {
-                        is LiveValue2.Condition2.GreaterThan -> value1!! > value2
-                        is LiveValue2.Condition2.LessThan -> value1!! < value2
-                        else -> TODO()
-                    }
-                }
-
-                else -> TODO()
-            }
-
-            else -> TODO()
-        }
-    }
-
-    @Deprecated("This was copied from client2")
-    fun computeLiveText(liveValue: LiveValue2.TextLiveValue2) = when (liveValue.ref) {
-        is LiveValue2.Ref2.StateRef2 -> {
-            val paths = client.idPaths[liveValue.ref.id] ?: error("No paths found for id: ${liveValue.ref.id}")
-            val path = paths.firstOrNull() ?: error("Paths were empty for id: ${liveValue.ref.id}")
-            val state = client.get<State2>(path)
-            (state as? TextState2)?.text ?: error("Not a text state ${liveValue.ref.id}")
-        }
-
-        is VmRef2 -> {
-            val vm = client.viewModels[liveValue.ref.vm] as? ZoneViewModel2
-                ?: error("No vm found for id: ${liveValue.ref.vm}")
-            (vm.map[liveValue.ref.property] as? StringProperty)?.value
-                ?: error("No value found for ref: ${liveValue.ref} in ${liveValue.ref.vm} for ${liveValue.ref.property}")
-        }
-
-        else -> TODO()
-    }
-
-
     fun sort(liveValue2: LiveValue3, parent: ChildrenModifier2<*>): ChildrenModifier2<*> {
-        if (liveValue2 !is LiveValue3.ReferenceableLiveValue3) {
-            sduiLog("sort > expected ReferenceableLiveValue3 but got $liveValue2")
+        try {
+            if (liveValue2 !is LiveValue3.ReferenceableLiveValue3) {
+                sduiLog("sort > expected ReferenceableLiveValue3 but got $liveValue2")
+                return parent
+            }
+
+            val zoneWrappers = parent.children.mapNotNull { child ->
+                child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let { zvm -> ZoneWrapper(zvm, child) }
+            }
+
+            val values = zoneWrappers.map { zW ->
+                when (liveValue2.ref) {
+                    is VmRef3 -> ChildOrderWrapper(order = zW.viewModel.map[liveValue2.ref.property] as IntValue, state = zW.state)
+                    is Ref3.StateRef3 -> {
+                        sduiLog("sort > expected StateRef3 but got ${liveValue2.ref}")
+                        return parent
+                    }
+                }
+            }.sortedBy { it.order.value }
+
+            val updatedChildren = values.map { it.state }
+            val updatedParent = parent.c(children = updatedChildren)
+            client.update(updatedParent)
+            return updatedParent as ChildrenModifier2<*>
+        } catch (e: Exception) {
+            sduiLog("sort error > $e", e, tag = "sort")
+            client.emitSideEffect(
+                PopulatedSideEffectMeta2(
+                    metaId = MetaId2("%SDUIError%", "sort"),
+                )
+            )
             return parent
         }
-
-        val zoneWrappers = parent.children.mapNotNull { child ->
-            child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let { zvm -> ZoneWrapper(zvm, child) }
-        }
-
-        val values = zoneWrappers.map { zW ->
-            when (liveValue2.ref) {
-                is VmRef3 -> ChildOrderWrapper(order = zW.viewModel.map[liveValue2.ref.property] as IntValue, state = zW.state)
-                is Ref3.StateRef3 -> {
-                    sduiLog("sort > expected StateRef3 but got ${liveValue2.ref}")
-                    return parent
-                }
-            }
-        }.sortedBy { it.order.value }
-
-        val updatedChildren = values.map { it.state }
-        val updatedParent = parent.c(children = updatedChildren)
-        client.update(updatedParent)
-        return updatedParent as ChildrenModifier2<*>
     }
 
     fun filter(value: SingleConditionalValue, parent: ChildrenModifier2<*>): ChildrenModifier2<*> {
-        // TODO will need to replicate similar logic to other methods below and even above
-        val zoneWrappers = parent.children.mapNotNull { child ->
-            if (child is RefState2) {
-                val updatedChild = client.get<State2>(child.id)
-                updatedChild.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let { zvm -> ZoneWrapper(zvm, child) }
-            } else {
-                child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let { zvm -> ZoneWrapper(zvm, child) }
+        try {
+            // TODO will need to replicate similar logic to other methods below and even above
+            val zoneWrappers = parent.children.mapNotNull { child ->
+                if (child is RefState2) {
+                    val updatedChild = client.get<State2>(child.id)
+                    updatedChild.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let { zvm -> ZoneWrapper(zvm, child) }
+                } else {
+                    child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let { zvm -> ZoneWrapper(zvm, child) }
+                }
             }
-        }
 
-        val values = zoneWrappers.map { zW ->
-            val value = computeConditionalValue(value, zW.viewModel, parent as? State2)
-            if (value !is BooleanValue) error("Expected boolean value but got $value")
-            FilterWrapper(value, zW.state)
-        }
+            val values = zoneWrappers.map { zW ->
+                val value = computeConditionalValue(value, zW.viewModel, parent as? State2)
+                if (value !is BooleanValue) error("Expected boolean value but got $value")
+                FilterWrapper(value, zW.state)
+            }
 
-        val updatedChildren = values.filter { it.filter.value }.map { it.state }
-        val updatedParent = parent.modifiedChildren(modifiedChildren = updatedChildren)
-        client.update(updatedParent)
-        return updatedParent as ChildrenModifier2<*>
+            val updatedChildren = values.filter { it.filter.value }.map { it.state }
+            val updatedParent = parent.modifiedChildren(modifiedChildren = updatedChildren)
+            client.update(updatedParent)
+            return updatedParent as ChildrenModifier2<*>
+        } catch (e: Exception) {
+            sduiLog("filter error > $e", e, tag = "filter")
+            client.emitSideEffect(
+                PopulatedSideEffectMeta2(
+                    metaId = MetaId2("%SDUIError%", "filter"),
+                )
+            )
+            return parent
+        }
     }
 
     fun filterAll(allConditionValue: AllConditionalValue, parent: ChildrenModifier2<*>): ChildrenModifier2<*> {
-        val zoneWrappers = parent.children.mapNotNull { child ->
-            child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let { zvm -> ZoneWrapper(zvm, child) }
-        }
+        try {
+            val zoneWrappers = parent.children.mapNotNull { child ->
+                child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let { zvm -> ZoneWrapper(zvm, child) }
+            }
 
-        val values = zoneWrappers.map { zW ->
-            val bools = allConditionValue.values.map { single -> computeConditionalValue(single, zW.viewModel, parent as? State2) }
-            val onlyBools = bools.filterIsInstance<BooleanValue>()
-            if (bools.size != onlyBools.size) error("Expected only boolean values but got $bools")
-            val value = BooleanValue(onlyBools.all { it.value })
-            FilterWrapper(value, zW.state)
-        }
+            val values = zoneWrappers.map { zW ->
+                val bools = allConditionValue.values.map { single -> computeConditionalValue(single, zW.viewModel, parent as? State2) }
+                val onlyBools = bools.filterIsInstance<BooleanValue>()
+                if (bools.size != onlyBools.size) error("Expected only boolean values but got $bools")
+                val value = BooleanValue(onlyBools.all { it.value })
+                FilterWrapper(value, zW.state)
+            }
 
-        val updatedChildren = values.filter { it.filter.value }.map { it.state }
-        val updatedParent = parent.modifiedChildren(modifiedChildren = updatedChildren)
-        client.update(updatedParent)
-        return updatedParent as ChildrenModifier2<*>
+            val updatedChildren = values.filter { it.filter.value }.map { it.state }
+            val updatedParent = parent.modifiedChildren(modifiedChildren = updatedChildren)
+            client.update(updatedParent)
+            return updatedParent as ChildrenModifier2<*>
+        } catch (e: Exception) {
+            sduiLog("filterAll error > $e", e, tag = "filterAll")
+            client.emitSideEffect(
+                PopulatedSideEffectMeta2(
+                    metaId = MetaId2("%SDUIError%", "filtering"),
+                )
+            )
+            return parent
+        }
     }
 
     fun index(parent: ChildrenModifier2<*>) {
-        val children = parent.filteredChildren ?: parent.children
-        children.forEachIndexed { index, child ->
-            child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let {
-                if (it.map["!index"] == IntValue(index)) return@forEachIndexed
-                it.map["!index"] = IntValue(index)
+        try {
+            val children = parent.filteredChildren ?: parent.children
+            children.forEachIndexed { index, child ->
+                child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let {
+                    if (it.map["!index"] == IntValue(index)) return@forEachIndexed
+                    it.map["!index"] = IntValue(index)
+                }
             }
+        } catch (e: Exception) {
+            sduiLog("index error > $e", e, tag = "index")
+            client.emitSideEffect(
+                PopulatedSideEffectMeta2(
+                    metaId = MetaId2("%SDUIError%", "index"),
+                )
+            )
         }
     }
 
     fun focus(parent: ChildrenModifier2<*>) {
-        parent.children.forEach { child ->
-            child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let {
-                parent.focus?.let { focus ->
-                    sduiLog("focus > parent focus: $focus", tag = "timer")
-                    if (it.map["!focus"] == focus) return@forEach
-                    it.map["!focus"] = focus
+        try {
+            parent.children.forEach { child ->
+                child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let {
+                    parent.focus?.let { focus ->
+                        sduiLog("focus > parent focus: $focus", tag = "timer")
+                        if (it.map["!focus"] == focus) return@forEach
+                        it.map["!focus"] = focus
+                    }
                 }
             }
+        } catch (e: Exception) {
+            sduiLog("focus error > $e", e, tag = "focus")
+            client.emitSideEffect(
+                PopulatedSideEffectMeta2(
+                    metaId = MetaId2("%SDUIError%", "focus"),
+                )
+            )
         }
     }
 
     fun jumpTo(liveValue: SingleConditionalValue, parent: ChildrenModifier2<*>): ChildrenModifier2<*> {
-        val zoneWrappers = parent.children.mapNotNull { child ->
-            child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let { zvm -> ZoneWrapper(zvm, child) }
-        }
+        try {
+            val zoneWrappers = parent.children.mapNotNull { child ->
+                child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let { zvm -> ZoneWrapper(zvm, child) }
+            }
 
-        val values = zoneWrappers.map { zW ->
-            val value = computeConditionalValue(liveValue, zW.viewModel, parent as? State2)
-            if (value !is BooleanValue) error("Expected boolean value but got $value")
-            JumpToWrapper(value, zW.state, zW.viewModel)
-        }
+            val values = zoneWrappers.map { zW ->
+                val value = computeConditionalValue(liveValue, zW.viewModel, parent as? State2)
+                if (value !is BooleanValue) error("Expected boolean value but got $value")
+                JumpToWrapper(value, zW.state, zW.viewModel)
+            }
 
-        val value = values.firstOrNull { it.jumpTo.value }
-        val map = value?.viewModel?.map
-        val newFocus = map?.get("!index") as? IntValue
-        val updatedParent = parent.focus(newFocus)
-        client.update(updatedParent)
-        return updatedParent as ChildrenModifier2<*>
+            val value = values.firstOrNull { it.jumpTo.value }
+            val map = value?.viewModel?.map
+            val newFocus = map?.get("!index") as? IntValue
+            val updatedParent = parent.focus(newFocus)
+            client.update(updatedParent)
+            return updatedParent as ChildrenModifier2<*>
+        } catch (e: Exception) {
+            sduiLog("jumpTo error > $e", e, tag = "jumpTo")
+            client.emitSideEffect(
+                PopulatedSideEffectMeta2(
+                    metaId = MetaId2("%SDUIError%", "jump"),
+                )
+            )
+        }
+        return parent
     }
 
     fun getValue(liveValue: LiveValue3, vm: ZoneViewModel3? = null, state2: State2? = null): Value {
-        return when (liveValue) {
-            is LiveValue3.ReferenceableLiveValue3 -> when (liveValue.ref) {
-                is Ref3.StateRef3 -> {
-                    val paths = client.idPaths[liveValue.ref.id] ?: error("No paths found for id: ${liveValue.ref.id}")
-                    val path = paths.firstOrNull() ?: error("Paths were empty for id: ${liveValue.ref.id}")
-                    val state = client.get<State2>(path)
-                    (state as? TextState2)?.text?.let { StringValue(it) }
-                        ?: error("Not a text state ${liveValue.ref.id}")
-                }
+        try {
+            return when (liveValue) {
+                is LiveValue3.ReferenceableLiveValue3 -> when (liveValue.ref) {
+                    is Ref3.StateRef3 -> {
+                        val paths = client.idPaths[liveValue.ref.id] ?: error("No paths found for id: ${liveValue.ref.id}")
+                        val path = paths.firstOrNull() ?: error("Paths were empty for id: ${liveValue.ref.id}")
+                        val state = client.get<State2>(path)
+                        (state as? TextState2)?.text?.let { StringValue(it) }
+                            ?: error("Not a text state ${liveValue.ref.id}")
+                    }
 
-                is VmRef3 -> {
-                    val updatedRef = if (liveValue.ref.vm == MetaId2() && vm != null) {
-                        liveValue.copyRef(VmRef3(vm = vm.metaId, property = liveValue.ref.property)).ref
-                    } else {
-                        liveValue.ref
-                    } as VmRef3
-                    client.get<ZoneViewModel3>(updatedRef.vm).map[updatedRef.property]
-                        ?: error("No value found for ref > in getValue: $updatedRef in ${updatedRef.vm} for ${updatedRef.property}")
+                    is VmRef3 -> {
+                        val updatedRef = if (liveValue.ref.vm == MetaId2() && vm != null) {
+                            liveValue.copyRef(VmRef3(vm = vm.metaId, property = liveValue.ref.property)).ref
+                        } else {
+                            liveValue.ref
+                        } as VmRef3
+                        client.get<ZoneViewModel3>(updatedRef.vm).map[updatedRef.property]
+                            ?: error("No value found for ref > in getValue: $updatedRef in ${updatedRef.vm} for ${updatedRef.property}")
+                    }
                 }
-            }
-            // TODO Could make it it's own type in future
-            is LiveValue3.InstantNowLiveValue3 -> IntValue(getNow()).also {
-                if (state2 != null && !state2.id.isAutoGenerated && liveValue.refreshMillis != null) {
-                    timer.add(state2, liveValue.refreshMillis / debugSpeed)
+                // TODO Could make it it's own type in future
+                is LiveValue3.InstantNowLiveValue3 -> IntValue(getNow()).also {
+                    if (state2 != null && !state2.id.isAutoGenerated && liveValue.refreshMillis != null) {
+                        timer.add(state2, liveValue.refreshMillis / debugSpeed)
+                    }
                 }
+                is LiveValue3.StaticLiveValue3 -> liveValue.value
             }
-            is LiveValue3.StaticLiveValue3 -> liveValue.value
+        } catch (e: Exception) {
+            sduiLog("getValue error > $e", e, tag = "getValue")
+            client.emitSideEffect(
+                PopulatedSideEffectMeta2(
+                    metaId = MetaId2("%SDUIError%", "evaluation"),
+                )
+            )
+            return VoidValue(true)
         }
     }
 
     fun reduceValue(value: Value, vm: ZoneViewModel3? = null, state2: State2? = null): Value {
-        return when (value) {
-            is SingleConditionalValue -> computeConditionalValue(value, vm, state2)
-            else -> value
+        try {
+            return when (value) {
+                is SingleConditionalValue -> computeConditionalValue(value, vm, state2)
+                else -> value
+            }
+        } catch (e: Exception) {
+            sduiLog("reduceValue error > $e", e, tag = "reduction")
+            client.emitSideEffect(
+                PopulatedSideEffectMeta2(
+                    metaId = MetaId2("%SDUIError%", "evaluation"),
+                )
+            )
+            return VoidValue(true)
         }
     }
 
     fun computeConditionalValue(value: SingleConditionalValue, vm: ZoneViewModel3? = null, state2: State2? = null): Value {
-        val value1 = getValue(value.value1, vm, state2).run { reduceValue(this, vm, state2) }
-        val value2 = getValue(value.value2, vm, state2).run { reduceValue(this, vm, state2) }
+        try {
+            val value1 = getValue(value.value1, vm, state2).run { reduceValue(this, vm, state2) }
+            val value2 = getValue(value.value2, vm, state2).run { reduceValue(this, vm, state2) }
 
-        val result = when (value.condition) {
-            Condition3.All -> {
-                if (value1 !is ListValue<*>) value.notCurrentlySupported()
-                BooleanValue(value1.value.all { it == value2 })
-            }
-
-            Condition3.Eq -> {
-                sduiLog("value1: $value1, value2: $value2", value1, value2, tag = "computeConditionalValue > Eq")
-                BooleanValue(value1 == value2)
-            }
-            Condition3.GreaterThan -> {
-                when {
-                    value1 is IntValue && value2 is IntValue -> BooleanValue(value1.value > value2.value)
-                    else -> value.notCurrentlySupported()
+            val result = when (value.condition) {
+                Condition3.All -> {
+                    if (value1 !is ListValue<*>) value.notCurrentlySupported()
+                    BooleanValue(value1.value.all { it == value2 })
                 }
-            }
 
-            Condition3.In -> {
-                if (value2 !is ListValue<*>) value.notCurrentlySupported()
-                BooleanValue(value1 in value2.value)
-            }
-
-            Condition3.InOrEmpty -> {
-                if (value2 !is ListValue<*>) value.notCurrentlySupported()
-                BooleanValue(value1 in value2.value || value2.value.isEmpty())
-            }
-
-            Condition3.LessThan -> {
-                when {
-                    value1 is IntValue && value2 is IntValue -> BooleanValue(value1.value < value2.value)
-                    else -> value.notCurrentlySupported()
+                Condition3.Eq -> {
+                    sduiLog("value1: $value1, value2: $value2", value1, value2, tag = "computeConditionalValue > Eq")
+                    BooleanValue(value1 == value2)
                 }
-            }
-
-            Condition3.Mod -> {
-                when {
-                    value1 is IntValue && value2 is IntValue -> BooleanValue((value1.value % value2.value) == 0)
-                    else -> value.notCurrentlySupported()
+                Condition3.GreaterThan -> {
+                    when {
+                        value1 is IntValue && value2 is IntValue -> BooleanValue(value1.value > value2.value)
+                        else -> value.notCurrentlySupported()
+                    }
                 }
-            }
 
-            Condition3.And -> {
-                when {
-                    value1 is BooleanValue && value2 is BooleanValue -> BooleanValue(value1.value && value2.value)
-                    else -> value.notCurrentlySupported()
+                Condition3.In -> {
+                    if (value2 !is ListValue<*>) value.notCurrentlySupported()
+                    BooleanValue(value1 in value2.value)
                 }
+
+                Condition3.InOrEmpty -> {
+                    if (value2 !is ListValue<*>) value.notCurrentlySupported()
+                    BooleanValue(value1 in value2.value || value2.value.isEmpty())
+                }
+
+                Condition3.LessThan -> {
+                    when {
+                        value1 is IntValue && value2 is IntValue -> BooleanValue(value1.value < value2.value)
+                        else -> value.notCurrentlySupported()
+                    }
+                }
+
+                Condition3.Mod -> {
+                    when {
+                        value1 is IntValue && value2 is IntValue -> BooleanValue((value1.value % value2.value) == 0)
+                        else -> value.notCurrentlySupported()
+                    }
+                }
+
+                Condition3.And -> {
+                    when {
+                        value1 is BooleanValue && value2 is BooleanValue -> BooleanValue(value1.value && value2.value)
+                        else -> value.notCurrentlySupported()
+                    }
+                }
+
+                else -> value.notCurrentlySupported()
             }
 
-            else -> value.notCurrentlySupported()
-        }
+            val value = if (result.value) {
+                getValue(value.trueBranch, vm)
+            } else {
+                getValue(value.falseBranch, vm)
+            }
 
-        val value = if (result.value) {
-            getValue(value.trueBranch, vm)
-        } else {
-            getValue(value.falseBranch, vm)
-        }
-
-        return when(value) {
-            is SingleConditionalValue -> computeConditionalValue(value, vm, state2)
-            else -> value
+            return when(value) {
+                is SingleConditionalValue -> computeConditionalValue(value, vm, state2)
+                else -> value
+            }
+        } catch (e: Exception) {
+            sduiLog("computeConditionalValue error > $e", e, tag = "computeConditionalValue")
+            client.emitSideEffect(
+                PopulatedSideEffectMeta2(
+                    metaId = MetaId2("%SDUIError%", "evaluation"),
+                )
+            )
+            return VoidValue(true)
         }
     }
 

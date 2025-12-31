@@ -25,14 +25,10 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.Compan
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalLiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Path2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.LiveValue3
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.Ref3
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.ListValue
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.RandomStringValue
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.StringValue
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.VoidValue
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
 import ship.f.engine.shared.utils.serverdrivenui2.ext.createTime
@@ -963,15 +959,13 @@ data class UpdateZoneModel(
 @SerialName("LiveAction2")
 data class LiveAction2(
     override val action: Action2,
-    val liveValue: List<ConditionalLiveValue2>
+    val liveValue: ConditionalValue,
 ) : Action2(), HigherOrderModifier2 {
     override fun execute(
         state: State2,
         client: Client2
     ) {
-        if (liveValue.isNotEmpty() && liveValue.map { client.computeConditionalLive(it) }.all { it }) {
-            action.run(state, client) // TODO the state will be incorrect because this is not a remote action
-        }
+        TODO("Use run 3 instead")
     }
 
     // TODO will be upgraded shortly
@@ -979,10 +973,18 @@ data class LiveAction2(
         state: State2,
         client: Client3,
     ) {
-        val all = liveValue.map { client.computationEngine.computeConditionalLive(it) }.all { it }
-        if (liveValue.isNotEmpty() && all) {
+        val shouldRun = when(liveValue){
+            is AllConditionalValue -> liveValue.values.map {
+                (client3.computationEngine.computeConditionalValue(it) as BooleanValue).value
+            }.all { it } && liveValue.values.isNotEmpty()
+            is AnyConditionalValue -> liveValue.values.map {
+                (client3.computationEngine.computeConditionalValue(it) as BooleanValue).value
+            }.any { it } && liveValue.values.isNotEmpty()
+            is SingleConditionalValue -> (client3.computationEngine.computeConditionalValue(liveValue) as BooleanValue).value
+        }
+        if (shouldRun) {
             action.run3(state, client) // TODO the state will be incorrect because this is not a remote action
-            sduiLog(all, tag = "liveAction")
+            sduiLog(shouldRun, tag = "liveAction")
         }
     }
 }

@@ -3,12 +3,15 @@ package ship.f.engine.shared.utils.serverdrivenui2.state
 import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3.Companion.client3
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.DeferredAction2
+import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSideEffectMeta2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalBranchLiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.ConditionalValue
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.Trigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.modifiers.OnBuildCompleteModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.modifiers.OnInitialRenderModifier2
+import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
 
 @Serializable
 sealed class State2 :
@@ -47,13 +50,22 @@ sealed class State2 :
 //            )
 //        }
 
-        actions.forEach {
-            if (this is OnInitialRenderModifier2 && client3.hasFired(it)) return@forEach
-            (cachedState?.let { cacheState ->
-                (it as? DeferredAction2<*>)?.copy(cachedState = cacheState)
-            } ?: it).run3(
-                state = this@State2,
-                client = client3,
+        try {
+            actions.forEach {
+                if (this is OnInitialRenderModifier2 && client3.hasFired(it)) return@forEach
+                (cachedState?.let { cacheState ->
+                    (it as? DeferredAction2<*>)?.copy(cachedState = cacheState)
+                } ?: it).run3(
+                    state = this@State2,
+                    client = client3,
+                )
+            }
+        } catch (e: Exception) {
+            sduiLog("Error running trigger: ${e.message}", tag = "EngineX > State2 > trigger")
+            client3.emitSideEffect(
+                PopulatedSideEffectMeta2(
+                    metaId = MetaId2("%SDUIError%", "trigger"),
+                )
             )
         }
     }

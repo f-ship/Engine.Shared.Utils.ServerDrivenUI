@@ -142,21 +142,30 @@ open class Client3 {
 
     fun commit() {
         commitScope.launch {
-            val distinct = queueMutex.withLock {
-                val distinct = stateQueue.distinct()
-                stateQueue.clear()
-                distinct
-            }
-
-            distinct.forEach { state ->
-                // This is done to ensure parents that are already rendered can accept children on the main thread
-                if (reactiveStates[state.path3] == null) {
-                    reactiveStates[state.path3] = mutableStateOf(state)
-                    navigationEngine.checkNavigation(state.id)
+            try {
+                val distinct = queueMutex.withLock {
+                    val distinct = stateQueue.distinct()
+                    stateQueue.clear()
+                    distinct
                 }
-            }
-            distinct.forEach { state ->
-                reactiveStates.defaultIfNull(state.path3, mutableStateOf(state)) { it.also { it.value = state } }
+
+                distinct.forEach { state ->
+                    // This is done to ensure parents that are already rendered can accept children on the main thread
+                    if (reactiveStates[state.path3] == null) {
+                        reactiveStates[state.path3] = mutableStateOf(state)
+                        navigationEngine.checkNavigation(state.id)
+                    }
+                }
+                distinct.forEach { state ->
+                    reactiveStates.defaultIfNull(state.path3, mutableStateOf(state)) { it.also { it.value = state } }
+                }
+            } catch (e: Exception) {
+                sduiLog("Commit error: ${e.message}", tag = "Client3 > commit > error")
+                emitSideEffect(
+                    PopulatedSideEffectMeta2(
+                        metaId = MetaId2("%SDUIError%", "commit"),
+                    )
+                )
             }
         }
     }
