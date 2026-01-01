@@ -116,6 +116,7 @@ data class NavigationConfig2(
         data class Next2(
             override val stateId: StateId2 = StateId2(),
             val idempotentKey: String? = null,
+            val skip: Int = 0,
         ) : StateOperation2()
 
         @Serializable

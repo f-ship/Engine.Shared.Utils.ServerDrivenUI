@@ -77,6 +77,10 @@ class NavigationEngine(val client: Client3) {
                     operation.idempotentKey?.let { key ->
                         if (currentQueueKeys.contains(key)) return else currentQueueKeys.add(key)
                     }
+                    repeat(operation.skip) {
+                        sduiLog("Skipping item ${currentQueue.firstOrNull()}", tag = "NavigationEngine > navigate > Next2")
+                        currentQueue.removeFirstOrNull()
+                    }
                     val newItem = currentQueue.removeFirstOrNull() ?: return
                     val state = client.getOrNull<State2>(newItem)
                     state?.let {
