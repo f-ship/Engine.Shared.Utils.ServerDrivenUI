@@ -9,7 +9,6 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Alignment2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Arrangement2.VerticalArrangement2.Top2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalLiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.LiveValue3
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.ConditionalValue
@@ -42,12 +41,9 @@ data class VariantState2(
     override val path: Path2 = Path2(),
     override val path3: Path3 = Path3.Init,
     override val filteredChildren: List<State2>? = null,
-    override val filter: List<ConditionalLiveValue2>? = null,
     override val filter3: ConditionalValue? = null,
-    override val sort: LiveValue2? = null,
     override val sort3: LiveValue3? = null,
     override val focus: IntValue? = null,
-    override val jumpTo: List<ConditionalLiveValue2>? = null,
     override val jumpTo3: ConditionalValue? = null,
     val variant: LiveValue3,
     val defaultVariant: LiveValue3,
@@ -65,11 +61,8 @@ data class VariantState2(
     override fun c(alignment: Alignment2) = copy(alignment = alignment)
     override fun c(arrangement: Arrangement2) = copy(arrangement = arrangement)
     override fun modifiedChildren(modifiedChildren: List<State2>?) = copy(filteredChildren = modifiedChildren)
-    override fun filter(filter: List<ConditionalLiveValue2>?) = copy(filter = filter)
     override fun filter3(filter3: ConditionalValue?) = copy(filter3 = filter3)
-    override fun c(sort: LiveValue2?) = copy(sort = sort)
     override fun c(sort3: LiveValue3?) = copy(sort3 = sort3)
-    override fun jumpTo(jumpTo: List<ConditionalLiveValue2>?) = copy(jumpTo = jumpTo)
     override fun jumpTo3(jumpTo3: ConditionalValue?) = copy(jumpTo3 = jumpTo3)
     override fun focus(focus: IntValue?) = copy(focus = focus)
     override fun c(weight: Weight2) = copy(weight = weight)

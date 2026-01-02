@@ -5,7 +5,6 @@ import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3.Companion.clie
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.DeferredAction2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSideEffectMeta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalBranchLiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.ConditionalValue
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.Trigger2
@@ -25,31 +24,14 @@ sealed class State2 :
     ResetModifier2<State2>,
     OnInitialRenderModifier2,
     OnBuildCompleteModifier2 {
-    override val liveDraws: List<ConditionalBranchLiveValue2>? // TODO to make it easier to not have to add everywhere
-        get() = null
-
     override val liveDraws3: List<ConditionalValue>?
         get() = null
-    override fun liveDraws(liveDraws: List<ConditionalBranchLiveValue2>?): State2 {
-        return this
-    }
 
     override fun liveDraws3(liveDraws3: List<ConditionalValue>?): State2 {
         return this
     }
 
     fun Trigger2.trigger(cachedState: State2? = null) {
-//        val client = get<Client2>()
-//        actions.forEach {
-//            if (this is OnInitialRenderModifier2 && client.hasFired(it)) return@forEach
-//            (cachedState?.let { cacheState ->
-//                (it as? DeferredAction2<*>)?.copy(cachedState = cacheState)
-//            } ?: it).run(
-//                state = this@State2,
-//                client = client,
-//            )
-//        }
-
         try {
             actions.forEach {
                 if (this is OnInitialRenderModifier2 && client3.hasFired(it)) return@forEach
@@ -72,7 +54,6 @@ sealed class State2 :
 
     inline fun <reified S : State2> S.update(block: S.() -> S): State2 {
         val update = block()
-//        get<Client2>().update(update)
         return update.also { client3.update(update) }
     }
 

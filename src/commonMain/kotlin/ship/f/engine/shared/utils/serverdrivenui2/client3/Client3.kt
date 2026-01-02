@@ -13,15 +13,12 @@ import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.Action2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.DeferredAction2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.RemoteAction2
-import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.ResetState2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.MetaPublisherActionModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.StatePublisherActionModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSideEffectMeta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.*
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.Ref2.VmRef2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ChildrenModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.Trigger2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.modifiers.*
@@ -303,24 +300,6 @@ open class Client3 {
                         action = action as Action2,
                         targetStateId = state.id
                     )
-                }
-            }
-        }
-
-        (state as? ChildrenModifier2<State2>)?.run {
-            filter?.let { filterConfig ->
-                val vmRefs = mutableListOf<VmRef2>()
-                filterConfig.forEach { filter ->
-                    if (filter.value1 is LiveValue2.MultiLiveValue2) vmRefs.add(filter.value1.ref)
-                    if (filter.value2 is LiveValue2.MultiLiveValue2) vmRefs.add(filter.value2.ref)
-                }
-                vmRefs.distinct().forEach { vmRef ->
-                    listeners.defaultIfNull(vmRef.vm, listOf()) {
-                        it + RemoteAction2(
-                            action = ResetState2(state.id),
-                            targetStateId = state.id
-                        )
-                    }
                 }
             }
         }

@@ -9,7 +9,6 @@ import kotlinx.serialization.modules.subclass
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.Action2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.ConfirmSideEffect2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.StateMachineSelect2
-import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.ToggleFilter2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.StateMachineMeta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.StringValue
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Value
@@ -23,12 +22,7 @@ val json2 = Json {
     classDiscriminatorMode = ClassDiscriminatorMode.ALL_JSON_OBJECTS
 
     serializersModule = SerializersModule {
-//        polymorphic(
-//            baseClass = State2::class,
-//        ) {
-//            subclass(ScreenState2::class)
-//            defaultDeserializer { ScreenState2.serializer() }
-//        }
+
         polymorphic(
             baseClass = Value::class,
         ) {
@@ -39,7 +33,6 @@ val json2 = Json {
             baseClass = Action2::class,
         ) {
             // TODO add all actions
-            subclass(ToggleFilter2::class)
             subclass(StateMachineSelect2::class)
             subclass(ConfirmSideEffect2::class)
         }

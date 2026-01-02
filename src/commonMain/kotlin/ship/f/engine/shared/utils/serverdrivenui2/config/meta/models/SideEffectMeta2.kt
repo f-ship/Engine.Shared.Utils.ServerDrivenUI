@@ -2,7 +2,6 @@ package ship.f.engine.shared.utils.serverdrivenui2.config.meta.models
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import ship.f.engine.shared.utils.serverdrivenui2.client.Client2
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.Action2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2
@@ -18,13 +17,6 @@ data class SideEffectMeta2(
     val metas: List<MetaId2> = listOf(),
     val onExpected: Map<Id2, List<Pair<StateId2, Action2>>> = mapOf(),
 ) : Meta2() {
-    fun toPopulated(client: Client2) = PopulatedSideEffectMeta2(
-        metaId = metaId,
-        states = states.map { client.get(it) },
-        metas = metas.map { client.get(it) },
-        onExpected = onExpected,
-    )
-
     fun toPopulated(client: Client3) = PopulatedSideEffectMeta2(
         metaId = metaId,
         states = states.map { client.get(it) },

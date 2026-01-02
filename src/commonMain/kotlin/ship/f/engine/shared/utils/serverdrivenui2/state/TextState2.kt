@@ -43,7 +43,6 @@ data class TextState2(
     val limit: Int? = null,
     val overrideScope: Boolean = false,
     override val text: String,
-    override val liveText: LiveValue2.TextLiveValue2? = null,
     override val liveText3: LiveValue3? = null,
 ) : State2(),
     TextStyleModifier2<TextState2>,
@@ -65,6 +64,5 @@ data class TextState2(
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
     override fun text(text: String) = copy(text = text)
-    override fun liveText(liveText: LiveValue2.TextLiveValue2) = copy(liveText = liveText)
     override fun liveText3(liveText3: LiveValue3) = copy(liveText3 = liveText3)
 }

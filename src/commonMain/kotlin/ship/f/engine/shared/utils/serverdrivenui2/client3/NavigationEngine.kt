@@ -2,7 +2,6 @@ package ship.f.engine.shared.utils.serverdrivenui2.client3
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import ship.f.engine.shared.utils.serverdrivenui2.client.BackStackEntry2.Direction2.Backward2
 import ship.f.engine.shared.utils.serverdrivenui2.client3.BackStackEntry3.ScreenEntry
 import ship.f.engine.shared.utils.serverdrivenui2.client3.BackStackEntry3.ViewEntry
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.ResetDescendantState2
@@ -217,7 +216,7 @@ class NavigationEngine(val client: Client3) {
             when(val entry = backstack.last()) {
                 is ScreenEntry -> {
                     when (old) {
-                        is ScreenEntry -> currentScreen.value = entry.copy(direction2 = Backward2) // TODO wrap in an self destructing animation
+                        is ScreenEntry -> currentScreen.value = entry.copy(direction2 = ScreenEntry.BackStackEntry2.Direction2.Backward2) // TODO wrap in an self destructing animation
                         is ViewEntry -> {
                             navigate(
                                 ReplaceChild2(

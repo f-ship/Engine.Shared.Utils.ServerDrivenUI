@@ -1,6 +1,5 @@
 package ship.f.engine.shared.utils.serverdrivenui2.client3
 
-import ship.f.engine.shared.utils.serverdrivenui2.client.BackStackEntry2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.Action2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.RemoteAction2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2.PushState2.SavedZone
@@ -17,7 +16,18 @@ sealed class BackStackEntry3 {
         override val canPopBack: Boolean = true,
         override val savedZones: List<SavedZone> = emptyList(),
         override val refreshStates: List<StateId2> = emptyList(),
-    ): BackStackEntry3()
+    ): BackStackEntry3() {
+        data class BackStackEntry2(
+            val direction: Direction2,
+            val state: State2,
+            val canPopBack: Boolean = true,
+        ) {
+            sealed class Direction2 {
+                data object Forward2 : Direction2()
+                data object Backward2 : Direction2()
+            }
+        }
+    }
 
     data class ViewEntry(
         val containerId: StateId2,

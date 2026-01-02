@@ -4,11 +4,13 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalLiveValue2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.PaddingValues2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Path2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.TextStyle2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.LiveValue3
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.ConditionalValue
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Draw2
@@ -49,12 +51,9 @@ data class DropDownState2(
     val arrowDropUpIcon: ImageState2? = null,
     override val children: List<State2> = listOf(),
     override val filteredChildren: List<State2>? = null,
-    override val filter: List<ConditionalLiveValue2>? = null,
     override val filter3: ConditionalValue? = null,
-    override val sort: LiveValue2? = null,
     override val sort3: LiveValue3? = null,
     override val focus: IntValue? = null,
-    override val jumpTo: List<ConditionalLiveValue2>? = null,
     override val jumpTo3: ConditionalValue? = null,
 ) : State2(),
     PaddingModifier2<DropDownState2>,
@@ -71,11 +70,8 @@ data class DropDownState2(
     override fun cM(metas: List<Meta2>) = copy(metas = metas)
     override fun c(children: List<State2>) = copy(children = children)
     override fun modifiedChildren(modifiedChildren: List<State2>?) = copy(filteredChildren = modifiedChildren)
-    override fun filter(filter: List<ConditionalLiveValue2>?) = copy(filter = filter)
     override fun filter3(filter3: ConditionalValue?) = copy(filter3 = filter3)
-    override fun c(sort: LiveValue2?) = copy(sort = sort)
     override fun c(sort3: LiveValue3?) = copy(sort3 = sort3)
-    override fun jumpTo(jumpTo: List<ConditionalLiveValue2>?) = copy(jumpTo = jumpTo)
     override fun jumpTo3(jumpTo3: ConditionalValue?) = copy(jumpTo3 = jumpTo3)
     override fun focus(focus: IntValue?) = copy(focus = focus)
 

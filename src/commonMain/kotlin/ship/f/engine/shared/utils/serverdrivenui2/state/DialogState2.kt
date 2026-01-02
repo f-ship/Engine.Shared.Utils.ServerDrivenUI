@@ -5,8 +5,6 @@ import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalLiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.PaddingValues2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Path2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2
@@ -39,12 +37,9 @@ data class DialogState2(
     override val children: List<State2> = listOf(),
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val filteredChildren: List<State2>? = null,
-    override val filter: List<ConditionalLiveValue2>? = null,
     override val filter3: ConditionalValue? = null,
-    override val sort: LiveValue2? = null,
     override val sort3: LiveValue3? = null,
     override val focus: IntValue? = null,
-    override val jumpTo: List<ConditionalLiveValue2>? = null,
     override val jumpTo3: ConditionalValue? = null,
     override val padding: PaddingValues2 = PaddingValues2(),
     override val onDismissTrigger: OnDismissTrigger2,
@@ -63,11 +58,8 @@ data class DialogState2(
     override fun c(path3: Path3) = copy(path3 = path3)
     override fun c(path: Path2) = copy(path = path)
     override fun modifiedChildren(modifiedChildren: List<State2>?) = copy(filteredChildren = modifiedChildren)
-    override fun filter(filter: List<ConditionalLiveValue2>?) = copy(filter = filter)
     override fun filter3(filter3: ConditionalValue?) = copy(filter3 = filter3)
-    override fun c(sort: LiveValue2?) = copy(sort = sort)
     override fun c(sort3: LiveValue3?) = copy(sort3 = sort3)
-    override fun jumpTo(jumpTo: List<ConditionalLiveValue2>?) = copy(jumpTo = jumpTo)
     override fun jumpTo3(jumpTo3: ConditionalValue?) = copy(jumpTo3 = jumpTo3)
     override fun focus(focus: IntValue?) = copy(focus = focus)
 

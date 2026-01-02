@@ -12,8 +12,6 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorSchem
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2.Unspecified
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalBranchLiveValue2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.LiveValue2.ConditionalLiveValue2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.Companion.DefaultShapes2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.CornerBasedShape2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
@@ -53,14 +51,10 @@ data class ColumnState2(
     override val draws: List<Draw2> = listOf(),
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val filteredChildren: List<State2>? = null,
-    override val filter: List<ConditionalLiveValue2>? = null,
     override val filter3: ConditionalValue? = null,
-    override val sort: LiveValue2? = null,
     override val sort3: LiveValue3? = null,
     override val focus: IntValue? = null,
-    override val jumpTo: List<ConditionalLiveValue2>? = null,
     override val jumpTo3: ConditionalValue? = null,
-    override val liveDraws: List<ConditionalBranchLiveValue2>? = null,
     override val liveDraws3: List<ConditionalValue>? = null,
 ) : State2(),
     ChildrenModifier2<ColumnState2>,
@@ -87,11 +81,8 @@ data class ColumnState2(
     override fun reset(counter: Int) = copy(counter = counter)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun modifiedChildren(modifiedChildren: List<State2>?) = copy(filteredChildren = modifiedChildren)
-    override fun filter(filter: List<ConditionalLiveValue2>?) = copy(filter = filter)
     override fun filter3(filter3: ConditionalValue?) = copy(filter3 = filter3)
-    override fun c(sort: LiveValue2?) = copy(sort = sort)
     override fun c(sort3: LiveValue3?) = copy(sort3 = sort3)
-    override fun jumpTo(jumpTo: List<ConditionalLiveValue2>?) = copy(jumpTo = jumpTo)
     override fun jumpTo3(jumpTo3: ConditionalValue?) = copy(jumpTo3 = jumpTo3)
     override fun focus(focus: IntValue?) = copy(focus = focus)
 
@@ -102,7 +93,5 @@ data class ColumnState2(
         padding = padding,
         innerPadding = innerPadding
     )
-
-    override fun liveDraws(liveDraws: List<ConditionalBranchLiveValue2>?) = copy(liveDraws = liveDraws)
     override fun liveDraws3(liveDraws3: List<ConditionalValue>?) = copy(liveDraws3 = liveDraws3)
 }
