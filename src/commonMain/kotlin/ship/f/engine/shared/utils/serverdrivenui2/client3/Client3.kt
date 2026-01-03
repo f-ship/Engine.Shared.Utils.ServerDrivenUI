@@ -173,6 +173,7 @@ open class Client3 {
         clearState: Boolean = true,
     ): State2 {
         return if (state.path3 !is Init && renderChain.isEmpty()) state
+//        else if (state.path3 is Global) state // TODO hopefully will improve performance of this case
         else if (renderChain.isNotEmpty()) {
             resetPaths(state, clearState).run {
                 buildPaths(this, renderChain).also {

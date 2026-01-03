@@ -96,6 +96,7 @@ class NavigationEngine(val client: Client3) {
                     val parent = inside as? ChildrenModifier2<*>
                         ?: error("During insertion operation, parent was not of type ChildrenModifier<*> ${operation.container}")
                     val child = client.get<State2>(operation.stateId)
+                    sduiLog(child.path3, tag = "NavigationEngine > navigate > ReplaceChild2 > path3") { operation.stateId.name == "Agenda" + "Items" }
                     val updatedChild = client.initState(child, inside.path3.toRenderChain(), operation.clearState)
                     val updatedParent = parent.c(listOf(updatedChild))
                     client.update(updatedParent)
