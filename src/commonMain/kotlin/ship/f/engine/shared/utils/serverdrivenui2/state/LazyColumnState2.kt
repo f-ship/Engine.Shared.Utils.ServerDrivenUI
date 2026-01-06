@@ -52,6 +52,7 @@ data class LazyColumnState2(
     override val sort3: LiveValue3? = null,
     override val focus: IntValue? = null,
     override val jumpTo3: ConditionalValue? = null,
+    val scrollToBottom: Boolean? = null, // TODO replace with a proper jumpTo3 implementation
 ) : State2(),
     ChildrenModifier2<LazyColumnState2>,
     AlignmentModifier2<LazyColumnState2>,

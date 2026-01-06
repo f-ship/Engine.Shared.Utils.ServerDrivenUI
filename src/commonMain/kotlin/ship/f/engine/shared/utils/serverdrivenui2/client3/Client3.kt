@@ -171,8 +171,9 @@ open class Client3 {
         state: State2,
         renderChain: List<StateId2> = listOf(),
         clearState: Boolean = true,
+        forceUpdate: Boolean = false,
     ): State2 {
-        return if (state.path3 !is Init && renderChain.isEmpty()) state
+        return if (state.path3 !is Init && renderChain.isEmpty() && !forceUpdate) state // TODO makes server updates hard
 //        else if (state.path3 is Global) state // TODO hopefully will improve performance of this case
         else if (renderChain.isNotEmpty()) {
             resetPaths(state, clearState).run {

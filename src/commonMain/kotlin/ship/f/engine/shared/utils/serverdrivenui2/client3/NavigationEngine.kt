@@ -55,6 +55,7 @@ class NavigationEngine(val client: Client3) {
                         backstack.add(entry)
                         client.commit() // Need to commit before setting it to the current screen
                         currentScreen.value = entry
+                        canPopState.value = canPop()
                     } ?: safeNavigationQueue.add(operation.stateId)
                 }
 
@@ -68,6 +69,7 @@ class NavigationEngine(val client: Client3) {
                             backstack.add(entry)
                             client.commit() // Need to commit before setting it to the current screen
                             currentScreen.value = entry
+                            canPopState.value = canPop()
                         } ?: safeNavigationQueue.add(item)
                     }
                 }
@@ -87,6 +89,7 @@ class NavigationEngine(val client: Client3) {
                         backstack.add(entry)
                         client.commit()
                         currentScreen.value = entry
+                        canPopState.value = canPop()
                     } ?: safeNavigationQueue.add(newItem)
                 }
 
@@ -120,6 +123,8 @@ class NavigationEngine(val client: Client3) {
                 }
 
                 is PushState2 -> {
+                    sduiLog("Pushing state ${operation.stateId}", client.getOrNull<State2>(operation.stateId), client.get<State2>(operation.container), tag = "NavigationEngine > navigate > PushState2")
+
                     client.getOrNull<State2>(operation.stateId)
                         ?: safeNavigationQueue.add(operation.stateId).let { return }
                     (client.get<State2>(operation.container) as? ChildrenModifier2<*>)
@@ -180,13 +185,14 @@ class NavigationEngine(val client: Client3) {
                     val parent = inside as? ChildrenModifier2<*>
                         ?: error("During insertion operation, parent was not of type ChildrenModifier<*> ${operation.stateId}")
 
-                    sduiLog(operation.state.metas, tag = "NavigationEngine > navigate > InsertionStateOperation2.End2")
+                    sduiLog(operation.state.metas, operation.state, tag = "NavigationEngine > navigate > InsertionStateOperation2.End2")
 
                     val updatedState = client.initState(operation.state, inside.path3.toRenderChain())
                     client.setViewModels(updatedState) // TODO because initState prevents this from happening due to renderChain
                     val updatedParent = parent.c(parent.children + updatedState)
 
                     client.update(updatedParent)
+                    updateAscendants(updatedParent)
                 }
 
                 else -> Unit
@@ -202,6 +208,26 @@ class NavigationEngine(val client: Client3) {
         }
     }
 
+    fun updateAscendants(state: State2){
+        val parents = when(val p = state.path3){
+            is Path3.Anon, Path3.Init -> listOf()
+            is Path3.Global -> listOf()
+            is Path3.Local -> p.path
+        }
+        if (parents.isNotEmpty()) tryUpdateAscendants(state, parents.subList(0, parents.lastIndex))
+        client.commit()
+    }
+
+    fun tryUpdateAscendants(state: State2, ascendants: List<StateId2>){
+        val parent = ascendants.last()
+        val parentState = client.getOrNull<State2>(parent) ?: error("Failed to find parent in try Update Ascendants")
+        val cM = parentState as? ChildrenModifier2<*> ?: error("Parent state was not of type ChildrenModifier2")
+        val updatedParent = cM.c(cM.children.map { child -> if (child.id == state.id) state else child })
+        client.update(updatedParent)
+        val nextAscendants = ascendants.subList(0, ascendants.lastIndex)
+        if (nextAscendants.isNotEmpty()) tryUpdateAscendants(updatedParent, nextAscendants)
+    }
+
     fun checkNavigation(stateId: StateId2) {
         if (safeNavigationQueue.contains(stateId)) {
             safeNavigationQueue.remove(stateId)
@@ -209,7 +235,7 @@ class NavigationEngine(val client: Client3) {
         }
     }
 
-    fun canPop() = backstack.isNotEmpty() && backstack.subList(0, backstack.lastIndex).any { it.canPopBack }
+    fun canPop() = backstack.isNotEmpty() && backstack.subList(0, backstack.lastIndex).any { it.canPopBack }.also { sduiLog("result of canPop: $it, backstack size ${backstack.size}", tag = "NavigationEngine > canPop") }
     fun pop() {
         try {
             val old = backstack.removeLast()

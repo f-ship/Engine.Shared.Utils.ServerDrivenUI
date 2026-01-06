@@ -42,6 +42,7 @@ data class TextState2(
     val underline: Boolean = false,
     val limit: Int? = null,
     val overrideScope: Boolean = false,
+    val spans: List<Span>? = null,
     override val text: String,
     override val liveText3: LiveValue3? = null,
 ) : State2(),
@@ -65,4 +66,14 @@ data class TextState2(
     override fun reset(counter: Int) = copy(counter = counter)
     override fun text(text: String) = copy(text = text)
     override fun liveText3(liveText3: LiveValue3) = copy(liveText3 = liveText3)
+
+    @Serializable
+    @SerialName("Spans")
+    data class Span(
+        val text: String,
+        val color: Color2,
+        val underline: Boolean,
+        val fontSize: Int,
+        val fontWeight: FontWeight2,
+    )
 }

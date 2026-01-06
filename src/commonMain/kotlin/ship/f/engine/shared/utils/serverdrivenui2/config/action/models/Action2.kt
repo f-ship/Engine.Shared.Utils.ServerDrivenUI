@@ -25,7 +25,7 @@ sealed class Action2 : ActionIdModifier2 {
             client.addFired(this)
             execute3(state, client)
         } catch (e: Exception) {
-            sduiLog("Error while executing action $id", tag = "EngineX > run3")
+            sduiLog("Error while executing action $id", this, tag = "EngineX > run3")
             client.emitSideEffect(
                 PopulatedSideEffectMeta2(
                     metaId = Id2.MetaId2("%SDUIError%", "action"),

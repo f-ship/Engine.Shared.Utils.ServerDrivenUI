@@ -389,18 +389,25 @@ data class Create3(
         }
         val updatedState = replaceScope(newState, scopeString)
         //2) Get New Meta by searching state
-        val meta = updatedState.metas.filterIsInstance<ZoneViewModel3>().firstOrNull() ?: error("ZoneViewModel3 not found in $state")
-        sduiLog("meta: $meta", tag = "create3")
+        val zoneModel = updatedState.metas.filterIsInstance<ZoneViewModel3>().firstOrNull() ?: error("ZoneViewModel3 not found in $state")
+        val copiedZoneModel = zoneModel.copy(
+            metaId = zoneModel.metaId,
+            map = zoneModel.map.toMutableMap(),
+        )
+
+        sduiLog("meta: $zoneModel", tag = "create3")
         //3) Get Base Meta
-        val baseMeta = client3.get(targetMetaId) as? ZoneViewModel3 ?: error("ZoneViewModel3 not found for ${meta.metaId}")
+        val baseMeta = client3.get(targetMetaId) as? ZoneViewModel3 ?: error("ZoneViewModel3 not found for ${zoneModel.metaId}")
         //4) Copy the values over
         copyMap.forEach { (key, value) ->
-            meta.map[value] = baseMeta.map[key] ?: error("Value not found for $value")
+            copiedZoneModel.map[value] = baseMeta.map[key] ?: error("Value not found for $value")
         }
-        sduiLog("meta: $meta", tag = "create3 > copyMap")
+        val updatedStateWithMeta = updatedState.cM(metas = updatedState.metas.map { meta -> if (meta.metaId == copiedZoneModel.metaId) copiedZoneModel else meta })
+
+        sduiLog("meta: $copiedZoneModel", tag = "create3 > copyMap")
         //5) Perform actions on current state
         stateActions.forEach {
-            it.run3(updatedState, client)
+            it.run3(updatedStateWithMeta, client)
         }
         //6) Perform actions in general
         actions.forEach {
@@ -471,7 +478,7 @@ data class UpdateZoneModel3(
                 else -> error("Not supported yet $liveValue in $operation")
             }
             is Operation2.Set -> when (liveValue) {
-                is LiveValue3.StaticLiveValue3 -> vm.map[operation.property] = liveValue.value.also { sduiLog(vm.map[operation.property], operation.property, tag = "updateZoneModel > Set") }
+                is LiveValue3.StaticLiveValue3 -> vm.map[operation.property] = liveValue.value.also { sduiLog(liveValue.value, operation.property, targetMetaId, tag = "updateZoneModel > Set") }
                 is LiveValue3.ReferenceableLiveValue3 -> when(liveValue.ref) {
                     is Ref3.StateRef3 -> (client.get<State2>(liveValue.ref.id) as? TextModifier2<*> ?: error("Text not found for $liveValue")).let {
                         vm.map[operation.property] = StringValue(it.text)
