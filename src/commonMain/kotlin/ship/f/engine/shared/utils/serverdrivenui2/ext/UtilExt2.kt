@@ -19,6 +19,16 @@ fun <V, T> List<V>.zipMap(other: T, transform: (V) -> T): List<T> {
     return list
 }
 
+fun <T> List<T>.wrapWith(element: T): List<T> {
+    val list = mutableListOf<T>()
+    list.add(element)
+    forEach {
+        list.add(it)
+        list.add(element)
+    }
+    return list
+}
+
 
 /**
  * Used to dangerously get a non-nullable value from a map that should have the value

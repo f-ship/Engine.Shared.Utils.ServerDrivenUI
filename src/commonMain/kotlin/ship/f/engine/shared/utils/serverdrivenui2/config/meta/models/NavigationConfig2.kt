@@ -2,6 +2,8 @@ package ship.f.engine.shared.utils.serverdrivenui2.config.meta.models
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import ship.f.engine.shared.utils.serverdrivenui2.client3.BackStackEntry3.ScreenEntry.BackStackEntry2.Direction2
+import ship.f.engine.shared.utils.serverdrivenui2.client3.BackStackEntry3.ScreenEntry.BackStackEntry2.Direction2.Forward2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.Navigate2
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.RemoteAction2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
@@ -97,6 +99,7 @@ data class NavigationConfig2(
             val groupKey: String? = null,
             val savedZones: List<SavedZone> = emptyList(),
             val refreshStates: List<StateId2> = emptyList(), // TODO while we don't have reactive zone models
+            val direction: Direction2 = Forward2,
         ) : StateOperation2() {
             @Serializable
             @SerialName("SavedZone")

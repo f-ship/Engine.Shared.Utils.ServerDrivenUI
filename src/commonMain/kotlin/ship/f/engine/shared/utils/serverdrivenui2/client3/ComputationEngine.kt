@@ -99,7 +99,7 @@ class ComputationEngine(val client: Client3) {
 
             val values = zoneWrappers.map { zW ->
                 when (liveValue2.ref) {
-                    is VmRef3 -> ChildOrderWrapper(order = zW.viewModel?.map[liveValue2.ref.property] as? IntValue, state = zW.state)
+                    is VmRef3 -> ChildOrderWrapper(order = zW.viewModel!!.map[liveValue2.ref.property] as IntValue, state = zW.state)
                     is Ref3.StateRef3 -> {
                         sduiLog("sort > expected StateRef3 but got ${liveValue2.ref}")
                         return parent
@@ -125,17 +125,17 @@ class ComputationEngine(val client: Client3) {
     fun filter(value: SingleConditionalValue, parent: ChildrenModifier2<*>): ChildrenModifier2<*> {
         try {
             // TODO will need to replicate similar logic to other methods below and even above
-            val zoneWrappers = parent.children.mapNotNull { child ->
+            val zoneWrappers = parent.children.map { child ->
                 if (child is RefState2) {
                     val updatedChild = client.get<State2>(child.id)
                     updatedChild.metas.filterIsInstance<ZoneViewModel3>().firstOrNull().let { zvm -> ZoneWrapper(zvm, child) }
                 } else {
-                    child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull()?.let { zvm -> ZoneWrapper(zvm, child) }
+                    child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull().let { zvm -> ZoneWrapper(zvm, child) }
                 }
             }
 
             val values = zoneWrappers.map { zW ->
-                if (zw.viewModel == null) return@map FilterWrapper(BooleanValue(true), zW.state)
+                if (zW.viewModel == null) return@map FilterWrapper(BooleanValue(true), zW.state)
                 val value = computeConditionalValue(value, zW.viewModel, parent as? State2)
                 if (value !is BooleanValue) error("Expected boolean value but got $value")
                 FilterWrapper(value, zW.state)
@@ -158,12 +158,12 @@ class ComputationEngine(val client: Client3) {
 
     fun filterAll(allConditionValue: AllConditionalValue, parent: ChildrenModifier2<*>): ChildrenModifier2<*> {
         try {
-            val zoneWrappers = parent.children.mapNotNull { child ->
+            val zoneWrappers = parent.children.map { child ->
                 child.metas.filterIsInstance<ZoneViewModel3>().firstOrNull().let { zvm -> ZoneWrapper(zvm, child) }
             }
 
             val values = zoneWrappers.map { zW ->
-                if (zw.viewModel == null) return@map FilterWrapper(BooleanValue(true), zW.state)
+                if (zW.viewModel == null) return@map FilterWrapper(BooleanValue(true), zW.state)
                 val bools = allConditionValue.values.map { single -> computeConditionalValue(single, zW.viewModel, parent as? State2) }
                 val onlyBools = bools.filterIsInstance<BooleanValue>()
                 if (bools.size != onlyBools.size) error("Expected only boolean values but got $bools")
@@ -235,7 +235,7 @@ class ComputationEngine(val client: Client3) {
             val values = zoneWrappers.map { zW ->
                 val value = computeConditionalValue(liveValue, zW.viewModel, parent as? State2)
                 if (value !is BooleanValue) error("Expected boolean value but got $value")
-                JumpToWrapper(value, zW.state, zW.viewModel)
+                JumpToWrapper(value, zW.state, zW.viewModel ?: error("Expected zone view model but got null in JumpToWrapper"))
             }
 
             val value = values.firstOrNull { it.jumpTo.value }
