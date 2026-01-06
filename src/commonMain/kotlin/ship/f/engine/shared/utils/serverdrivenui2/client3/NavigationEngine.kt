@@ -282,7 +282,13 @@ class NavigationEngine(val client: Client3) {
                     entry.refreshStates.forEach {
                         ResetDescendantState2(it).run3(state = client.get<State2>(it), client = client)
                     }
-                    client.commit()
+                    client.commit {
+                        if (old is ScreenEntry) {
+                            backstack.filterIsInstance<ScreenEntry>().lastOrNull()?.let {
+                                currentScreen.value = it.copy(direction2 = ScreenEntry.BackStackEntry2.Direction2.Backward2)
+                            }
+                        }
+                    }
                 }
             }
             canPopState.value = canPop()

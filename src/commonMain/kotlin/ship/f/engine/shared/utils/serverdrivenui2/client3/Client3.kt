@@ -137,7 +137,7 @@ open class Client3 {
         }
     }
 
-    fun commit() {
+    fun commit(afterCommitHook: () -> Unit = {}) {
         commitScope.launch {
             try {
                 val distinct = queueMutex.withLock {
@@ -156,6 +156,7 @@ open class Client3 {
                 distinct.forEach { state ->
                     reactiveStates.defaultIfNull(state.path3, mutableStateOf(state)) { it.also { it.value = state } }
                 }
+                afterCommitHook()
             } catch (e: Exception) {
                 sduiLog("Commit error: ${e.message}", tag = "Client3 > commit > error")
                 emitSideEffect(
