@@ -112,6 +112,7 @@ data class NavigationConfig2(
             override val stateId: StateId2 = StateId2(),
             val flow: List<StateId2>,
             val push: Boolean = true,
+            val timeout: Long = 10000L, // After this timeout check which views exist, then send another request again
         ) : StateOperation2()
 
         @Serializable

@@ -180,6 +180,7 @@ data class ColorScheme2(
         @Serializable
         @SerialName("CustomColor2")
         data class CustomColor2(
+            val label: String,
             val color: Long,
             val alpha: Float,
         ) : Color2()
