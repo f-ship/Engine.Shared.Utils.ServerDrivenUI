@@ -2,6 +2,8 @@ package ship.f.engine.shared.utils.serverdrivenui2.client3
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import ship.f.engine.shared.utils.serverdrivenui2.client3.BackStackEntry3.ScreenEntry
 import ship.f.engine.shared.utils.serverdrivenui2.client3.BackStackEntry3.ViewEntry
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.ResetDescendantState2
@@ -26,6 +28,8 @@ class NavigationEngine(val client: Client3) {
     val currentQueueKeys: MutableList<String> = mutableListOf() // TODO Replace with a way to make sure actions can be fired only once
 
     val safeNavigationQueue: MutableList<StateId2> = mutableListOf()
+
+    val recordMap: MutableMap<StateId2, Record> = mutableMapOf()
 
     fun navigate(operation: NavigationConfig2.StateOperation2) {
         try {
@@ -56,7 +60,7 @@ class NavigationEngine(val client: Client3) {
                         client.commit() // Need to commit before setting it to the current screen
                         currentScreen.value = entry
                         canPopState.value = canPop()
-                    } ?: safeNavigationQueue.add(operation.stateId)
+                    } ?: addRecordTimer(stateId = operation.stateId)
                 }
 
                 is Flow2 -> {
@@ -70,7 +74,7 @@ class NavigationEngine(val client: Client3) {
                             client.commit() // Need to commit before setting it to the current screen
                             currentScreen.value = entry
                             canPopState.value = canPop()
-                        } ?: safeNavigationQueue.add(item)
+                        } ?: addRecordTimer(stateId = item)
                     }
                 }
 
@@ -90,7 +94,7 @@ class NavigationEngine(val client: Client3) {
                         client.commit()
                         currentScreen.value = entry
                         canPopState.value = canPop()
-                    } ?: safeNavigationQueue.add(newItem)
+                    } ?: addRecordTimer(stateId = newItem)
                 }
 
                 is ReplaceChild2 -> {
@@ -231,6 +235,7 @@ class NavigationEngine(val client: Client3) {
     fun checkNavigation(stateId: StateId2) {
         if (safeNavigationQueue.contains(stateId)) {
             safeNavigationQueue.remove(stateId)
+            recordMap.remove(stateId)
             navigate(Push2(stateId))
         }
     }
@@ -316,4 +321,26 @@ class NavigationEngine(val client: Client3) {
                 existing.subList(0, index + offset) + addition + existing.subList(index + offset, existing.size)
             }
         }
+
+    private fun addRecordTimer(stateId: StateId2) {
+        client.emitViewRequest(stateId)
+        if (safeNavigationQueue.contains(stateId)) return
+        safeNavigationQueue.add(stateId)
+        val timestamp = Clock.System.now()
+        recordMap[stateId] = Record(id = stateId, timestamp = timestamp)
+        client.computationEngine.timer.createTimer(intervalMillis = 30000) {
+            if (recordMap.containsKey(stateId)) {
+                sduiLog("State $stateId not found, emitting view request", tag = "NavigationEngine > addRecordTimer")
+                client.emitViewRequest(stateId)
+            } else {
+                sduiLog("State $stateId found, removing record timer", tag = "NavigationEngine > addRecordTimer")
+            }
+            recordMap.containsKey(stateId)
+        }
+    }
+
+    data class Record(
+        val id: StateId2,
+        val timestamp: Instant,
+    )
 }

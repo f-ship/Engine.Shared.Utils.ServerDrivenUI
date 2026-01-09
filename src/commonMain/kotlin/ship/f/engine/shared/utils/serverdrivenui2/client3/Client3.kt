@@ -49,7 +49,6 @@ open class Client3 {
     fun addVectors(items: Map<String, ImageVector>) = vectors.putAll(items)
     fun getImageVector(id: String) = vectors[id] ?: error("ImageVector with id: $id not found")
 
-
     val computationEngine = ComputationEngine(this)
     val navigationEngine = NavigationEngine(this)
     fun hasFired(action: Action2) = firedActions[action.id] != null
@@ -69,6 +68,7 @@ open class Client3 {
     fun getDeferredActions(key: String?) = deferredActions[key]
 
     var emitSideEffect: (PopulatedSideEffectMeta2) -> Unit = { }
+    var emitViewRequest: (StateId2) -> Unit = { }
     val commitScope = CoroutineScope(Dispatchers.Main)
     val queueMutex = Mutex()
 
