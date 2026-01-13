@@ -31,6 +31,9 @@ class NavigationEngine(val client: Client3) {
 
     val recordMap: MutableMap<StateId2, Record> = mutableMapOf()
 
+    //TODO Flowhack
+    val flowMap: MutableMap<StateId2, Int> = mutableMapOf()
+
     fun navigate(operation: NavigationConfig2.StateOperation2) {
         try {
             when(operation) {
@@ -64,6 +67,11 @@ class NavigationEngine(val client: Client3) {
                 }
 
                 is Flow2 -> {
+                    if (flowMap[operation.stateId] != null) {
+                        flowMap[operation.stateId] = flowMap[operation.stateId]!!.inc()
+                        return
+                    }
+                    flowMap[operation.stateId] = 1
                     currentQueue.addAll(operation.flow)
                     if (operation.push) {
                         val item = currentQueue.removeFirst()
