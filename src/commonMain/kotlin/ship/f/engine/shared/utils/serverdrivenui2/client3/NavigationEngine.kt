@@ -57,8 +57,12 @@ class NavigationEngine(val client: Client3) {
 
                 is Push2 -> {
                     val state = client.getOrNull<State2>(operation.stateId)
+                    sduiLog(operation.stateId, state, tag = "NavigationEngine > navigate > Push2")
                     state?.let {
-                        val entry = ScreenEntry(state)
+                        val entry = ScreenEntry(
+                            state2 = state,
+                            canPopBack = operation.addToBackStack,
+                        )
                         backstack.add(entry)
                         client.commit() // Need to commit before setting it to the current screen
                         currentScreen.value = entry
@@ -106,19 +110,19 @@ class NavigationEngine(val client: Client3) {
                 }
 
                 is ReplaceChild2 -> {
-                    sduiLog("Replacing child ${operation.stateId} inside ${operation.container}", tag = "NavigationEngine > navigate > ReplaceChild2")
                     val inside = client.get<State2>(operation.container)
                     val parent = inside as? ChildrenModifier2<*>
                         ?: error("During insertion operation, parent was not of type ChildrenModifier<*> ${operation.container}")
+//                    val shimmer = client.get<State2>(StateId2("shimmer", isGlobal = true))
+//                    client.reactiveStates.getValue(inside.path3).value = parent.c(listOf(shimmer))
+
                     val child = client.get<State2>(operation.stateId)
-                    sduiLog(child.path3, tag = "NavigationEngine > navigate > ReplaceChild2 > path3") { operation.stateId.name == "Agenda" + "Items" }
-                    val updatedChild = client.initState(child, inside.path3.toRenderChain(), operation.clearState)
-                    val updatedParent = parent.c(listOf(updatedChild))
+//                    val updatedChild = client.initState(child, inside.path3.toRenderChain(), operation.clearState) // TODO this may still be needed but hopefully not
+                    val updatedParent = parent.c(listOf(child))
                     client.update(updatedParent)
                 }
 
                 is ReplaceChildSave2 -> {
-                    sduiLog("Replacing child ${operation.stateId} inside ${operation.container}", tag = "NavigationEngine > navigate > ReplaceChild2")
                     val inside = client.get<State2>(operation.container)
                     val parent = inside as? ChildrenModifier2<*>
                         ?: error("During insertion operation, parent was not of type ChildrenModifier<*> ${operation.container}")
@@ -135,12 +139,13 @@ class NavigationEngine(val client: Client3) {
                 }
 
                 is PushState2 -> {
-                    sduiLog("Pushing state ${operation.stateId}", client.getOrNull<State2>(operation.stateId), client.get<State2>(operation.container), tag = "NavigationEngine > navigate > PushState2")
-
+//                    val start = Clock.System.now()
                     client.getOrNull<State2>(operation.stateId)
                         ?: safeNavigationQueue.add(operation.stateId).let { return }
                     (client.get<State2>(operation.container) as? ChildrenModifier2<*>)
                         ?: safeNavigationQueue.add(operation.stateId).let { return }
+
+//                    val getStates = Clock.System.now()
 
                     var entry = ViewEntry(
                         containerId = operation.container,
@@ -181,10 +186,30 @@ class NavigationEngine(val client: Client3) {
                         else -> Unit
                     }
 
+//                    val handleBackStack = Clock.System.now()
+
                     backstack.add(entry)
-                    canPopState.value = canPop()
+
+//                    val addToBackstack = Clock.System.now()
+
                     navigate(ReplaceChild2(operation.container, operation.stateId))
-                    client.commit() // Need to commit before setting it to the current screen
+
+//                    val replaceChild = Clock.System.now()
+
+                    client.commit {
+//                        sduiLog("realCommitTime ${Clock.System.now().minus(replaceChild).inWholeMilliseconds} ms", tag = "NavigationEngine > navigate > PushState2 > Perf Test")
+                    } // Need to commit before setting it to the current screen
+                    canPopState.value = canPop()
+
+//                    val commitTime = Clock.System.now()
+
+//                    sduiLog("getStates ${getStates.minus(start).inWholeMilliseconds} ms", tag = "NavigationEngine > navigate > PushState2 > Perf Test")
+//                    sduiLog("handleBackStack ${handleBackStack.minus(getStates).inWholeMilliseconds} ms", tag = "NavigationEngine > navigate > PushState2 > Perf Test")
+//                    sduiLog("addToBackstack ${addToBackstack.minus(handleBackStack).inWholeMilliseconds} ms", tag = "NavigationEngine > navigate > PushState2 > Perf Test")
+//                    sduiLog("replaceChild ${replaceChild.minus(addToBackstack).inWholeMilliseconds} ms", tag = "NavigationEngine > navigate > PushState2 > Perf Test")
+//                    sduiLog("commitTime ${commitTime.minus(replaceChild).inWholeMilliseconds} ms", tag = "NavigationEngine > navigate > PushState2 > Perf Test")
+//                    sduiLog("total ${Clock.System.now().minus(start).inWholeMilliseconds} ms", tag = "NavigationEngine > navigate > PushState2 > Perf Test")
+
                 }
 
                 is Back2 -> pop()
@@ -252,7 +277,9 @@ class NavigationEngine(val client: Client3) {
     fun pop() {
         try {
             val old = backstack.removeLast()
-            backstack.dropLastWhile { !it.canPopBack }
+            sduiLog(backstack, tag = "NavigationEngine > pop > old")
+            sduiLog(backstack.map { it.canPopBack }, tag = "NavigationEngine > pop > old")
+            while(!backstack.last().canPopBack) backstack.removeLast()
             when(val entry = backstack.last()) {
                 is ScreenEntry -> {
                     when (old) {

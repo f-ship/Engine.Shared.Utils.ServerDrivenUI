@@ -89,6 +89,7 @@ data class NavigationConfig2(
         @SerialName("Push2")
         data class Push2(
             override val stateId: StateId2,
+            val addToBackStack: Boolean = true,
         ) : StateOperation2()
 
         @Serializable

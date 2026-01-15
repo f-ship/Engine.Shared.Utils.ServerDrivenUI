@@ -10,7 +10,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3.Companion.client3
-import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2.StateOperation2
@@ -461,7 +460,7 @@ data class UpdateZoneModel3(
         state: State2,
         client: Client3,
     ) {
-        sduiLog("updating zone model $targetMetaId $liveValue $operation", tag = "updateZoneModel")
+        val start = Clock.System.now()
         val vm = client.get(targetMetaId) as? ZoneViewModel3 ?: error("ZoneViewModel3 not found for $targetMetaId")
         when (operation) {
             is Operation2.Toggle -> when (liveValue) {
@@ -478,7 +477,7 @@ data class UpdateZoneModel3(
                 else -> error("Not supported yet $liveValue in $operation")
             }
             is Operation2.Set -> when (liveValue) {
-                is LiveValue3.StaticLiveValue3 -> vm.map[operation.property] = liveValue.value.also { sduiLog(liveValue.value, operation.property, targetMetaId, tag = "updateZoneModel > Set") }
+                is LiveValue3.StaticLiveValue3 -> vm.map[operation.property] = liveValue.value
                 is LiveValue3.ReferenceableLiveValue3 -> when(liveValue.ref) {
                     is Ref3.StateRef3 -> (client.get<State2>(liveValue.ref.id) as? TextModifier2<*> ?: error("Text not found for $liveValue")).let {
                         vm.map[operation.property] = StringValue(it.text)
@@ -509,6 +508,7 @@ data class UpdateZoneModel3(
         }
         client.update(vm)
         client.commit()
+        sduiLog("took ${Clock.System.now().minus(start).inWholeMilliseconds} ms", tag = "updateZoneModel")
     }
 
     fun formatDateEpoch(date: Long, timeZone: TimeZone): String { // TODO use a complex really smart date formatter
@@ -679,10 +679,12 @@ data class ResetChildrenState2(
 data class ResetDescendantState2(
     override val targetStateId: StateId2,
 ) : Action2(), TargetableStateModifier2 {
+    @OptIn(ExperimentalTime::class)
     override fun execute3(
         state: State2,
         client: Client3
     ) {
+        val start = Clock.System.now()
 //        sduiLog("ResetDescendantState2 $targetStateId", tag = "resetDescendantState")
         (client.get<State2>(targetStateId) as? ChildrenModifier2<*>)?.children?.forEach {
 //            sduiLog("ResetDescendantState2 ${it.id}", tag = "resetDescendantState > forEach")
@@ -692,6 +694,7 @@ data class ResetDescendantState2(
             }
         }
         client.update(client.get<State2>(targetStateId).reset())
+        sduiLog("took ${Clock.System.now().minus(start).inWholeMilliseconds} ms", tag = "resetDescendantState")
     }
 }
 
@@ -704,9 +707,6 @@ data class CommitState2(
         state: State2,
         client: Client3
     ) {
-        sduiLog(client3.reactiveStates.keys.find {
-            (it as? Path3.Local)?.path?.first()?.name == "EventDetail" && it.path.size == 1
-        }, tag = "CommitState2")
         client.commit()
     }
 }

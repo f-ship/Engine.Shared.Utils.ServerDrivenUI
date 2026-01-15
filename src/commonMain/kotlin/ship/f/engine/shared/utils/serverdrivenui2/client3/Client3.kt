@@ -114,7 +114,6 @@ open class Client3 {
     }
 
     fun update(viewModel: Meta2) {
-        if (viewModels[viewModel.metaId] != null) sduiLog("Tried to Update ${viewModel.metaId} multiple times, ensure metaIds are unique")
         viewModels[viewModel.metaId] = viewModel
         propagate(viewModel)
     }
@@ -262,7 +261,6 @@ open class Client3 {
     fun setViewModels(state: State2) {
         setListeners(state)
         state.metas.forEach { meta ->
-            if (viewModels[meta.metaId] != null) sduiLog("Tried to set ${meta.metaId} multiple times, ensure metaIds are unique")
             viewModels[meta.metaId] = meta
             propagate(meta)
         }

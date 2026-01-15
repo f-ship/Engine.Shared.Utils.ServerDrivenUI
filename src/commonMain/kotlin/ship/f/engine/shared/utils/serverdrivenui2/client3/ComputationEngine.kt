@@ -327,7 +327,6 @@ class ComputationEngine(val client: Client3) {
                 }
 
                 Condition3.Eq -> {
-                    sduiLog("value1: $value1, value2: $value2", value1, value2, tag = "computeConditionalValue > Eq")
                     BooleanValue(value1 == value2)
                 }
                 Condition3.GreaterThan -> {
