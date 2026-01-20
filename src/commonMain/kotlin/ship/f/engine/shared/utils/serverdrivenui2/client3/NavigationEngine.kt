@@ -140,10 +140,13 @@ class NavigationEngine(val client: Client3) {
 
                 is PushState2 -> {
 //                    val start = Clock.System.now()
-                    client.getOrNull<State2>(operation.stateId)
-                        ?: safeNavigationQueue.add(operation.stateId).let { return }
-                    (client.get<State2>(operation.container) as? ChildrenModifier2<*>)
-                        ?: safeNavigationQueue.add(operation.stateId).let { return }
+//                    client.getOrNull<State2>(operation.stateId)
+//                        ?: safeNavigationQueue.add(operation.stateId).let { return }
+//                    (client.get<State2>(operation.container) as? ChildrenModifier2<*>)
+//                        ?: safeNavigationQueue.add(operation.stateId).let { return }
+
+                    client.getOrNull<State2>(operation.stateId) ?: return
+                    if (client.get<State2>(operation.container) !is ChildrenModifier2<*>) return
 
 //                    val getStates = Clock.System.now()
 
