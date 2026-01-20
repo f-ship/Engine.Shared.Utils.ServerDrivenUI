@@ -2,6 +2,7 @@ package ship.f.engine.shared.utils.serverdrivenui2.client3
 
 import kotlinx.coroutines.*
 import kotlinx.datetime.Clock
+import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.ResetState2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSideEffectMeta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.ZoneViewModel3
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
@@ -273,6 +274,13 @@ class ComputationEngine(val client: Client3) {
                         val updatedRef = if (liveValue.ref.vm == MetaId2() && vm != null) {
                             liveValue.copyRef(VmRef3(vm = vm.metaId, property = liveValue.ref.property)).ref
                         } else {
+                            state2?.also {
+                                client.addRemoteAction(
+                                    metaId = liveValue.ref.vm,
+                                    stateId = it.id,
+                                    action = ResetState2(it.id),
+                                )
+                            }
                             liveValue.ref
                         } as VmRef3
                         client.get<ZoneViewModel3>(updatedRef.vm).map[updatedRef.property]

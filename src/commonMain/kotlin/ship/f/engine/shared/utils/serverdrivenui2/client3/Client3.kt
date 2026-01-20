@@ -61,7 +61,7 @@ open class Client3 {
     }
 
     fun addRemoteAction(metaId: MetaId2, stateId: StateId2, action: Action2) {
-        listeners.defaultIfNull(metaId, mutableListOf()) { it + RemoteAction2(action, stateId) }
+        listeners.defaultIfNull(metaId, mutableListOf()) { (it + RemoteAction2(action, stateId)).distinct() }
     }
 
     fun clearDeferredActions(key: String?) = deferredActions.remove(key)
