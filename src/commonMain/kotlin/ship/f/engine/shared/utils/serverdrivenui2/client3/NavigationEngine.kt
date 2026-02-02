@@ -113,8 +113,6 @@ class NavigationEngine(val client: Client3) {
                     val inside = client.get<State2>(operation.container)
                     val parent = inside as? ChildrenModifier2<*>
                         ?: error("During insertion operation, parent was not of type ChildrenModifier<*> ${operation.container}")
-//                    val shimmer = client.get<State2>(StateId2("shimmer", isGlobal = true))
-//                    client.reactiveStates.getValue(inside.path3).value = parent.c(listOf(shimmer))
 
                     val child = client.get<State2>(operation.stateId)
 //                    val updatedChild = client.initState(child, inside.path3.toRenderChain(), operation.clearState) // TODO this may still be needed but hopefully not

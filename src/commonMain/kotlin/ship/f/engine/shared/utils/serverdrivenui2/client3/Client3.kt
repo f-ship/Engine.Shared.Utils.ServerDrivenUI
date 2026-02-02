@@ -34,6 +34,19 @@ open class Client3 {
     val idPaths: MutableMap<StateId2, List<Path3>> = mutableMapOf()
     val states: MutableMap<Path3, State2> = mutableMapOf()
     val reactiveStates: MutableMap<Path3, MutableState<State2>> = mutableMapOf()
+    val promises: MutableMap<Path3, MutableState<RefState2>> = mutableMapOf()
+
+    val promiseTimer = ComputationEngine.Timer(this).apply {
+        createTimer(1000) {
+            promises.forEach { (path, promise) ->
+                sduiLog("Resetting promise: $path ${promise.value.counter}")
+                commitScope.launch {
+                    promise.value = promise.value.reset()
+                }
+            }
+            true
+        }
+    }
     val stateQueue: MutableList<State2> = mutableListOf()
 
     val listeners: MutableMap<Id2, List<RemoteAction2<out Action2>>> = mutableMapOf()

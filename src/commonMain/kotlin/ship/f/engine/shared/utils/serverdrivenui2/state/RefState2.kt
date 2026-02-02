@@ -29,6 +29,7 @@ data class RefState2(
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val path: Path2 = Path2(),
     override val path3: Path3 = Path3.Init,
+    val showWarning: Boolean = false,
 ) : State2() {
     override fun cM(metas: List<Meta2>) = copy(metas = metas)
     override fun c(id: StateId2) = copy(id = id)
