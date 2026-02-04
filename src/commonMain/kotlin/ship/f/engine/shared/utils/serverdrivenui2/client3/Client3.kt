@@ -81,6 +81,7 @@ open class Client3 {
     fun getDeferredActions(key: String?) = deferredActions[key]
 
     var emitSideEffect: (PopulatedSideEffectMeta2) -> Unit = { }
+    var emitLocalEffect: (PopulatedSideEffectMeta2) -> Unit = { }
     var emitViewRequest: (StateId2) -> Unit = { }
     val commitScope = CoroutineScope(Dispatchers.Main)
     val queueMutex = Mutex()

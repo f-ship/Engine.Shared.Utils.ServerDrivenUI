@@ -134,6 +134,19 @@ data class EmitSideEffect2(
 }
 
 @Serializable
+@SerialName("EmitLocalEffect2")
+data class EmitLocalEffect2(
+    val sideEffect: SideEffectMeta2,
+) : Action2() {
+    override fun execute3(
+        state: State2,
+        client: Client3,
+    ) {
+        client.emitLocalEffect(sideEffect.toPopulated(client))
+    }
+}
+
+@Serializable
 @SerialName("EmitStateAsSideEffect2")
 data class EmitStateAsSideEffect(
     val sideEffect: SideEffectMeta2,
