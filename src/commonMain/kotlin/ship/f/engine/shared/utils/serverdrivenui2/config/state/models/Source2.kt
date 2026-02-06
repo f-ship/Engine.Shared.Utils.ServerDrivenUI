@@ -33,6 +33,12 @@ sealed class Source2 {
     ) : Source2()
 
     @Serializable
+    @SerialName("QrCode2")
+    data class QrCode2(
+        override val location: String
+    ) : Source2()
+
+    @Serializable
     data class LiveUrl2(
         val liveValue: LiveValue3,
     ) : Source2() {
