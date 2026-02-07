@@ -666,7 +666,10 @@ data class ResetState2(
         state: State2,
         client: Client3
     ) {
-        client.update(client.get<State2>(targetStateId).reset())
+//        client.update(client.get<State2>(targetStateId).reset())
+        val targetState = client.get<State2>(targetStateId)
+        val reactiveTargetState = client.getReactive<State2>(targetState.path3)
+        client.update(reactiveTargetState.value.reset())
         client.commit()
     }
 }

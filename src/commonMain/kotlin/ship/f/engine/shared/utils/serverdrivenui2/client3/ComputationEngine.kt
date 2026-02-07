@@ -68,7 +68,7 @@ class ComputationEngine(val client: Client3) {
             }
         }
 
-        fun createTimer(intervalMillis: Int, stillRunning: () -> Boolean): Job {
+        fun createTimer(intervalMillis: Int, stillRunning: suspend () -> Boolean): Job {
             val job = CoroutineScope(Dispatchers.Default).launch {
                 var isActive = true
                 while (isActive) {

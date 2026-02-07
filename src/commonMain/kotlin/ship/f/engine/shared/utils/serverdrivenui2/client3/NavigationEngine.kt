@@ -90,6 +90,9 @@ class NavigationEngine(val client: Client3) {
                     }
                 }
 
+
+                // TODO This and flow has now been marked for major reword, this does not currently interact with safeQueue
+                // TODO it is possible to get stuck in a flow by removing all subsequent nexts in the stack if they load in too slow
                 is Next2 -> {
                     operation.idempotentKey?.let { key ->
                         if (currentQueueKeys.contains(key)) return else currentQueueKeys.add(key)
