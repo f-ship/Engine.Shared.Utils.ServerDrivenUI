@@ -122,6 +122,7 @@ data class NavigationConfig2(
             override val stateId: StateId2 = StateId2(),
             val idempotentKey: String? = null,
             val skip: Int = 0,
+            val addToBackStack: Boolean = true,
         ) : StateOperation2()
 
         @Serializable

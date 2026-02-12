@@ -104,7 +104,7 @@ class NavigationEngine(val client: Client3) {
                     val newItem = currentQueue.removeFirstOrNull() ?: return
                     val state = client.getOrNull<State2>(newItem)
                     state?.let {
-                        val entry = ScreenEntry(state)
+                        val entry = ScreenEntry(state2 = state, canPopBack = operation.addToBackStack)
                         backstack.add(entry)
                         client.commit()
                         currentScreen.value = entry
