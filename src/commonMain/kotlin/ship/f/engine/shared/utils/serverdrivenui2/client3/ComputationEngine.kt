@@ -399,6 +399,11 @@ class ComputationEngine(val client: Client3) {
         }
     }
 
+    fun clear() {
+        timer.map.forEach { (_, job) -> job.cancel() }
+        timer.map.clear()
+    }
+
     fun SingleConditionalValue.notCurrentlySupported(): Nothing =
         error("Not currently supported > $value1 $condition $value2")
 }

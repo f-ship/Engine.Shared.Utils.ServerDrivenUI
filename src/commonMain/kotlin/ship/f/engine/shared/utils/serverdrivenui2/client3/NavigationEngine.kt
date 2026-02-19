@@ -31,7 +31,7 @@ class NavigationEngine(val client: Client3) {
 
     val recordMap: MutableMap<StateId2, Record> = mutableMapOf()
 
-    //TODO Flowhack
+    //TODO Flow hack
     val flowMap: MutableMap<StateId2, Int> = mutableMapOf()
 
     fun navigate(operation: NavigationConfig2.StateOperation2) {
@@ -344,6 +344,15 @@ class NavigationEngine(val client: Client3) {
                 )
             )
         }
+    }
+
+    fun clear() {
+        backstack.clear()
+        currentQueue.clear()
+        currentQueueKeys.clear()
+        safeNavigationQueue.clear()
+        recordMap.clear()
+        flowMap.clear()
     }
 
     private fun insert(

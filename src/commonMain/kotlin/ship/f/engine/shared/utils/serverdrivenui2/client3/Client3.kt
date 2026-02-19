@@ -356,7 +356,19 @@ open class Client3 {
         }
     }
 
+    fun clear() {
+        idPaths.clear()
+        states.clear()
+        reactiveStates.clear()
+        promises.clear()
+        viewModels.clear()
+        listeners.clear()
+        firedActions.clear()
+        computationEngine.clear()
+        navigationEngine.clear()
+    }
+
     companion object {
-        val client3 = Client3()
+        var client3 = Client3()
     }
 }
