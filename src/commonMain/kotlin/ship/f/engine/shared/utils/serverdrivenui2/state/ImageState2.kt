@@ -5,13 +5,14 @@ import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.*
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2.Unspecified
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Color2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Color2.Unspecified
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ContentScale2.None2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.CornerBasedShape2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.ConditionalValue
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Draw2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ColorModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.PaddingModifier2
@@ -31,6 +32,7 @@ data class ImageState2(
     override val visible: Visible2 = Visible2(true),
     override val size: Size2 = DefaultSize2,
     override val color: Color2 = Unspecified,
+    override val liveColor: ConditionalValue? = null,
     override val weight: Weight2? = null,
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
     override val onClickTrigger: OnClickTrigger2 = OnClickTrigger2(),
@@ -61,4 +63,5 @@ data class ImageState2(
     override fun c(path: Path2) = copy(path = path)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun reset(counter: Int) = copy(counter = counter)
+    override fun liveColor(liveColor: ConditionalValue) = copy(liveColor = liveColor)
 }

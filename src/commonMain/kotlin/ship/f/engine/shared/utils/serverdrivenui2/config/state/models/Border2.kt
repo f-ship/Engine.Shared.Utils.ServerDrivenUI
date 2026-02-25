@@ -2,7 +2,7 @@ package ship.f.engine.shared.utils.serverdrivenui2.config.state.models
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Color2
 
 @Serializable
 @SerialName("Border2")

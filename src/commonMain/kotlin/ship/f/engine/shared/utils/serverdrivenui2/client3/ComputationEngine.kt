@@ -345,8 +345,11 @@ class ComputationEngine(val client: Client3) {
                 }
 
                 Condition3.In -> {
-                    if (value2 !is ListValue<*>) value.notCurrentlySupported()
-                    BooleanValue(value1 in value2.value)
+                    when(value2) {
+                        is ListLimitValue<*> -> BooleanValue(value1 in value2.value)
+                        is ListValue<*> -> BooleanValue(value1 in value2.value)
+                        else -> value.notCurrentlySupported()
+                    }
                 }
 
                 Condition3.InOrEmpty -> {

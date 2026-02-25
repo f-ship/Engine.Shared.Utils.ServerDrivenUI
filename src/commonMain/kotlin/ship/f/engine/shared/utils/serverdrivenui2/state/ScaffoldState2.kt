@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.*
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Color2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Companion.DefaultDarkColorScheme2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Companion.DefaultLightColorScheme2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
@@ -46,6 +46,7 @@ data class ScaffoldState2(
     override val draws: List<Draw2> = listOf(),
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val color: Color2 = Color2.OnPrimary,
+    override val liveColor: ConditionalValue? = null,
     override val filteredChildren: List<State2>? = null,
     override val filter3: ConditionalValue? = null,
     override val sort3: LiveValue3? = null,
@@ -81,6 +82,8 @@ data class ScaffoldState2(
     override fun jumpTo3(jumpTo3: ConditionalValue?) = copy(jumpTo3 = jumpTo3)
     override fun focus(focus: IntValue?) = copy(focus = focus)
     override fun reset(counter: Int) = copy(counter = counter)
+    override fun liveColor(liveColor: ConditionalValue) = copy(liveColor = liveColor)
+
     override fun c(
         lightColorScheme: ColorScheme2,
         darkColorScheme: ColorScheme2,
@@ -95,5 +98,6 @@ data class ScaffoldState2(
         padding = padding,
         innerPadding = innerPadding,
     )
+
     override fun c(color: Color2) = copy(color = color)
 }

@@ -40,4 +40,5 @@ data class RefState2(
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
     override fun c(path3: Path3) = copy(path3 = path3)
     override fun c(path: Path2) = copy(path = path)
+
 }

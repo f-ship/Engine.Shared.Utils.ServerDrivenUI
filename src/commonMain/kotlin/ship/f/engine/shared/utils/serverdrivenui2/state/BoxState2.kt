@@ -7,14 +7,14 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Alignment2.HorizontalAndVerticalAlignment2.Center2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Border2.Companion.default
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2.Unspecified
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.Companion.DefaultShapes2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.CornerBasedShape2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.LiveValue3
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Color2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Color2.Unspecified
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.ConditionalValue
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Draw2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.IntValue
@@ -36,12 +36,14 @@ data class BoxState2(
     override val alignment: Alignment2 = Center2,
     override val border: Border2 = default,
     override val color: Color2 = Unspecified,
+    override val liveColor: ConditionalValue? = null,
     override val weight: Weight2? = null,
     override val shape: CornerBasedShape2 = DefaultShapes2.small,
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
     override val metas: List<Meta2> = listOf(),
     override val counter: Int = 0,
     override val draws: List<Draw2> = listOf(),
+    override val liveDraws3: List<ConditionalValue> = listOf(),
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val path: Path2 = Path2(),
     override val path3: Path3 = Path3.Init,
@@ -67,6 +69,7 @@ data class BoxState2(
     override fun c(sort3: LiveValue3?) = copy(sort3 = sort3)
     override fun jumpTo3(jumpTo3: ConditionalValue?) = copy(jumpTo3 = jumpTo3)
     override fun focus(focus: IntValue?) = copy(focus = focus)
+    override fun liveColor(liveColor: ConditionalValue) = copy(liveColor = liveColor)
 
     override fun c(alignment: Alignment2) = copy(alignment = alignment)
     override fun c(color: Color2) = copy(color = color)

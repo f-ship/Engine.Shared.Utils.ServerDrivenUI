@@ -12,6 +12,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.Co
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.CornerBasedShape2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.UIType2.Primary2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Color2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Draw2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.LoadingModifier2.Loading2
@@ -44,8 +45,8 @@ data class ButtonState2(
     override val draws: List<Draw2> = listOf(),
     val leadingIcon: ImageState2? = null,
     val text: String? = null,
-    val buttonBorderColor: ColorScheme2.Color2? = null,
-    val textColor: ColorScheme2.Color2? = null,
+    val buttonBorderColor: Color2? = null,
+    val textColor: Color2? = null,
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val path: Path2 = Path2(),
     override val path3: Path3 = Path3.Init,

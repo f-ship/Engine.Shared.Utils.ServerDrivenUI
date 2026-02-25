@@ -2,7 +2,6 @@ package ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computati
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.PaddingValues2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2
 
@@ -16,14 +15,14 @@ sealed class Draw2 : Value {
         @SerialName("Circle2")
         data class Circle2(
             val radius: Float? = null,
-            val color: ColorScheme2.Color2,
+            val color: Color2,
         ) : Behind2()
 
         @Serializable
         @SerialName("Rectangle2")
         data class Rectangle2(
             val roundRect: RoundRect2 = RoundRect2(),
-            val color: ColorScheme2.Color2,
+            val color: Color2,
         ) : Behind2() {
             @Serializable
             @SerialName("RoundRect2")
@@ -49,7 +48,7 @@ sealed class Draw2 : Value {
         @SerialName("BottomBorder2")
         data class BottomBorder2(
             val strokeWidth: Float = 1f,
-            val color: ColorScheme2.Color2,
+            val color: Color2,
         ) : Behind2()
     }
 
@@ -61,8 +60,8 @@ sealed class Draw2 : Value {
     @SerialName("Border2")
     data class Border2(
         val width: Float = 1f,
-        val color: ColorScheme2.Color2,
-        val fill: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
+        val color: Color2,
+        val fill: Color2 = Color2.Unspecified,
         val padding: PaddingValues2 = PaddingValues2(),
         val shape: Shapes2.CornerBasedShape2 = Shapes2.DefaultShapes2.small,
     ) : Draw2()

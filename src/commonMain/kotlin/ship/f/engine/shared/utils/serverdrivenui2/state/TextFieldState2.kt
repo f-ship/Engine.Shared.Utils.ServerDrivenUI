@@ -10,6 +10,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateI
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.CornerBasedShape2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.LiveValue3
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Color2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Draw2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.PaddingModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ShapeModifier2
@@ -41,12 +42,12 @@ data class TextFieldState2(
     override val path: Path2 = Path2(),
     override val draws: List<Draw2> = listOf(),
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
-    val focusedTextColor: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
-    val textColor: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
-    val borderColor: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
-    val containerColor: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
+    val focusedTextColor: Color2 = Color2.Unspecified,
+    val textColor: Color2 = Color2.Unspecified,
+    val borderColor: Color2 = Color2.Unspecified,
+    val containerColor: Color2 = Color2.Unspecified,
     val textStyle: TextStyle2 = TextStyle2.BodyMedium2,
-    val placeholderColor: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
+    val placeholderColor: Color2 = Color2.Unspecified,
     val placeholderTextStyle: TextStyle2 = TextStyle2.BodyMedium2,
     val imeType: IMEType2 = IMEType2.Default2,
     val leadingIcon: ImageState2? = null,
@@ -55,7 +56,7 @@ data class TextFieldState2(
     val placeholder: String = "",
     val label: String = "",
     val labelTextStyle: TextStyle2 = TextStyle2.BodyMedium2,
-    val labelColor: ColorScheme2.Color2 = ColorScheme2.Color2.Unspecified,
+    val labelColor: Color2 = Color2.Unspecified,
     override val text: String = "",
     val fieldType: FieldType2 = FieldType2.Text,
     val validations: List<Validation2> = listOf(), // TODO need to uplift this as it's not looking so good

@@ -26,7 +26,6 @@ sealed class State2 :
     OnBuildCompleteModifier2 {
     override val liveDraws3: List<ConditionalValue>?
         get() = null
-
     override fun liveDraws3(liveDraws3: List<ConditionalValue>?): State2 {
         return this
     }

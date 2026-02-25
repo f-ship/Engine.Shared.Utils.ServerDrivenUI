@@ -8,14 +8,14 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Alignment2.HorizontalAlignment2.CenterHorizontally2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Arrangement2.VerticalArrangement2.Top2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Border2.Companion.default
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2.Unspecified
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.Companion.DefaultShapes2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Shapes2.CornerBasedShape2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.LiveValue3
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Color2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Color2.Unspecified
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.ConditionalValue
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Draw2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.IntValue
@@ -40,6 +40,7 @@ data class ColumnState2(
     override val arrangement: Arrangement2 = Top2,
     override val border: Border2 = default,
     override val color: Color2 = Unspecified,
+    override val liveColor: ConditionalValue? = null,
     override val shape: CornerBasedShape2 = DefaultShapes2.small,
     override val weight: Weight2? = null,
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
@@ -85,6 +86,7 @@ data class ColumnState2(
     override fun c(sort3: LiveValue3?) = copy(sort3 = sort3)
     override fun jumpTo3(jumpTo3: ConditionalValue?) = copy(jumpTo3 = jumpTo3)
     override fun focus(focus: IntValue?) = copy(focus = focus)
+    override fun liveColor(liveColor: ConditionalValue) = copy(liveColor = liveColor)
 
     override fun c(
         padding: PaddingValues2,

@@ -5,14 +5,15 @@ import kotlinx.serialization.Serializable
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.*
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.ColorScheme2.Color2.Unspecified
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.FontWeight2.Regular2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2.DefaultSize2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.TextStyle2.BodyMedium2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.LiveValue3
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Color2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Color2.Unspecified
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.ConditionalValue
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Draw2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
@@ -29,6 +30,7 @@ data class TextState2(
     override val size: Size2 = DefaultSize2,
     override val textStyle: TextStyle2 = BodyMedium2,
     override val color: Color2 = Unspecified,
+    override val liveColor: ConditionalValue? = null,
     override val fontWeight: FontWeight2 = Regular2,
     override val weight: Weight2? = null,
     override val onInitialRenderTrigger: OnInitialRenderTrigger2 = OnInitialRenderTrigger2(),
@@ -66,6 +68,7 @@ data class TextState2(
     override fun reset(counter: Int) = copy(counter = counter)
     override fun text(text: String) = copy(text = text)
     override fun liveText3(liveText3: LiveValue3) = copy(liveText3 = liveText3)
+    override fun liveColor(liveColor: ConditionalValue) = copy(liveColor = liveColor)
 
     @Serializable
     @SerialName("Spans")

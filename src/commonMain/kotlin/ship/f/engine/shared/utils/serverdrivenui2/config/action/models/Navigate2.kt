@@ -465,6 +465,10 @@ data class UpdateZoneModel3(
         @Serializable
         @SerialName("Toggle")
         data class Toggle(val property: String) : Operation2()
+
+        @Serializable
+        @SerialName("ToggleLimit")
+        data class ToggleLimit(val property: String) : Operation2()
     }
 
     // TODO("Need to upgrade this method to be better")
@@ -515,6 +519,66 @@ data class UpdateZoneModel3(
                     val listValue = vm.map[operation.property] as? ListValue<*> ?: error("ListValue not for $targetMetaId")
                     if (!listValue.value.contains(liveValue.value)) return
                     vm.map[operation.property] = ListValue(listValue.value - liveValue.value)
+                }
+                else -> error("Not supported yet $liveValue in $operation")
+            }
+
+            is Operation2.ToggleLimit -> when (liveValue) {
+                is LiveValue3.StaticLiveValue3 -> {
+                    var listLimitValue = vm.map[operation.property] as? ListLimitValue<*>
+                        ?: error("ListLimitValue not for ${operation.property} in $targetMetaId")
+
+                    sduiLog(listLimitValue, operation.property, liveValue, tag = "updateZoneModel > ToggleLimit")
+                    if (listLimitValue.value.contains(liveValue.value)) {
+                        val update = ListLimitValue(
+                            value = listLimitValue.value - liveValue.value,
+                            min = listLimitValue.min,
+                            max = listLimitValue.max,
+                            limitMin = listLimitValue.limitMin,
+                            limitMax = listLimitValue.limitMax,
+                            stateListeners = listLimitValue.stateListeners,
+                        )
+
+                        if (listLimitValue.limitMin) {
+                            if (listLimitValue.min < listLimitValue.value.size) {
+                                listLimitValue = update
+                                sduiLog(update.value, operation.property, liveValue, tag = "updateZoneModel > ToggleLimit > Min&Min")
+                            }
+                        } else {
+                            listLimitValue = update
+                            sduiLog(update.value, operation.property, liveValue, tag = "updateZoneModel > ToggleLimit > Min&Else")
+                        }
+                    } else {
+                        val update = ListLimitValue(
+                            value = listLimitValue.value + liveValue.value,
+                            min = listLimitValue.min,
+                            max = listLimitValue.max,
+                            limitMin = listLimitValue.limitMin,
+                            limitMax = listLimitValue.limitMax,
+                            stateListeners = listLimitValue.stateListeners,
+                        )
+
+                        if (listLimitValue.limitMax) {
+                            if (listLimitValue.max > listLimitValue.value.size) {
+                                listLimitValue = update
+                                sduiLog(listLimitValue.value, operation.property, liveValue, tag = "updateZoneModel > ToggleLimit > Max&Max")
+                            }
+                        } else {
+                            listLimitValue = update
+                            sduiLog(listLimitValue.value, operation.property, liveValue, tag = "updateZoneModel > ToggleLimit > Max&Else")
+                        }
+                    }
+
+                    vm.map[operation.property] = listLimitValue
+
+                    val isValid = listLimitValue.value.size >= listLimitValue.min && listLimitValue.value.size <= listLimitValue.max
+                    listLimitValue.stateListeners.forEach { id ->
+                        val s = client.get<State2>(id)
+                        (s as? ValidModifier2<*>)?.let {
+                            val update = it.c(valid = ValidModifier2.Valid2(isValid))
+                            client.update(update)
+                        }
+                    }
                 }
                 else -> error("Not supported yet $liveValue in $operation")
             }
