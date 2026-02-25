@@ -89,6 +89,7 @@ data class NavigationConfig2(
         @SerialName("Push2")
         data class Push2(
             override val stateId: StateId2,
+            val flowId: StateId2? = null,
             val addToBackStack: Boolean = true,
         ) : StateOperation2()
 
@@ -113,16 +114,27 @@ data class NavigationConfig2(
             override val stateId: StateId2 = StateId2(),
             val flow: List<StateId2>,
             val push: Boolean = true,
+            val dropped: Set<StateId2> = setOf(),
+            val dropOnCompletion: Set<StateId2> = setOf(),
+            val current: StateId2 = flow.first(),
+            val isComplete: Boolean = false,
             val timeout: Long = 10000L, // After this timeout check which views exist, then send another request again
         ) : StateOperation2()
 
         @Serializable
         @SerialName("Next2")
         data class Next2(
-            override val stateId: StateId2 = StateId2(),
+            override val stateId: StateId2,
             val idempotentKey: String? = null,
+            val dropOnCompletion: Boolean = false,
+            val dropOnNext: Boolean = false,
+            val current: StateId2,
             val skip: Int = 0,
             val addToBackStack: Boolean = true,
+        ) : StateOperation2()
+        data class CompleteFlow2(
+            override val stateId: StateId2,
+            val push: Push2,
         ) : StateOperation2()
 
         @Serializable

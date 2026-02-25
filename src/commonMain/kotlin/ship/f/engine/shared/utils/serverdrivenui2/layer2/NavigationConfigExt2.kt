@@ -13,10 +13,11 @@ fun String.toPush() = listOf(
     )
 )
 
-fun StateId2.toPush() = listOf(
+fun StateId2.toPush(addToBackStack: Boolean = true) = listOf(
     NavigationConfig2(
         operation = Push2(
-            stateId = this
+            stateId = this,
+            addToBackStack = addToBackStack
         )
     )
 )

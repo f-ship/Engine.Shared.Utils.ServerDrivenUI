@@ -27,16 +27,20 @@ class NavigationEngine(val client: Client3) {
     val currentQueue: MutableList<StateId2> = mutableListOf()
     val currentQueueKeys: MutableList<String> = mutableListOf() // TODO Replace with a way to make sure actions can be fired only once
 
-    val safeNavigationQueue: MutableList<StateId2> = mutableListOf()
+    val safeNavigationQueue: MutableList<SafeNavigationRecord> = mutableListOf()
+
+    data class SafeNavigationRecord(val stateId: StateId2, val flowId: StateId2?)
 
     val recordMap: MutableMap<StateId2, Record> = mutableMapOf()
 
     //TODO Flow hack
     val flowMap: MutableMap<StateId2, Int> = mutableMapOf()
 
+    val flowManager: MutableMap<StateId2, Flow2> = mutableMapOf()
+
     fun navigate(operation: NavigationConfig2.StateOperation2) {
         try {
-            when(operation) {
+            when (operation) {
                 is InsertionOperation2 -> {
                     val inside = client.get<State2>(operation.inside)
                     val parent = inside as? ChildrenModifier2<*>
@@ -44,7 +48,7 @@ class NavigationEngine(val client: Client3) {
                     val child = client.get<State2>(operation.stateId)
                     client.initState(child, inside.path3.toRenderChain())
 
-                    val updatedParent = when(operation){
+                    val updatedParent = when (operation) {
                         is Start2 -> parent.c(listOf(child) + parent.children)
                         is End2 -> parent.c(parent.children + child)
                         is Before2 -> parent.c(insert(parent.children, child, operation.before, operation.offset))
@@ -61,6 +65,7 @@ class NavigationEngine(val client: Client3) {
                     state?.let {
                         val entry = ScreenEntry(
                             state2 = state,
+                            flowId = operation.flowId, // TODO usually null but not when doing safe navigation for a flow
                             canPopBack = operation.addToBackStack,
                         )
                         backstack.add(entry)
@@ -70,23 +75,57 @@ class NavigationEngine(val client: Client3) {
                     } ?: addRecordTimer(stateId = operation.stateId)
                 }
 
+                is CompleteFlow2 -> {
+                    flowManager[operation.stateId]?.let { flow ->
+                        flowManager[operation.stateId] = flow.copy(isComplete = true, dropped = flow.dropped + flow.dropOnCompletion)
+
+                    } ?: sduiLog("Flow ${operation.stateId} not found", tag = "NavigationEngine > navigate > CompleteFlow2")
+
+                    val state = client.getOrNull<State2>(operation.push.stateId)
+                    sduiLog(operation.push.stateId, state, tag = "NavigationEngine > navigate > Push2")
+                    state?.let {
+                        val entry = ScreenEntry(
+                            state2 = state,
+                            canPopBack = operation.push.addToBackStack,
+                        )
+                        backstack.add(entry)
+                        client.commit() // Need to commit before setting it to the current screen
+                        currentScreen.value = entry
+                        canPopState.value = canPop()
+                    } ?: addRecordTimer(stateId = operation.push.stateId)
+                }
+
                 is Flow2 -> {
-                    if (flowMap[operation.stateId] != null) {
-                        flowMap[operation.stateId] = flowMap[operation.stateId]!!.inc()
+//                    if (flowMap[operation.stateId] != null) {
+//                        flowMap[operation.stateId] = flowMap[operation.stateId]!!.inc()
+//                        return
+//                    }
+//                    flowMap[operation.stateId] = 1
+//                    currentQueue.addAll(operation.flow)
+                    if (flowManager[operation.stateId] != null) {
                         return
                     }
-                    flowMap[operation.stateId] = 1
-                    currentQueue.addAll(operation.flow)
+                    flowManager[operation.stateId] = operation
+//                    if (operation.push) {
+//                        val item = currentQueue.removeFirst()
+//                        val state = client.getOrNull<State2>(item)
+//                        state?.let {
+//                            val entry = ScreenEntry(state)
+//                            backstack.add(entry)
+//                            client.commit() // Need to commit before setting it to the current screen
+//                            currentScreen.value = entry
+//                            canPopState.value = canPop()
+//                        } ?: addRecordTimer(stateId = item)
+//                    }
                     if (operation.push) {
-                        val item = currentQueue.removeFirst()
-                        val state = client.getOrNull<State2>(item)
+                        val state = client.getOrNull<State2>(operation.flow.first())
                         state?.let {
-                            val entry = ScreenEntry(state)
+                            val entry = ScreenEntry(state2 = state, flowId = operation.stateId)
                             backstack.add(entry)
-                            client.commit() // Need to commit before setting it to the current screen
+                            client.commit()
                             currentScreen.value = entry
                             canPopState.value = canPop()
-                        } ?: addRecordTimer(stateId = item)
+                        } ?: addRecordTimer(stateId = operation.flow.first(), flowId = operation.stateId)
                     }
                 }
 
@@ -94,22 +133,47 @@ class NavigationEngine(val client: Client3) {
                 // TODO This and flow has now been marked for major reword, this does not currently interact with safeQueue
                 // TODO it is possible to get stuck in a flow by removing all subsequent nexts in the stack if they load in too slow
                 is Next2 -> {
-                    operation.idempotentKey?.let { key ->
-                        if (currentQueueKeys.contains(key)) return else currentQueueKeys.add(key)
+//                    operation.idempotentKey?.let { key ->
+//                        if (currentQueueKeys.contains(key)) return else currentQueueKeys.add(key)
+//                    }
+//                    repeat(operation.skip) {
+//                        sduiLog("Skipping item ${currentQueue.firstOrNull()}", tag = "NavigationEngine > navigate > Next2")
+//                        currentQueue.removeFirstOrNull()
+//                    }
+//                    val newItem = currentQueue.removeFirstOrNull() ?: return
+//                    val state = client.getOrNull<State2>(newItem)
+//                    state?.let {
+//                        val entry = ScreenEntry(state2 = state, canPopBack = operation.addToBackStack)
+//                        backstack.add(entry)
+//                        client.commit()
+//                        currentScreen.value = entry
+//                        canPopState.value = canPop()
+//                    } ?: addRecordTimer(stateId = newItem)
+                    val flow = flowManager[operation.stateId] ?: error("Flow ${operation.stateId} not found")
+                    val index = flow.flow.indexOf(operation.current)
+                    var newIndex = index + operation.skip + 1
+                    var newItem = flow.flow[index]
+                    while (newIndex < flow.flow.size) {
+                        if (!flow.dropped.contains(flow.flow[newIndex])) {
+                            newItem = flow.flow[newIndex]
+                            break
+                        }
+                        newIndex++
                     }
-                    repeat(operation.skip) {
-                        sduiLog("Skipping item ${currentQueue.firstOrNull()}", tag = "NavigationEngine > navigate > Next2")
-                        currentQueue.removeFirstOrNull()
+                    if (newItem != operation.stateId) {
+                        client.getOrNull<State2>(newItem)?.let { state ->
+                            val entry = ScreenEntry(state2 = state, flowId = operation.stateId)
+                            backstack.add(entry)
+                            client.commit()
+                            currentScreen.value = entry
+                            canPopState.value = canPop()
+                            flowManager[operation.stateId] = flow.copy(
+                                current = newItem,
+                                dropped = flow.dropped + if (operation.dropOnNext) setOf(operation.current) else emptySet(),
+                                dropOnCompletion = flow.dropOnCompletion + if (operation.dropOnCompletion) setOf(operation.current) else emptySet()
+                            )
+                        } ?: addRecordTimer(stateId = newItem)
                     }
-                    val newItem = currentQueue.removeFirstOrNull() ?: return
-                    val state = client.getOrNull<State2>(newItem)
-                    state?.let {
-                        val entry = ScreenEntry(state2 = state, canPopBack = operation.addToBackStack)
-                        backstack.add(entry)
-                        client.commit()
-                        currentScreen.value = entry
-                        canPopState.value = canPop()
-                    } ?: addRecordTimer(stateId = newItem)
                 }
 
                 is ReplaceChild2 -> {
@@ -161,13 +225,12 @@ class NavigationEngine(val client: Client3) {
                         restoreState = (client.get<State2>(operation.container) as ChildrenModifier2<*>).children.first().id,
                     )
 
-                    when(val last = backstack.lastOrNull()) {
+                    when (val last = backstack.lastOrNull()) {
                         is ViewEntry -> {
                             if (last.groupKey == operation.groupKey) {
                                 val old = backstack.removeLast() as ViewEntry
                                 entry = entry.copy(restoreContainer = old.restoreContainer, restoreState = old.restoreState)
-                            }
-                            else {
+                            } else {
                                 backstack.removeLast()
                                 val updatedSavedZones = operation.savedZones.mapNotNull { (ref, value) ->
                                     (client.viewModels[ref.vm] as? ZoneViewModel3)?.map[ref.property]?.let {
@@ -177,6 +240,7 @@ class NavigationEngine(val client: Client3) {
                                 backstack.add(last.copy(refreshStates = operation.refreshStates, savedZones = updatedSavedZones))
                             }
                         }
+
                         is ScreenEntry -> {
                             backstack.removeLast()
                             val updatedSavedZones = operation.savedZones.mapNotNull { (ref, value) ->
@@ -219,7 +283,10 @@ class NavigationEngine(val client: Client3) {
                 is Back2 -> pop()
                 is InsertionStateOperation2.StateEnd2 -> {
                     if (operation.state == null) {
-                        sduiLog("No state was passed for insertion state operation, nothing was done", tag = "NavigationEngine > navigate > InsertionStateOperation2.End2")
+                        sduiLog(
+                            "No state was passed for insertion state operation, nothing was done",
+                            tag = "NavigationEngine > navigate > InsertionStateOperation2.End2"
+                        )
                         return
                     }
                     val inside = client.get<State2>(operation.stateId)
@@ -249,8 +316,8 @@ class NavigationEngine(val client: Client3) {
         }
     }
 
-    fun updateAscendants(state: State2){
-        val parents = when(val p = state.path3){
+    fun updateAscendants(state: State2) {
+        val parents = when (val p = state.path3) {
             is Path3.Anon, Path3.Init -> listOf()
             is Path3.Global -> listOf()
             is Path3.Local -> p.path
@@ -259,7 +326,7 @@ class NavigationEngine(val client: Client3) {
         client.commit()
     }
 
-    fun tryUpdateAscendants(state: State2, ascendants: List<StateId2>){
+    fun tryUpdateAscendants(state: State2, ascendants: List<StateId2>) {
         val parent = ascendants.last()
         val parentState = client.getOrNull<State2>(parent) ?: error("Failed to find parent in try Update Ascendants")
         val cM = parentState as? ChildrenModifier2<*> ?: error("Parent state was not of type ChildrenModifier2")
@@ -270,24 +337,36 @@ class NavigationEngine(val client: Client3) {
     }
 
     fun checkNavigation(stateId: StateId2) {
-        if (safeNavigationQueue.contains(stateId)) {
-            safeNavigationQueue.remove(stateId)
+        safeNavigationQueue.find { it.stateId == stateId }?.let { safeNav ->
+            safeNavigationQueue.remove(safeNav)
             recordMap.remove(stateId)
-            navigate(Push2(stateId))
+            navigate(Push2(stateId = stateId, flowId = safeNav.flowId))
         }
     }
 
-    fun canPop() = backstack.isNotEmpty() && backstack.subList(0, backstack.lastIndex).any { it.canPopBack }.also { sduiLog("result of canPop: $it, backstack size ${backstack.size}", tag = "NavigationEngine > canPop") }
+    fun canPop() = backstack.isNotEmpty() && backstack.subList(0, backstack.lastIndex).any { it.canPopBack().also { sduiLog("for backhandler", tag = "NavigationEngine > canPopBack") } }
+        .also { sduiLog("result of canPop: $it, backstack size ${backstack.size}", tag = "NavigationEngine > canPopBack") }
+
+    fun BackStackEntry3.canPopBack() = when (this) {
+        is ScreenEntry -> {
+            val flow = flowManager[flowId] ?: return canPopBack.also { sduiLog("result of canPopBack $it with ${state2.id} as can't find $flowId", tag = "NavigationEngine > canPopBack") }
+            (!flow.dropped.contains(state2.id)). also { sduiLog("result of canPopBack $it with ${state2.id} for $flow", tag = "NavigationEngine > canPopBack") }
+        }
+        is ViewEntry -> canPopBack
+    }
+
+
     fun pop() {
         try {
             val old = backstack.removeLast()
             sduiLog(backstack, tag = "NavigationEngine > pop > old")
             sduiLog(backstack.map { it.canPopBack }, tag = "NavigationEngine > pop > old")
-            while(!backstack.last().canPopBack) backstack.removeLast()
-            when(val entry = backstack.last()) {
+            while (!backstack.last().canPopBack().also { sduiLog("in while loop", tag = "NavigationEngine > canPopBack") }) backstack.removeLast().also { sduiLog("removed last $it", tag = "NavigationEngine > canPopBack") }
+            when (val entry = backstack.last()) {
                 is ScreenEntry -> {
                     when (old) {
-                        is ScreenEntry -> currentScreen.value = entry.copy(direction2 = ScreenEntry.BackStackEntry2.Direction2.Backward2) // TODO wrap in an self destructing animation
+                        is ScreenEntry -> currentScreen.value =
+                            entry.copy(direction2 = ScreenEntry.BackStackEntry2.Direction2.Backward2) // TODO wrap in an self destructing animation
                         is ViewEntry -> {
                             navigate(
                                 ReplaceChild2(
@@ -309,6 +388,7 @@ class NavigationEngine(val client: Client3) {
                         }
                     }
                 }
+
                 is ViewEntry -> {
                     navigate(
                         ReplaceChild2(
@@ -370,10 +450,10 @@ class NavigationEngine(val client: Client3) {
             }
         }
 
-    private fun addRecordTimer(stateId: StateId2) {
+    private fun addRecordTimer(stateId: StateId2, flowId: StateId2? = null) {
         client.emitViewRequest(stateId)
-        if (safeNavigationQueue.contains(stateId)) return
-        safeNavigationQueue.add(stateId)
+        if (safeNavigationQueue.find { it.stateId == stateId } != null) return
+        safeNavigationQueue.add(SafeNavigationRecord(stateId, flowId))
         val timestamp = Clock.System.now()
         recordMap[stateId] = Record(id = stateId, timestamp = timestamp)
         client.computationEngine.timer.createTimer(intervalMillis = 30000) {

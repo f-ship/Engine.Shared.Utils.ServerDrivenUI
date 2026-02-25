@@ -21,6 +21,7 @@ sealed class BackStackEntry3 {
     data class ScreenEntry(
         val state2: State2,
         val direction2: BackStackEntry2.Direction2 = Forward2, // TODO to remove, just keeping for now for backwards compatibility
+        val flowId: StateId2? = null,
         override val canPopBack: Boolean = true,
         override val savedZones: List<SavedZone> = emptyList(),
         override val refreshStates: List<StateId2> = emptyList(),
