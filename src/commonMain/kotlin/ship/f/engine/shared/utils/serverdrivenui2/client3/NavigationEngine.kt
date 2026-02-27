@@ -33,10 +33,9 @@ class NavigationEngine(val client: Client3) {
 
     val recordMap: MutableMap<StateId2, Record> = mutableMapOf()
 
-    //TODO Flow hack
-    val flowMap: MutableMap<StateId2, Int> = mutableMapOf()
-
     val flowManager: MutableMap<StateId2, Flow2> = mutableMapOf()
+
+    val droppedStates: MutableSet<StateId2> = mutableSetOf()
 
     fun navigate(operation: NavigationConfig2.StateOperation2) {
         try {
@@ -96,27 +95,10 @@ class NavigationEngine(val client: Client3) {
                 }
 
                 is Flow2 -> {
-//                    if (flowMap[operation.stateId] != null) {
-//                        flowMap[operation.stateId] = flowMap[operation.stateId]!!.inc()
-//                        return
-//                    }
-//                    flowMap[operation.stateId] = 1
-//                    currentQueue.addAll(operation.flow)
                     if (flowManager[operation.stateId] != null) {
                         return
                     }
                     flowManager[operation.stateId] = operation
-//                    if (operation.push) {
-//                        val item = currentQueue.removeFirst()
-//                        val state = client.getOrNull<State2>(item)
-//                        state?.let {
-//                            val entry = ScreenEntry(state)
-//                            backstack.add(entry)
-//                            client.commit() // Need to commit before setting it to the current screen
-//                            currentScreen.value = entry
-//                            canPopState.value = canPop()
-//                        } ?: addRecordTimer(stateId = item)
-//                    }
                     if (operation.push) {
                         val state = client.getOrNull<State2>(operation.flow.first())
                         state?.let {
@@ -125,6 +107,7 @@ class NavigationEngine(val client: Client3) {
                             client.commit()
                             currentScreen.value = entry
                             canPopState.value = canPop()
+                            flowManager[operation.stateId] = operation.copy(current = state.id)
                         } ?: addRecordTimer(stateId = operation.flow.first(), flowId = operation.stateId)
                     }
                 }
@@ -133,22 +116,6 @@ class NavigationEngine(val client: Client3) {
                 // TODO This and flow has now been marked for major reword, this does not currently interact with safeQueue
                 // TODO it is possible to get stuck in a flow by removing all subsequent nexts in the stack if they load in too slow
                 is Next2 -> {
-//                    operation.idempotentKey?.let { key ->
-//                        if (currentQueueKeys.contains(key)) return else currentQueueKeys.add(key)
-//                    }
-//                    repeat(operation.skip) {
-//                        sduiLog("Skipping item ${currentQueue.firstOrNull()}", tag = "NavigationEngine > navigate > Next2")
-//                        currentQueue.removeFirstOrNull()
-//                    }
-//                    val newItem = currentQueue.removeFirstOrNull() ?: return
-//                    val state = client.getOrNull<State2>(newItem)
-//                    state?.let {
-//                        val entry = ScreenEntry(state2 = state, canPopBack = operation.addToBackStack)
-//                        backstack.add(entry)
-//                        client.commit()
-//                        currentScreen.value = entry
-//                        canPopState.value = canPop()
-//                    } ?: addRecordTimer(stateId = newItem)
                     val flow = flowManager[operation.stateId] ?: error("Flow ${operation.stateId} not found")
                     val index = flow.flow.indexOf(operation.current)
                     var newIndex = index + operation.skip + 1
@@ -182,7 +149,6 @@ class NavigationEngine(val client: Client3) {
                         ?: error("During insertion operation, parent was not of type ChildrenModifier<*> ${operation.container}")
 
                     val child = client.get<State2>(operation.stateId)
-//                    val updatedChild = client.initState(child, inside.path3.toRenderChain(), operation.clearState) // TODO this may still be needed but hopefully not
                     val updatedParent = parent.c(listOf(child))
                     client.update(updatedParent)
                 }
@@ -301,6 +267,15 @@ class NavigationEngine(val client: Client3) {
 
                     client.update(updatedParent)
                     updateAscendants(updatedParent)
+                }
+
+                is MultiPush2 -> {
+                    operation.stateIds.forEach { stateId ->
+                        if (!droppedStates.contains(stateId)) {
+                            navigate(Push2(stateId = stateId, addToBackStack = operation.addToBackStack))
+                            return
+                        }
+                    }
                 }
 
                 else -> Unit
@@ -432,7 +407,8 @@ class NavigationEngine(val client: Client3) {
         currentQueueKeys.clear()
         safeNavigationQueue.clear()
         recordMap.clear()
-        flowMap.clear()
+        flowManager.clear()
+        droppedStates.clear()
     }
 
     private fun insert(

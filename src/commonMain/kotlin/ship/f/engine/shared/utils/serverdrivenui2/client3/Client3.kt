@@ -17,7 +17,6 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.MetaPu
 import ship.f.engine.shared.utils.serverdrivenui2.config.action.modifiers.StatePublisherActionModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSideEffectMeta2
-import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.ZoneViewModel3
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.*
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ChildrenModifier2
@@ -37,29 +36,6 @@ open class Client3 {
     val reactiveStates: MutableMap<Path3, MutableState<State2>> = mutableMapOf()
     val promises: MutableMap<Path3, MutableState<RefState2>> = mutableMapOf()
     val mutex = Mutex()
-
-    val promiseTimer = ComputationEngine.Timer(this).apply {
-        createTimer(1000) {
-            mutex.withLock {
-//                sduiLog(promises, tag = "EngineX > promise")
-                promises.forEach { (path, promise) ->
-                    commitScope.launch {
-                        promise.value = promise.value.reset()
-                    }
-                }
-            }
-            true
-        }
-    }
-
-    suspend fun addPromise(path: Path3, promise: MutableState<RefState2>) {
-        sduiLog("adding promise: $path", tag = "EngineX > promise")
-        mutex.withLock { promises[path] = promise }
-    }
-    suspend fun removePromise(path: Path3): MutableState<RefState2>? {
-        sduiLog("removing promise: $path", tag = "EngineX > promise")
-        return mutex.withLock { promises.remove(path) }
-    }
 
     val stateQueue: MutableList<State2> = mutableListOf()
 
@@ -97,8 +73,17 @@ open class Client3 {
     var emitSideEffect: (PopulatedSideEffectMeta2) -> Unit = { }
     var emitLocalEffect: (PopulatedSideEffectMeta2) -> Unit = { }
     var emitViewRequest: (StateId2) -> Unit = { }
-    val commitScope = CoroutineScope(Dispatchers.Main)
+    val commitScope = CoroutineScope(Dispatchers.Main.immediate)
     val queueMutex = Mutex()
+
+    fun addPromise(path: Path3, promise: MutableState<RefState2>) {
+        sduiLog("adding promise: $path", tag = "EngineX > promise")
+        commitScope.launch { mutex.withLock { promises[path] = promise } }
+    }
+    suspend fun removePromise(path: Path3): MutableState<RefState2>? {
+        sduiLog("removing promise: $path", tag = "EngineX > promise")
+        return mutex.withLock { promises.remove(path) }
+    }
 
     /**
      * By default, if a rootPath is not provided, the first path in the list will be returned.
@@ -134,9 +119,7 @@ open class Client3 {
     fun update(state: State2) {
         if (state !is RefState2) {
             states.defaultIfNull(state.path3, state) { state }
-            commitScope.launch {
-                queueMutex.withLock { stateQueue.add(state) }
-            }
+            commitScope.launch { queueMutex.withLock { stateQueue.add(state) } }
             propagate(state)
         }
     }
@@ -156,14 +139,7 @@ open class Client3 {
     }
 
     fun propagate(viewModel: Meta2) {
-        sduiLog("Propagating viewModel: ${viewModel.metaId}", tag = "EngineX > propagate")
-        (viewModel as? ZoneViewModel3)?.also { sduiLog(it.map, tag = "EngineX > propagate") }
         listeners[viewModel.metaId]?.forEach { listener ->
-            sduiLog("Propagating listener: $listener", tag = "EngineX > propagate > listener")
-            getOrNull<State2>(listener.targetStateId)?.let {
-                sduiLog(it.counter, tag = "EngineX > propagate > listener > state")
-                sduiLog(getReactiveOrNull<State2>(it.path3)!!.value.counter, tag = "EngineX > propagate > listener > state")
-            }
             listener.action.run3(
                 state = get(listener.targetStateId),
                 client = this,
@@ -183,14 +159,15 @@ open class Client3 {
                 distinct.forEach { state ->
                     // This is done to ensure parents that are already rendered can accept children on the main thread
                     if (reactiveStates[state.path3] == null) {
-                        sduiLog("Updating state: ${state.counter} and hit null", tag = "EngineX > Commit > Debug") { state.id.name == "EventDetailSubHeadBarAgendaDayBar-0Variant" }
                         reactiveStates[state.path3] = mutableStateOf(state)
                         navigationEngine.checkNavigation(state.id)
+                        commitScope.launch {
+                            client3.removePromise(state.path3)?.let { promise -> promise.value = promise.value.reset() }
+                        }
                     }
                 }
                 distinct.forEach { state ->
                     reactiveStates.defaultIfNull(state.path3, mutableStateOf(state)) {
-                        sduiLog("Updating state: ${state.counter} vs ${it.value.counter}", tag = "EngineX > Commit > Debug") { state.id.name == "EventDetailSubHeadBarAgendaDayBar-0Variant" }
                         it.also { it.value = state }
                     }
                 }

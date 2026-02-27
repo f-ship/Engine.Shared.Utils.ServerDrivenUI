@@ -17,12 +17,8 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnBuildC
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnInitialRenderTrigger2
 
 @Serializable
-@SerialName("RefState2")
-/**
- * RefState2 currently works by setting its path locally but not adding its state to the idMap or reactivity Map
- *
- */
-data class RefState2(
+@SerialName("PromiseState2")
+data class PromiseState2(
     override val id: StateId2 = autoStateId2(),
     override val visible: Visible2 = Visible2(true),
     override val size: Size2 = DefaultSize2,
@@ -34,9 +30,7 @@ data class RefState2(
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val path: Path2 = Path2(),
     override val path3: Path3 = Path3.Init,
-    val showWarning: Boolean = false,
-    val fallback: State2 = SpacerState2(size = Fixed2(0, 0)),
-    val timeoutMillis: Long = 15000,
+    val fallback: State2 = SpacerState2(size = Fixed2(0,0)),
 ) : State2() {
     override fun cM(metas: List<Meta2>) = copy(metas = metas)
     override fun c(id: StateId2) = copy(id = id)

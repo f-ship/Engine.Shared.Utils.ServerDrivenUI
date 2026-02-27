@@ -6,12 +6,14 @@ import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2.Companion.autoStateId2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.PaddingValues2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Path2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Size2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Color2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.ConditionalValue
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.computation.value.Draw2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.ColorModifier2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.PaddingModifier2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.VisibilityModifier2.Visible2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.modifiers.WeightModifier2.Weight2
 import ship.f.engine.shared.utils.serverdrivenui2.config.trigger.models.OnBuildCompleteTrigger2
@@ -33,9 +35,11 @@ data class ShimmerState2(
     override val draws: List<Draw2> = listOf(),
     override val color: Color2 = Color2.Unspecified,
     override val liveColor: ConditionalValue? = null,
+    override val padding: PaddingValues2 = PaddingValues2(),
     val trackColor: Color2 = Color2.Unspecified,
 ) : State2(),
-    ColorModifier2<ShimmerState2> {
+    ColorModifier2<ShimmerState2>,
+    PaddingModifier2<ShimmerState2> {
     override fun cM(metas: List<Meta2>) = copy(metas = metas)
     override fun c(id: StateId2) = copy(id = id)
     override fun c(visible: Visible2) = copy(visible = visible)
@@ -45,6 +49,7 @@ data class ShimmerState2(
     override fun c(path: Path2) = copy(path = path)
     override fun c(color: Color2) = copy(color = color)
     override fun cD(draws: List<Draw2>) = copy(draws = draws)
+    override fun c(padding: PaddingValues2) = copy(padding = padding)
     override fun reset(counter: Int) = copy(counter = counter)
     override fun liveColor(liveColor: ConditionalValue) = copy(liveColor = liveColor)
 }

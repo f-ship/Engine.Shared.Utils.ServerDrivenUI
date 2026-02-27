@@ -22,7 +22,7 @@ fun <T> List<T>.wrapWith(element: T): List<T> {
     return list
 }
 
-fun getRandomString(length: Int = 16): String {
+fun getRandomString(length: Int = 128): String {
     val allowedChars = ('A'..'Z') + ('a'..'z') + ('0'..'9')
     return (1..length)
         .map { allowedChars.random() }

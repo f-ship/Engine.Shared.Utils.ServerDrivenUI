@@ -94,6 +94,14 @@ data class NavigationConfig2(
         ) : StateOperation2()
 
         @Serializable
+        @SerialName("MultiPush2")
+        data class MultiPush2(
+            override val stateId: StateId2,
+            val stateIds: List<StateId2>,
+            val addToBackStack: Boolean = false,
+        ) : StateOperation2()
+
+        @Serializable
         @SerialName("PushState2")
         data class PushState2(
             override val stateId: StateId2,

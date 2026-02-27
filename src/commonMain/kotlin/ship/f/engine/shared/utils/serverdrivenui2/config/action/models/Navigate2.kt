@@ -60,30 +60,17 @@ data class Navigate3(
 }
 
 @Serializable
-@SerialName("StateUpdateOnMetaUpdate2")
-data class StateUpdateOnMetaUpdate2(
-    override val targetMetaId: MetaId2
-) : Action2(), TargetableMetaModifier2 {
+@SerialName("DropState2")
+data class DropState2(
+    val statesToDrop: List<StateId2>,
+) : Action2() {
     override fun execute3(
         state: State2,
-        client: Client3,
+        client: Client3
     ) {
-        TODO("Do not use")
+        client.navigationEngine.droppedStates.addAll(statesToDrop)
     }
-}
 
-@Serializable
-@SerialName("SideEffectOnMetaUpdate2")
-data class SideEffectOnMetaUpdate2(
-    val metaId: MetaId2,
-    override val targetMetaId: MetaId2,
-) : Action2(), TargetableMetaModifier2 {
-    override fun execute3(
-        state: State2,
-        client: Client3,
-    ) {
-        TODO("Do not use")
-    }
 }
 
 @Serializable
