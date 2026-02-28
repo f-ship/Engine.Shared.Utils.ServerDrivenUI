@@ -2,7 +2,6 @@ package ship.f.engine.shared.utils.serverdrivenui2.state
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.*
@@ -42,8 +41,7 @@ data class CameraGalleryState2(
     val defaultImage: ImageState2? = null,
     val contentDescription: String? = null,
     val contentScale: ContentScale2 = None2,
-    val encodedBytes: String? = null,
-    @Transient override val bytes: ByteArray = byteArrayOf(),
+    override val bytes: ByteArray = byteArrayOf(),
     override val onBuildCompleteTrigger2: OnBuildCompleteTrigger2 = OnBuildCompleteTrigger2(),
     override val path3: Path3 = Path3.Init,
     override val path: Path2 = Path2(),
@@ -89,7 +87,6 @@ data class CameraGalleryState2(
         if (defaultImage != other.defaultImage) return false
         if (contentDescription != other.contentDescription) return false
         if (contentScale != other.contentScale) return false
-        if (encodedBytes != other.encodedBytes) return false
         if (!bytes.contentEquals(other.bytes)) return false
         if (onBuildCompleteTrigger2 != other.onBuildCompleteTrigger2) return false
         if (path3 != other.path3) return false
@@ -114,7 +111,6 @@ data class CameraGalleryState2(
         result = 31 * result + (defaultImage?.hashCode() ?: 0)
         result = 31 * result + (contentDescription?.hashCode() ?: 0)
         result = 31 * result + contentScale.hashCode()
-        result = 31 * result + (encodedBytes?.hashCode() ?: 0)
         result = 31 * result + bytes.contentHashCode()
         result = 31 * result + onBuildCompleteTrigger2.hashCode()
         result = 31 * result + path3.hashCode()
