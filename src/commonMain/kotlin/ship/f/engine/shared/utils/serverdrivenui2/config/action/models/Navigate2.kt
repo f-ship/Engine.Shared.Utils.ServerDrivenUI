@@ -94,12 +94,19 @@ data class Loading2(
 data class MatchValid2(
     override val publishers: List<StateId2>,
 ) : Action2(), StatePublisherActionModifier2 {
-    // TODO("Do not use")
     override fun execute3(
         state: State2,
         client: Client3,
     ) {
-        val valid = publishers.mapNotNull { client.get<State2>(it) as? ValidModifier2<*> }.all { it.valid.value }
+        sduiLog("MatchValid2: $publishers", tag = "MatchValid2")
+        val valid = publishers.mapNotNull {
+            client.addRemoteStateAction(
+                publishStateId = it,
+                stateId = state.id,
+                action = this@MatchValid2,
+            )
+            client.get<State2>(it) as? ValidModifier2<*>
+        }.all { it.valid.value }
         (state as? ValidModifier2<*>)?.c(valid = ValidModifier2.Valid2(valid))?.let {
             client.update(it)
         }

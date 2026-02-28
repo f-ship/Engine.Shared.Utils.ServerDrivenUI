@@ -63,8 +63,12 @@ open class Client3 {
         deferredActions.defaultIfNull(remoteAction.action.deferKey, listOf()) { it + remoteAction }
     }
 
-    fun addRemoteAction(metaId: MetaId2, stateId: StateId2, action: Action2) {
+    fun addRemoteMetaAction(metaId: MetaId2, stateId: StateId2, action: Action2) {
         listeners.defaultIfNull(metaId, mutableListOf()) { (it + RemoteAction2(action, stateId)).distinct() }
+    }
+
+    fun addRemoteStateAction(publishStateId: StateId2, stateId: StateId2, action: Action2) {
+        listeners.defaultIfNull(publishStateId, mutableListOf()) { (it + RemoteAction2(action, stateId)).distinct() }
     }
 
     fun clearDeferredActions(key: String?) = deferredActions.remove(key)
@@ -115,6 +119,9 @@ open class Client3 {
 
     inline fun <reified T : Meta2> get(metaId2: MetaId2): T =
         viewModels[metaId2] as? T ?: sduiLog(viewModels.keys, tag = "ContentZoneModel").let{ null } ?: error("no meta exists for metaId: $metaId2")
+
+    inline fun <reified T : Meta2> getOrNull(metaId2: MetaId2): T? = viewModels[metaId2] as? T
+        ?: sduiLog(viewModels.keys, tag = "ContentZoneModel").let{ null }
 
     fun update(state: State2) {
         if (state !is RefState2) {

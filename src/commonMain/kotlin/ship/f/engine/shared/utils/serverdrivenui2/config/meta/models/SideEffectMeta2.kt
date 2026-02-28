@@ -20,7 +20,7 @@ data class SideEffectMeta2(
     fun toPopulated(client: Client3) = PopulatedSideEffectMeta2(
         metaId = metaId,
         states = states.map { client.get(it) },
-        metas = metas.map { client.get(it) },
+        metas = metas.mapNotNull { client.getOrNull(it) },
         onExpected = onExpected,
     )
 }

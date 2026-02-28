@@ -275,7 +275,7 @@ class ComputationEngine(val client: Client3) {
                             liveValue.copyRef(VmRef3(vm = vm.metaId, property = liveValue.ref.property)).ref
                         } else {
                             state2?.also {
-                                client.addRemoteAction(
+                                client.addRemoteMetaAction(
                                     metaId = liveValue.ref.vm,
                                     stateId = it.id,
                                     action = ResetState2(it.id),
